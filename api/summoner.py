@@ -16,11 +16,13 @@ DEFAULT_HEADERS = {
     "User-Agent": "LoLLab/0.1 (+contact: clone701@gmail.com)",
 }
 
+
 class HTTPError(Exception):
     def __init__(self, status: int, message: str):
         super().__init__(message)
         self.status = status
         self.message = message
+
 
 def fetch_json(url: str):
     headers = {**DEFAULT_HEADERS}
@@ -41,6 +43,7 @@ def fetch_json(url: str):
         except Exception:
             detail = str(e)
         raise HTTPError(e.code, detail)
+
 
 class handler(BaseHTTPRequestHandler):
     def _write(self, obj, status=200):

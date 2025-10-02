@@ -2,6 +2,7 @@
 import json, time
 from http.server import BaseHTTPRequestHandler
 
+
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         body = json.dumps({

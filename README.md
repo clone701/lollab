@@ -75,6 +75,21 @@ cp .env.local.example .env.local  # ない場合は手動で作成
 npm run dev  # http://localhost:3000
 ```
 
+
+## ディレクトリ構成
+src/
+├─ app/
+│  ├─ layout.tsx         ← 既存を更新（Navbar/Footer を読み込み）
+│  └─ page.tsx           ← HOME 画面（ヒーロー/検索/サイドカード/ピン）
+├─ components/
+│  ├─ Navbar.tsx
+│  ├─ Footer.tsx
+│  ├─ SearchBar.tsx
+│  ├─ RecentChips.tsx
+│  └─ PinnedChips.tsx
+└─ lib/
+   └─ storage.ts         ← localStorage ユーティリティ
+
 ## 環境変数
 
 > **注意**: Riot のキーは**クライアントに公開しない**ため、`NEXT_PUBLIC_` 接頭辞は付けません。
@@ -95,6 +110,7 @@ RIOT_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 * `npm run build` – 本番ビルド
 * `npm run start` – 本番サーバ（Vercel では自動）
 * `npm run lint` – ESLint
+* `vercel dev` – vercel dev
 
 ## デプロイ (Vercel)
 
@@ -104,6 +120,10 @@ RIOT_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 4. **Deploy / Redeploy**。完了後に URL から初期ページ表示を確認
 
 > **Tips**: 環境変数の変更は**再デプロイ**しないと反映されません。
+
+git add .
+git commit -m "Add champion select modal with recent champions"
+git push origin main
 
 ## Riot API 利用ポリシー/方針
 
