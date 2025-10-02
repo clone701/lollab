@@ -152,3 +152,18 @@ venv/
 # Vercel/Next
 .vercel/
 .next/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Secrets
+.env
+.env.*
+*.env
+
+# Vercel/Next
+.vercel/
+.next/
