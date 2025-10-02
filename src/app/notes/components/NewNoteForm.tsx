@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import ChampionSelectModal from './ChampionSelectModal';
+import Image from 'next/image';
+import ChampionSelectModal, { Champion } from './ChampionSelectModal';
 
 export default function NewNoteForm() {
   const [mode, setMode] = useState<'select' | 'counter'>('select');
   const [modalOpen, setModalOpen] = useState<'me' | 'enemy' | null>(null);
-  const [myChampion, setMyChampion] = useState<any>(null);
-  const [enemyChampion, setEnemyChampion] = useState<any>(null);
+  const [myChampion, setMyChampion] = useState<Champion | null>(null);
+  const [enemyChampion, setEnemyChampion] = useState<Champion | null>(null);
 
   return (
     <div className="flex flex-col md:flex-row gap-8">
@@ -56,9 +57,11 @@ export default function NewNoteForm() {
               >
                 {myChampion ? (
                   <>
-                    <img
+                    <Image
                       src={`https://ddragon.leagueoflegends.com/cdn/14.10.1/img/champion/${myChampion.id}.png`}
                       alt={myChampion.name}
+                      width={24}
+                      height={24}
                       className="w-6 h-6 rounded-full"
                     />
                     {myChampion.name}
@@ -77,9 +80,11 @@ export default function NewNoteForm() {
               >
                 {enemyChampion ? (
                   <>
-                    <img
+                    <Image
                       src={`https://ddragon.leagueoflegends.com/cdn/14.10.1/img/champion/${enemyChampion.id}.png`}
                       alt={enemyChampion.name}
+                      width={24}
+                      height={24}
                       className="w-6 h-6 rounded-full"
                     />
                     {enemyChampion.name}
