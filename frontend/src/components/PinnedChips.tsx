@@ -1,6 +1,6 @@
 'use client';
 
-import { ensureInitialPins, getPins } from "@/lib/storage";
+import { ensureInitialPins, getPins } from '@/lib/storage';
 import { useEffect, useState } from 'react';
 
 export default function PinnedChips() {

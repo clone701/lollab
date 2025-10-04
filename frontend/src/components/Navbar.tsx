@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { signIn, signOut, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
-  const { data: session } = useSession();
+  const router = useRouter();
 
   return (
     <header className="bg-white border-b border-[var(--border)] text-[var(--foreground)] sticky top-0 z-40">
@@ -31,23 +31,13 @@ export default function Navbar() {
 
         {/* Right */}
         <div className="flex items-center gap-2">
-          {session ? (
-            <button
-              onClick={() => signOut()}
-              className="bg-gray-700 text-white px-4 py-1.5 rounded font-medium text-sm hover:bg-gray-900 transition"
-              aria-label="ログアウト"
-            >
-              ログアウト
-            </button>
-          ) : (
-            <button
-              onClick={() => signIn('google')}
-              className="bg-gray-700 text-white px-4 py-1.5 rounded font-medium text-sm hover:bg-gray-900 transition"
-              aria-label="ログイン"
-            >
-              ログイン
-            </button>
-          )}
+          <button
+            onClick={() => router.push('/login')}
+            className="bg-gray-700 text-white px-4 py-1.5 rounded font-medium text-sm hover:bg-gray-900 transition"
+            aria-label="ログイン"
+          >
+            ログイン
+          </button>
         </div>
       </div>
     </header>
