@@ -113,7 +113,6 @@ RIOT_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 * `npm run build` – 本番ビルド
 * `npm run start` – 本番サーバ（Vercel では自動）
 * `npm run lint` – ESLint
-* `vercel dev` – vercel dev
 
 ## デプロイ (Vercel)
 
