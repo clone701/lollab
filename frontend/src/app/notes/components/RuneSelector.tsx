@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import Image from 'next/image';
 import {
   RUNE_PATHS,
   DOMINATION_KEYSTONES,
@@ -107,7 +107,7 @@ export default function RuneSelector({
                 onClick={() => handlePrimaryPath(path.id)}
                 type="button"
               >
-                <img src={path.icon} alt={path.name} width={36} height={36} />
+                <Image src={path.icon} alt={path.name} width={36} height={36} />
               </button>
             ))}
           </div>
@@ -120,7 +120,7 @@ export default function RuneSelector({
                 onClick={() => handleKeystone(rune.id)}
                 type="button"
               >
-                <img src={rune.icon} alt={rune.name} width={36} height={36} />
+                <Image src={rune.icon} alt={rune.name} width={36} height={36} />
               </button>
             ))}
           </div>
@@ -134,7 +134,7 @@ export default function RuneSelector({
                   onClick={() => handlePrimaryRune(i, rune.id)}
                   type="button"
                 >
-                  <img src={rune.icon} alt={rune.name} width={32} height={32} />
+                  <Image src={rune.icon} alt={rune.name} width={32} height={32} />
                 </button>
               ))}
             </div>
@@ -151,7 +151,7 @@ export default function RuneSelector({
                 onClick={() => handleSecondaryPath(path.id)}
                 type="button"
               >
-                <img src={path.icon} alt={path.name} width={36} height={36} />
+                <Image src={path.icon} alt={path.name} width={36} height={36} />
               </button>
             ))}
           </div>
@@ -165,7 +165,7 @@ export default function RuneSelector({
                   onClick={() => handleSecondaryRune(i, rune.id)}
                   type="button"
                 >
-                  <img src={rune.icon} alt={rune.name} width={32} height={32} />
+                  <Image src={rune.icon} alt={rune.name} width={32} height={32} />
                 </button>
               ))}
             </div>
@@ -183,7 +183,7 @@ export default function RuneSelector({
                   onClick={() => handleShard(i, shard.id)}
                   type="button"
                 >
-                  <img src={shard.icon} alt={shard.name} width={28} height={28} />
+                  <Image src={shard.icon} alt={shard.name} width={28} height={28} />
                 </button>
               ))}
             </div>
