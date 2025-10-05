@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useState, useRef, useEffect } from 'react';
 
@@ -56,9 +57,11 @@ export default function Navbar() {
                 className="flex items-center focus:outline-none"
                 aria-label="アカウントメニュー"
               >
-                <img
+                <Image
                   src={session.user?.image ?? ''}
                   alt="User"
+                  width={32}
+                  height={32}
                   className="w-8 h-8 rounded-full border border-gray-300"
                   referrerPolicy="no-referrer"
                 />
