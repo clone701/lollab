@@ -10,6 +10,7 @@ LoL プレイヤーの**学習・準備・振り返り**を支援する非公式
 
 * [機能](#機能)
 * [技術スタック](#技術スタック)
+* [ディレクトリ構成](#ディレクトリ構成)
 * [アーキテクチャ概要](#アーキテクチャ概要)
 * [セットアップ (ローカル)](#セットアップ-ローカル)
 * [環境変数](#環境変数)
@@ -36,6 +37,23 @@ LoL プレイヤーの**学習・準備・振り返り**を支援する非公式
 * **Backend**: Python (Vercel Serverless Functions under `/api`)
 * **DB/Cache**: 予定（Neon / Supabase / Upstash Redis）
 * **Infra**: Vercel (GitHub 連携, Preview/Prod 自動デプロイ)
+
+## ディレクトリ構成
+lollab/
+├─ api/
+└─ src/
+   ├─ app/
+   │  ├─ layout.tsx         ← 既存を更新（Navbar/Footer を読み込み）
+   │  └─ page.tsx           ← HOME 画面（ヒーロー/検索/サイドカード/ピン）
+   ├─ components/
+   │  ├─ Navbar.tsx
+   │  ├─ Footer.tsx
+   │  ├─ SearchBar.tsx
+   │  ├─ RecentChips.tsx
+   │  └─ PinnedChips.tsx
+   └─ lib/
+      ├─ storage.ts         ← localStorage ユーティリティ
+      └─ runeData.ts 
 
 ## アーキテクチャ概要
 
@@ -72,23 +90,8 @@ cp .env.local.example .env.local  # ない場合は手動で作成
 # .env.local に RIOT_API_KEY=... を記入
 
 # 起動
-npm run dev  # http://localhost:3000
+npx next dev  # http://localhost:3000
 ```
-
-
-## ディレクトリ構成
-src/
-├─ app/
-│  ├─ layout.tsx         ← 既存を更新（Navbar/Footer を読み込み）
-│  └─ page.tsx           ← HOME 画面（ヒーロー/検索/サイドカード/ピン）
-├─ components/
-│  ├─ Navbar.tsx
-│  ├─ Footer.tsx
-│  ├─ SearchBar.tsx
-│  ├─ RecentChips.tsx
-│  └─ PinnedChips.tsx
-└─ lib/
-   └─ storage.ts         ← localStorage ユーティリティ
 
 ## 環境変数
 
@@ -110,7 +113,6 @@ RIOT_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 * `npm run build` – 本番ビルド
 * `npm run start` – 本番サーバ（Vercel では自動）
 * `npm run lint` – ESLint
-* `vercel dev` – vercel dev
 
 ## デプロイ (Vercel)
 
