@@ -1,11 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import time
+from api import notes
+from api.users import router as users_router
 
 app = FastAPI()
 
-# ここでCORSを設定
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # 本番は ["https://あなたのフロントURL"] などにする
@@ -14,11 +13,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.get("/health")
-def health():
-    return JSONResponse({
-        "ok": True,
-        "service": "lollab",
-        "time": int(time.time())
-    })
+app.include_router(notes.router, prefix="/api/notes")
+app.include_router(users_router, prefix="/api/users")

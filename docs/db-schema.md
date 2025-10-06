@@ -7,16 +7,23 @@
 
 ## 1. 認証・ユーザー情報
 
-### Supabase Auth（自動生成）
+### app_users（Google認証ユーザー管理用・独自テーブル）
 
-- `auth.users`  
-  Google認証などで自動生成されるユーザー情報テーブル
+Google認証で得たユーザー情報を管理する独自テーブル例。
 
-| カラム名      | 型      | 説明                |
-| ------------- | ------- | ------------------- |
-| id            | uuid    | ユーザーID（PK）    |
-| email         | text    | メールアドレス      |
-| ...           |         | その他自動生成項目  |
+| カラム名      | 型      | 説明                          |
+| ------------- | ------- | ----------------------------- |
+| id            | uuid    | ユーザーID（PK, 自動生成可）  |
+| email         | text    | メールアドレス                |
+| name          | text    | 表示名                        |
+| image         | text    | アイコンURL                   |
+| provider      | text    | 認証プロバイダー名（例: google）|
+| provider_id   | text    | プロバイダー側のID（Google sub等）|
+| created_at    | timestamp | 作成日時                    |
+
+> NextAuth.jsのGoogle認証後、FastAPI経由でこのテーブルにINSERT/UPSERTする運用を想定。
+
+---
 
 ### profiles（任意）
 
@@ -24,7 +31,7 @@
 
 | カラム名      | 型         | 説明                |
 | ------------- | ---------- | ------------------- |
-| id            | uuid       | PK, users.idと同じ  |
+| id            | uuid       | PK, app_users.idと同じ  |
 | display_name  | text       | 表示名（任意）      |
 | icon_url      | text       | アイコンURL（任意） |
 | created_at    | timestamp  | 作成日時            |
@@ -38,7 +45,7 @@
 | カラム名            | 型         | 説明                          |
 | ------------------- | ---------- | ----------------------------- |
 | id                  | bigint     | PK, 自動採番                  |
-| user_id             | uuid       | FK, users.id                  |
+| user_id             | uuid       | FK, app_users.id              |
 | my_champion_id      | text       | 自分のチャンピオンID          |
 | enemy_champion_id   | text       | 相手のチャンピオンID          |
 | runes               | jsonb      | ルーン構成（JSON）            |
@@ -74,7 +81,7 @@
 ## 3. ER図イメージ
 
 ```
-auth.users ---< champion_notes
+app_users ---< champion_notes
       |
   profiles (option)
 ```
