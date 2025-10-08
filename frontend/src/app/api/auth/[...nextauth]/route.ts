@@ -10,18 +10,30 @@ const handler = NextAuth({
   ],
   callbacks: {
     async signIn({ user }) {
-      // FastAPIのエンドポイントにユーザー情報を送信
-      await fetch(process.env.NEXT_PUBLIC_BACKEND_URL + "/api/users/register", {
+
+      const requestBody = {
+        email: user.email,
+        name: user.name,
+        image: user.image,
+        provider: "google",
+        provider_id: user.id,
+      };
+
+      const res = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL + "/api/users/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          provider: "google",
-          provider_id: user.id, // Googleのsubなど
-        }),
+        body: JSON.stringify(requestBody),
       });
+
+      const result = await res.json();
+
+      if (result.ok && result.user_id) {
+        // localStorageにuser_idを保存
+        if (typeof window !== "undefined") {
+          localStorage.setItem("user_id", result.user_id);
+        }
+      }
+
       return true;
     },
   },

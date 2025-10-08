@@ -82,11 +82,12 @@ export default function ChampionNoteForm({
 
   // 追加: 保存ハンドラ
   const handleSave = async () => {
+    const userId = localStorage.getItem("user_id");
     const res = await fetch('http://localhost:8000/api/notes/champion_notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        user_id: 'ここにユーザーID', // next-authやsessionから取得
+        user_id: userId, // next-authやsessionから取得
         my_champion_id: myChampion.id,
         enemy_champion_id: enemyChampion.id,
         runes,

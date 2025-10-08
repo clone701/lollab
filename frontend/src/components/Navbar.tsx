@@ -10,6 +10,23 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // セッション復元時にuser_id取得
+  useEffect(() => {
+    if (session?.user?.email && !localStorage.getItem("user_id")) {
+      fetch(
+        process.env.NEXT_PUBLIC_BACKEND_URL +
+          `/api/users/by_email?email=${session.user.email}`
+      )
+        .then((res) => res.json())
+        .then((result) => {
+          if (result.ok && result.user_id) {
+            localStorage.setItem("user_id", result.user_id);
+            console.log("user_id set in localStorage (Navbar):", result.user_id);
+          }
+        });
+    }
+  }, [session]);
+
   // メニュー外クリックで閉じる
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
