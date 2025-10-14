@@ -17,7 +17,7 @@ export default function NewNoteForm() {
   const [myChampion, setMyChampion] = useState<Champion | null>(null);
   const [enemyChampion, setEnemyChampion] = useState<Champion | null>(null);
   const [selecting, setSelecting] = useState<'me' | 'enemy' | null>('me');
-  const [created, setCreated] = useState(false); // 追加
+  const [created, setCreated] = useState(false);
 
   useEffect(() => {
     fetch('https://ddragon.leagueoflegends.com/cdn/14.10.1/data/ja_JP/champion.json')

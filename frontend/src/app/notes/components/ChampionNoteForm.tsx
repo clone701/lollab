@@ -83,11 +83,15 @@ export default function ChampionNoteForm({
   // 追加: 保存ハンドラ
   const handleSave = async () => {
     const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      alert("ユーザーIDが取得できません。ログインしてください。");
+      return;
+    }
     const res = await fetch('http://localhost:8000/api/notes/champion_notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        user_id: userId, // next-authやsessionから取得
+        user_id: userId,
         my_champion_id: myChampion.id,
         enemy_champion_id: enemyChampion.id,
         runes,
@@ -98,9 +102,11 @@ export default function ChampionNoteForm({
     });
     if (res.ok) {
       alert('ノートを保存しました');
+      console.log('保存成功:', await res.json());
       // 必要なら画面遷移やリセット
     } else {
       alert('保存に失敗しました');
+      console.error('保存失敗:', await res.text());
     }
   };
 

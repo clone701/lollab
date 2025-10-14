@@ -41,6 +41,12 @@ LoL プレイヤーの**学習・準備・振り返り**を支援する非公式
 ## ディレクトリ構成
 lollab/
 ├─ api/
+├─ public/
+│   ├─ champions/
+│   │   ├─ ahri.png
+│   │   ├─ fizz.png
+│   │   └─ ...
+│   └─ other-images/
 └─ src/
    ├─ app/
    │  ├─ layout.tsx         ← 既存を更新（Navbar/Footer を読み込み）
