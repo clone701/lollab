@@ -10,7 +10,35 @@ import { Champion, CHAMPIONS } from '@/lib/champions';
 export default function ChampionCounterPage() {
   const MAX_RECENTS = 5; // <- 最新5件に制限
 
-  const [champions, setChampions] = useState<Champion[]>([]);
+  // use CHAMPIONS directly to avoid unused setState warning
+  const champions: Champion[] = CHAMPIONS;
+
+  // typed note to avoid `any`
+  type ChampionNote = {
+    id?: number | string;
+    runes?: unknown;
+    spells?: string[];
+    items?: string[];
+    memo?: string;
+    presetName?: string;
+    [key: string]: unknown;
+  };
+
+  // 安全に unknown を ChampionNote に変換するユーティリティ（any を避ける）
+  const toChampionNote = (raw: unknown): ChampionNote | undefined => {
+    if (!raw || typeof raw !== 'object') return undefined;
+    const r = raw as Record<string, unknown>;
+    const note: ChampionNote = {};
+    if ('id' in r) note.id = r['id'] as number | string;
+    if ('runes' in r) note.runes = r['runes'];
+    if ('spells' in r && Array.isArray(r['spells'])) note.spells = r['spells'] as string[];
+    if ('items' in r && Array.isArray(r['items'])) note.items = r['items'] as string[];
+    if ('memo' in r && typeof r['memo'] === 'string') note.memo = r['memo'] as string;
+    if (typeof r['presetName'] === 'string') note.presetName = r['presetName'] as string;
+    else if (typeof r['preset_name'] === 'string') note.presetName = r['preset_name'] as string;
+    return note;
+  };
+
   const [search, setSearch] = useState('');
   const [recent, setRecent] = useState<Champion[]>([]);
   const [myChampion, setMyChampion] = useState<Champion | null>(null);
@@ -18,7 +46,7 @@ export default function ChampionCounterPage() {
   const [selecting, setSelecting] = useState<'me' | 'enemy' | null>('me');
   const [created, setCreated] = useState(false);
   const [loadingShow, setLoadingShow] = useState(false);
-  const [loadedNote, setLoadedNote] = useState<any | null>(null);
+  const [loadedNote, setLoadedNote] = useState<ChampionNote | null>(null);
 
   useEffect(() => {
     // CHAMPIONS を使う設計にしているなら外部 fetch を行わない想定
@@ -34,6 +62,7 @@ export default function ChampionCounterPage() {
 
   // DB検索：my / enemy が揃ったら既存ノートを取得
   useEffect(() => {
+    const controller = new AbortController();
     const fetchNote = async () => {
       if (!myChampion || !enemyChampion) return;
       if (typeof window === 'undefined') return;
@@ -57,28 +86,35 @@ export default function ChampionCounterPage() {
         const q = `user_id=${encodeURIComponent(userId)}&my_champion_id=${encodeURIComponent(
           myChampion.id
         )}&enemy_champion_id=${encodeURIComponent(enemyChampion.id)}`;
-        const res = await fetch(`${backendUrl}/api/notes/champion_notes/get?${q}`);
+        const res = await fetch(`${backendUrl}/api/notes/champion_notes/get?${q}`, { signal: controller.signal });
         if (!res.ok) {
           console.error('ノート読み込み失敗:', await res.text());
           setLoadedNote(null);
           return;
         }
         const data = await res.json();
-        const note = Array.isArray(data) ? data[0] : data;
+        const raw = Array.isArray(data) ? data[0] : data;
+        const note = toChampionNote(raw);
         setLoadedNote(note ?? null);
-      } catch (err) {
-        console.error(err);
-        setLoadedNote(null);
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+          // fetch がキャンセルされた
+        } else {
+          console.error(err);
+          setLoadedNote(null);
+        }
       } finally {
         setLoadingShow(false);
       }
     };
 
     fetchNote();
+    return () => controller.abort();
   }, [myChampion, enemyChampion]);
 
+  // case-insensitive search
   const filtered = champions.filter(c =>
-    c.name.includes(search) || c.id.toLowerCase().includes(search.toLowerCase())
+    c.name.toLowerCase().includes(search.toLowerCase()) || c.id.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleSelect = (champ: Champion) => {

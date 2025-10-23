@@ -32,7 +32,6 @@ export default function ChampionPickerPanel({
   filtered,
   onSelect,
   onReset,
-  onCreate,
   maxListHeight = 240,
 }: Props) {
   return (

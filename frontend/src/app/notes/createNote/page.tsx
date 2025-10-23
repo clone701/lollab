@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import NotesTabBar from '../components/NotesTabBar';
 import CreateChampionNoteForm from '../components/CreateChampionNoteForm';
 import ChampionPickerPanel from '../components/ChampionPickerPanel';
