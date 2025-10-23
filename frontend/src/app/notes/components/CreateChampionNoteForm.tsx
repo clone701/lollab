@@ -21,7 +21,6 @@ type Props = {
     presetName?: string;
   } | null;
   readOnly?: boolean;
-  showMemoControls?: boolean;
 };
 
 export default function CreateChampionNoteForm({
@@ -29,7 +28,6 @@ export default function CreateChampionNoteForm({
   enemyChampion,
   initialNote = null,
   readOnly = false,
-  showMemoControls = true,
 }: Props) {
   // プリセット名（数値ではなく名前を入力して保存する仕様に変更）
   // デフォルトは "自分のキャラ VS 相手のキャラ"（props の name を使って初期化）
@@ -53,7 +51,7 @@ export default function CreateChampionNoteForm({
   const [selectedItems, setSelectedItems] = useState<string[]>(initialNote?.items ?? []);
   const [runes, setRunes] = useState<RuneSelection>(initialNote?.runes ?? defaultRunes);
   const [memo, setMemo] = useState<string>(initialNote?.memo ?? '');
-  const [saving, setSaving] = useState(false);
+  // saving state removed (unused)
 
   // 選択アイテム合計の上限（ゴールド）
   const MAX_ITEM_GOLD = 500;
@@ -124,55 +122,6 @@ export default function CreateChampionNoteForm({
     );
   };
 
-  // ノート保存処理（既存の API 呼び出し）
-  const handleSave = async () => {
-    if (readOnly) return;
-
-    const userId = typeof window !== 'undefined' ? localStorage.getItem('user_id') : null;
-    if (!userId) {
-      alert('ユーザーIDが取得できません。ログインしてください。');
-      return;
-    }
-
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-    if (!backendUrl) {
-      alert('バックエンドURLが未設定です。環境変数 NEXT_PUBLIC_BACKEND_URL を確認してください。');
-      return;
-    }
-
-    const payload = {
-      user_id: userId,
-      my_champion_id: myChampion.id,
-      enemy_champion_id: enemyChampion.id,
-      runes,
-      spells: selectedSpells,
-      items: selectedItems,
-      memo,
-      presetName,
-    };
-
-    try {
-      setSaving(true);
-      const res = await fetch(`${backendUrl}/api/notes/createChampionNotes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        alert('ノートを保存しました');
-      } else {
-        const text = await res.text();
-        console.error('保存エラー:', text);
-        alert('ノートの保存に失敗しました');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('保存中にエラーが発生しました');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   // プリセット名をバックエンドに保存する処理
   // - 保存先 API: /api/presets (仮) — 必要ならエンドポイントに合わせて変更してください
   // - payload にプリセット名・チャンピオン情報・現在の構成を含めて保存
@@ -236,27 +185,25 @@ export default function CreateChampionNoteForm({
       <div className="col-span-3 md:col-span-2 space-y-4">
         {/* プリセット入力（右側にプリセット保存ボタン） */}
         {/* プリセット名ラベルは上、入力欄と保存ボタンは同一行に並べる */}
-        {showMemoControls && (
-          <div className="mb-2 px-3 py-2 border border-gray-200 rounded w-full text-sm transition-colors duration-150">
-            <div className="text-sm font-medium mb-1">プリセット名</div>
-            <div className="flex items-center gap-3">
-              <input
-                value={presetName}
-                onChange={e => setPresetName(e.target.value)}
-                placeholder={`${myChampion.name} VS ${enemyChampion.name}`}
-                className="flex-1 h-10 px-3 border border-gray-200 rounded text-sm transition-colors duration-150 hover:border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-300"
-              />
-              <button
-                type="button"
-                onClick={handleSavePreset}
-                disabled={savingPreset || readOnly}
-                className="h-10 px-4 bg-gray-800 text-white rounded"
-              >
-                {savingPreset ? '保存中...' : '保存'}
-              </button>
-            </div>
+        <div className="mb-2 px-3 py-2 border border-gray-200 rounded w-full text-sm transition-colors duration-150">
+          <div className="text-sm font-medium mb-1">プリセット名</div>
+          <div className="flex items-center gap-3">
+            <input
+              value={presetName}
+              onChange={e => setPresetName(e.target.value)}
+              placeholder={`${myChampion.name} VS ${enemyChampion.name}`}
+              className="flex-1 h-10 px-3 border border-gray-200 rounded text-sm transition-colors duration-150 hover:border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-300"
+            />
+            <button
+              type="button"
+              onClick={handleSavePreset}
+              disabled={savingPreset || readOnly}
+              className="h-10 px-4 bg-gray-800 text-white rounded"
+            >
+              {savingPreset ? '保存中...' : '保存'}
+            </button>
           </div>
-        )}
+        </div>
 
         {/* サモナースペル */}
         <Panel>
@@ -333,7 +280,7 @@ export default function CreateChampionNoteForm({
           {!readOnly ? <RuneSelector value={runes} onChange={v => setRunes(v)} /> : <pre className="text-xs bg-gray-50 p-2 rounded overflow-auto">{JSON.stringify(runes, null, 2)}</pre>}
         </div>
 
-        {/* 対策メモ（ルーンの下に表示)
+        {/* 対策メモ（ルーンの下に表示）
             - 長くなったらこのテキストエリアのみ縦スクロールするように max-h/overflow を指定 */}
         <div className="p-4 border border-transparent rounded bg-white">
           <div className="text-sm font-medium mb-2">対策メモ</div>
@@ -344,16 +291,7 @@ export default function CreateChampionNoteForm({
             placeholder="対策メモを入力"
             className="mb-2 px-3 py-2 border border-gray-200 rounded w-full text-sm transition-colors duration-150 hover:border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-300 min-h-[120px] max-h-[320px] resize-vertical overflow-auto"
           />
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={readOnly || saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
-            >
-              {saving ? '保存中...' : 'ノートを保存'}
-            </button>
-          </div>
+          {/* メモ領域下のリセットボタンは不要なので削除 */}
         </div>
       </div>
 
