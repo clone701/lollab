@@ -22,7 +22,6 @@ type Props = {
     presetName?: string;
   } | null;
   readOnly?: boolean;
-  showMemoControls?: boolean;
 };
 
 export default function CreateChampionNoteForm({
@@ -30,11 +29,7 @@ export default function CreateChampionNoteForm({
   enemyChampion,
   initialNote = null,
   readOnly = false,
-  showMemoControls = true,
 }: Props) {
-  // helper: ローカル定義 CHAMPIONS からアイコン URL を取得する
-  const getIcon = (id: string) => CHAMPIONS.find(c => c.id === id)!.icon;
-
   // プリセット名（数値ではなく名前を入力して保存する仕様に変更）
   // デフォルトは "自分のキャラ VS 相手のキャラ"（props の name を使って初期化）
   const [presetName, setPresetName] = useState<string>(initialNote?.presetName ?? '');
@@ -57,7 +52,7 @@ export default function CreateChampionNoteForm({
   const [selectedItems, setSelectedItems] = useState<string[]>(initialNote?.items ?? []);
   const [runes, setRunes] = useState<RuneSelection>(initialNote?.runes ?? defaultRunes);
   const [memo, setMemo] = useState<string>(initialNote?.memo ?? '');
-  const [saving, setSaving] = useState(false);
+  // saving state removed (unused)
 
   // 選択アイテム合計の上限（ゴールド）
   const MAX_ITEM_GOLD = 500;
@@ -126,55 +121,6 @@ export default function CreateChampionNoteForm({
     setSelectedSpells(prev =>
       prev.includes(id) ? prev.filter(s => s !== id) : prev.length < 2 ? [...prev, id] : [prev[1], id]
     );
-  };
-
-  // ノート保存処理（既存の API 呼び出し）
-  const handleSave = async () => {
-    if (readOnly) return;
-
-    const userId = typeof window !== 'undefined' ? localStorage.getItem('user_id') : null;
-    if (!userId) {
-      alert('ユーザーIDが取得できません。ログインしてください。');
-      return;
-    }
-
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-    if (!backendUrl) {
-      alert('バックエンドURLが未設定です。環境変数 NEXT_PUBLIC_BACKEND_URL を確認してください。');
-      return;
-    }
-
-    const payload = {
-      user_id: userId,
-      my_champion_id: myChampion.id,
-      enemy_champion_id: enemyChampion.id,
-      runes,
-      spells: selectedSpells,
-      items: selectedItems,
-      memo,
-      presetName,
-    };
-
-    try {
-      setSaving(true);
-      const res = await fetch(`${backendUrl}/api/notes/createChampionNotes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        alert('ノートを保存しました');
-      } else {
-        const text = await res.text();
-        console.error('保存エラー:', text);
-        alert('ノートの保存に失敗しました');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('保存中にエラーが発生しました');
-    } finally {
-      setSaving(false);
-    }
   };
 
   // プリセット名をバックエンドに保存する処理

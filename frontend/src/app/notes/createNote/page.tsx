@@ -86,7 +86,6 @@ export default function NotesNewPage() {
               enemyChampion={enemyChampion}
               initialNote={null}
               readOnly={false}
-              showMemoControls={false}
             />
           ) : (
             <div className="text-gray-400 text-center">
