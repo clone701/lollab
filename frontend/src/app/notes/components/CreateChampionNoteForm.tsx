@@ -6,6 +6,7 @@ import RuneSelector, { RuneSelection } from './RuneSelector';
 import SummonerSpellPicker from './summoners/SummonerSpellPicker';
 import { SUMMONER_SPELLS } from '@/lib/summonerSpells';
 import { START_ITEMS } from '@/lib/items';
+import { CHAMPIONS } from '@/lib/champions';
 import { Panel, BORDER_STYLE_1, itemBtnClass } from '@/components/ui/Panel';
 
 type Props = {
@@ -31,6 +32,9 @@ export default function CreateChampionNoteForm({
   readOnly = false,
   showMemoControls = true,
 }: Props) {
+  // helper: ローカル定義 CHAMPIONS からアイコン URL を取得する
+  const getIcon = (id: string) => CHAMPIONS.find(c => c.id === id)!.icon;
+
   // プリセット名（数値ではなく名前を入力して保存する仕様に変更）
   // デフォルトは "自分のキャラ VS 相手のキャラ"（props の name を使って初期化）
   const [presetName, setPresetName] = useState<string>(initialNote?.presetName ?? '');
@@ -236,27 +240,25 @@ export default function CreateChampionNoteForm({
       <div className="col-span-3 md:col-span-2 space-y-4">
         {/* プリセット入力（右側にプリセット保存ボタン） */}
         {/* プリセット名ラベルは上、入力欄と保存ボタンは同一行に並べる */}
-        {showMemoControls && (
-          <div className="mb-2 px-3 py-2 border border-gray-200 rounded w-full text-sm transition-colors duration-150">
-            <div className="text-sm font-medium mb-1">プリセット名</div>
-            <div className="flex items-center gap-3">
-              <input
-                value={presetName}
-                onChange={e => setPresetName(e.target.value)}
-                placeholder={`${myChampion.name} VS ${enemyChampion.name}`}
-                className="flex-1 h-10 px-3 border border-gray-200 rounded text-sm transition-colors duration-150 hover:border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-300"
-              />
-              <button
-                type="button"
-                onClick={handleSavePreset}
-                disabled={savingPreset || readOnly}
-                className="h-10 px-4 bg-gray-800 text-white rounded"
-              >
-                {savingPreset ? '保存中...' : '保存'}
-              </button>
-            </div>
+        <div className="mb-2 px-3 py-2 border border-gray-200 rounded w-full text-sm transition-colors duration-150">
+          <div className="text-sm font-medium mb-1">プリセット名</div>
+          <div className="flex items-center gap-3">
+            <input
+              value={presetName}
+              onChange={e => setPresetName(e.target.value)}
+              placeholder={`${myChampion.name} VS ${enemyChampion.name}`}
+              className="flex-1 h-10 px-3 border border-gray-200 rounded text-sm transition-colors duration-150 hover:border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-300"
+            />
+            <button
+              type="button"
+              onClick={handleSavePreset}
+              disabled={savingPreset || readOnly}
+              className="h-10 px-4 bg-gray-800 text-white rounded"
+            >
+              {savingPreset ? '保存中...' : '保存'}
+            </button>
           </div>
-        )}
+        </div>
 
         {/* サモナースペル */}
         <Panel>
@@ -333,7 +335,7 @@ export default function CreateChampionNoteForm({
           {!readOnly ? <RuneSelector value={runes} onChange={v => setRunes(v)} /> : <pre className="text-xs bg-gray-50 p-2 rounded overflow-auto">{JSON.stringify(runes, null, 2)}</pre>}
         </div>
 
-        {/* 対策メモ（ルーンの下に表示)
+        {/* 対策メモ（ルーンの下に表示）
             - 長くなったらこのテキストエリアのみ縦スクロールするように max-h/overflow を指定 */}
         <div className="p-4 border border-transparent rounded bg-white">
           <div className="text-sm font-medium mb-2">対策メモ</div>
@@ -344,16 +346,7 @@ export default function CreateChampionNoteForm({
             placeholder="対策メモを入力"
             className="mb-2 px-3 py-2 border border-gray-200 rounded w-full text-sm transition-colors duration-150 hover:border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-300 min-h-[120px] max-h-[320px] resize-vertical overflow-auto"
           />
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={readOnly || saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
-            >
-              {saving ? '保存中...' : 'ノートを保存'}
-            </button>
-          </div>
+          {/* メモ領域下のリセットボタンは不要なので削除 */}
         </div>
       </div>
 
