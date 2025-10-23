@@ -65,7 +65,7 @@ export default function Navbar() {
           <nav className="hidden gap-8 md:flex">
             <Link href="/" className="text-sm text-gray-500 hover:text-[var(--foreground)] transition">ホーム</Link>
             <Link href="/champions" className="text-sm text-gray-500 hover:text-[var(--foreground)] transition">チャンピオン</Link>
-            <Link href="/notes" className="text-sm text-gray-500 hover:text-[var(--foreground)] transition">メモ</Link>
+            <Link href="/notes/createNote" className="text-sm text-gray-500 hover:text-[var(--foreground)] transition">メモ</Link>
           </nav>
 
           {/* Right */}

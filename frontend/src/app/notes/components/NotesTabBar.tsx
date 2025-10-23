@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const tabs = [
-  { label: '新規ノート作成', href: '/notes/new' },
-  { label: '汎用ノート', href: '/notes' },
-  { label: 'チャンピオン対策ノート', href: '/notes/counter' },
+  { label: '新規ノート作成', href: '/notes/createNote' },
+  { label: '汎用ノート', href: '/notes/generalNote' },
+  { label: 'チャンピオン対策ノート', href: '/notes/championNote' },
 ];
 
 export default function NotesTabBar() {

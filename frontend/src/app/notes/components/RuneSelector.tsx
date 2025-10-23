@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import {
   RUNE_PATHS,
@@ -52,6 +53,19 @@ export default function RuneSelector({
   value: RuneSelection;
   onChange: (v: RuneSelection) => void;
 }) {
+  // ローカルで直近クリックされたカラム順を保持しておく（最後に押した列を末尾にする）
+  // これを使って、ユニーク選択数が上限を超えた場合に「最後に選んだ列」を解除できるようにする
+  const [secondaryOrder, setSecondaryOrder] = useState<number[]>([]);
+
+  // value.secondaryRunes が外部から変わったときは order を同期（初期化）
+  useEffect(() => {
+    const order: number[] = [];
+    (value.secondaryRunes || []).forEach((v, i) => {
+      if (v != null && v !== 0) order.push(i);
+    });
+    setSecondaryOrder(order);
+  }, [value.secondaryRunes]);
+
   // Primary Path
   const handlePrimaryPath = (id: number) => {
     onChange({ ...value, primaryPath: id, keystone: null, primaryRunes: [] });
@@ -71,6 +85,8 @@ export default function RuneSelector({
 
   // Secondary Path
   const handleSecondaryPath = (id: number) => {
+    // パス変更時は secondaryRunes をクリアし、クリック履歴もリセット
+    setSecondaryOrder([]);
     onChange({ ...value, secondaryPath: id, secondaryRunes: [] });
   };
 
@@ -78,6 +94,43 @@ export default function RuneSelector({
   const handleSecondaryRune = (row: number, id: number) => {
     const newRunes = [...(value.secondaryRunes || [])];
     newRunes[row] = id;
+
+    // 選択中のユニーク値数を確認
+    const selected = newRunes.filter(v => v != null && v !== 0);
+    const unique = Array.from(new Set(selected));
+
+    // もしユニーク数が 2 を超えるなら、直近で選択された（＝secondaryOrder の末尾）列のうち
+    // current row を除いた「最後に選んだ列」を解除して、今選んだものを有効にする
+    if (unique.length > 2) {
+      // 現在の order を更新（既にある row は先に取り除いて、新しい row を末尾にする）
+      let order = secondaryOrder.filter(r => r !== row);
+      order.push(row);
+
+      // 末尾の一つ前が「最後に選んだ列」になる（current row の手前）
+      // 無ければ（保険で）最初に見つかる row を対象にする
+      const idxToRemove = order.length >= 2 ? order[order.length - 2] : order.find(r => r !== row);
+
+      if (idxToRemove !== undefined) {
+        // 解除（未選択状態にする）
+        newRunes[idxToRemove] = 0;
+        // order から解除した列を除外（current row は既に末尾に残る）
+        order = order.filter(r => r !== idxToRemove);
+      }
+
+      setSecondaryOrder(order);
+      onChange({ ...value, secondaryRunes: newRunes });
+      return;
+    }
+
+    // ユニーク数が上限内なら通常通り order を更新して state を流す
+    let order = secondaryOrder.filter(r => r !== row);
+    if (id != null && id !== 0) {
+      order.push(row);
+    } else {
+      // クリックで解除した場合は order から除外
+      order = order.filter(r => r !== row);
+    }
+    setSecondaryOrder(order);
     onChange({ ...value, secondaryRunes: newRunes });
   };
 
