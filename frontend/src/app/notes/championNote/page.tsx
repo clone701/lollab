@@ -5,39 +5,40 @@ import Image from 'next/image';
 import NotesTabBar from '../components/NotesTabBar';
 import ChampionNoteForm from '../components/ChampionNoteForm';
 import ChampionPickerPanel from '../components/ChampionPickerPanel';
+import { RuneSelection } from '../components/RuneSelector';
 import { Champion, CHAMPIONS } from '@/lib/champions';
+
+// move type and converter out of component so it's stable for hooks
+type ChampionNote = {
+  id?: number | string;
+  runes?: RuneSelection;
+  spells?: string[];
+  items?: string[];
+  memo?: string;
+  presetName?: string;
+  [key: string]: unknown;
+};
+
+const toChampionNote = (raw: unknown): ChampionNote | undefined => {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Record<string, unknown>;
+  const note: ChampionNote = {};
+  if ('id' in r) note.id = r['id'] as number | string;
+  // simple runtime check and cast to RuneSelection
+  if ('runes' in r && r['runes'] && typeof r['runes'] === 'object') note.runes = r['runes'] as RuneSelection;
+  if ('spells' in r && Array.isArray(r['spells'])) note.spells = r['spells'] as string[];
+  if ('items' in r && Array.isArray(r['items'])) note.items = r['items'] as string[];
+  if ('memo' in r && typeof r['memo'] === 'string') note.memo = r['memo'] as string;
+  if (typeof r['presetName'] === 'string') note.presetName = r['presetName'] as string;
+  else if (typeof r['preset_name'] === 'string') note.presetName = r['preset_name'] as string;
+  return note;
+};
 
 export default function ChampionCounterPage() {
   const MAX_RECENTS = 5; // <- 最新5件に制限
 
   // use CHAMPIONS directly to avoid unused setState warning
   const champions: Champion[] = CHAMPIONS;
-
-  // typed note to avoid `any`
-  type ChampionNote = {
-    id?: number | string;
-    runes?: unknown;
-    spells?: string[];
-    items?: string[];
-    memo?: string;
-    presetName?: string;
-    [key: string]: unknown;
-  };
-
-  // 安全に unknown を ChampionNote に変換するユーティリティ（any を避ける）
-  const toChampionNote = (raw: unknown): ChampionNote | undefined => {
-    if (!raw || typeof raw !== 'object') return undefined;
-    const r = raw as Record<string, unknown>;
-    const note: ChampionNote = {};
-    if ('id' in r) note.id = r['id'] as number | string;
-    if ('runes' in r) note.runes = r['runes'];
-    if ('spells' in r && Array.isArray(r['spells'])) note.spells = r['spells'] as string[];
-    if ('items' in r && Array.isArray(r['items'])) note.items = r['items'] as string[];
-    if ('memo' in r && typeof r['memo'] === 'string') note.memo = r['memo'] as string;
-    if (typeof r['presetName'] === 'string') note.presetName = r['presetName'] as string;
-    else if (typeof r['preset_name'] === 'string') note.presetName = r['preset_name'] as string;
-    return note;
-  };
 
   const [search, setSearch] = useState('');
   const [recent, setRecent] = useState<Champion[]>([]);
@@ -96,9 +97,10 @@ export default function ChampionCounterPage() {
         const raw = Array.isArray(data) ? data[0] : data;
         const note = toChampionNote(raw);
         setLoadedNote(note ?? null);
-      } catch (err: any) {
-        if (err.name === 'AbortError') {
-          // fetch がキャンセルされた
+      } catch (err: unknown) {
+        // handle AbortError without using `any`
+        if (typeof DOMException !== 'undefined' && err instanceof DOMException && err.name === 'AbortError') {
+          // fetch was aborted, nothing to do
         } else {
           console.error(err);
           setLoadedNote(null);
