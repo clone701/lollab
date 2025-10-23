@@ -6,7 +6,6 @@ import RuneSelector, { RuneSelection } from './RuneSelector';
 import SummonerSpellPicker from './summoners/SummonerSpellPicker';
 import { SUMMONER_SPELLS } from '@/lib/summonerSpells';
 import { START_ITEMS } from '@/lib/items';
-import { CHAMPIONS } from '@/lib/champions';
 import { Panel, BORDER_STYLE_1, itemBtnClass } from '@/components/ui/Panel';
 
 type Props = {
