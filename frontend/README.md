@@ -46,7 +46,7 @@ lollab/
 │   │   ├─ ahri.png
 │   │   ├─ fizz.png
 │   │   └─ ...
-│   └─ other-images/
+│   └─ otherimages/
 └─ src/
    ├─ app/
    │  ├─ layout.tsx         ← 既存を更新（Navbar/Footer を読み込み）

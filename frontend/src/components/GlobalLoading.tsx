@@ -12,7 +12,7 @@ export default function GlobalLoading({ loading }: { loading: boolean }) {
       }}
     >
       <Image
-        src="/otherImages/nunu.gif"
+        src="/loading/nunu.gif"
         alt="Loading"
         width={240}   // 48 x 5 = 240
         height={240}  // 48 x 5 = 240
