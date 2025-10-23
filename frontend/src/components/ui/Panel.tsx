@@ -63,37 +63,6 @@ export function Panel({ children, className = '' }: Props) {
 }
 
 /**
- * BorderStyle1
- *
- * 用途:
- * - 単独で「入力欄などに使う枠線スタイル」を適用したいときに使うラッパーコンポーネント。
- * - <BorderStyle1>...</BorderStyle1> のように中身をラップして使うことを想定。
- *
- * Tailwind クラス説明（枠線スタイル1）:
- * - mb-2: 要素下のマージンを小さく取る（margin-bottom: 0.5rem）。
- * - px-3: 左右のパディングを設定（padding-left/right: 0.75rem）。
- * - py-2: 上下のパディングを設定（padding-top/bottom: 0.5rem）。
- * - border: 1px ボーダーを有効化（枠線の存在を示す）。
- * - border-gray-200: 枠線色を薄いグレーに設定（控えめな境界線）。
- * - rounded: 角を丸める（border-radius: 0.25rem）。
- * - w-full: 横幅を親要素いっぱいに広げる（width: 100%）。
- * - text-sm: 小さいフォントサイズ（入力に適したサイズ）。
- * - focus:outline-none: フォーカス時のブラウザ既定アウトラインを消す（フォーカスリングは別管理）。
- * - focus:ring-0: Tailwind の ring を無効化（外枠が太くならないように）。
- *
- * 備考:
- * - ホバー・フォーカス時の色変化等は含めていません（ユーザー指定で追加してください）。
- * - className で中身や外側の追加スタイルを渡せます。
- *
- * 使い方例:
- * - ラッパーとして: <BorderStyle1><input className="bg-transparent w-full" /></BorderStyle1>
- * - クラス文字列を直接使いたい場合はここでエクスポートして再利用する設計も可能です。
- */
-export function BorderStyle1({ children, className = '' }: Props) {
-  return <div className={`${BORDER_STYLE_1} ${className}`.trim()}>{children}</div>;
-}
-
-/**
  * 既存コード互換のため default export も残す
  */
 export default Panel;
