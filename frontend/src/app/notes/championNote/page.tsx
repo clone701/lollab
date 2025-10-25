@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import NotesTabBar from '../components/NotesTabBar';
+import GlobalLoading from '@/components/GlobalLoading';
 import ChampionNoteForm from '../components/ChampionNoteForm';
 import ChampionPickerPanel from '../components/ChampionPickerPanel';
 import { RuneSelection } from '../components/RuneSelector';
@@ -177,7 +178,7 @@ export default function ChampionCounterPage() {
         {/* 右パネル */}
         <div className="flex-1 flex items-start justify-center min-h-[200px] border border-[var(--border)] bg-white rounded-xl p-6">
           {loadingShow ? (
-            <div>読み込み中...</div>
+            <GlobalLoading loading={true} />
           ) : myChampion && enemyChampion ? (
             loadedNote ? (
               // 取得したノートを読み取り専用フォームで表示
@@ -194,7 +195,7 @@ export default function ChampionCounterPage() {
                   <div className="flex items-center justify-center gap-6 mt-3">
                     <div className="flex items-center gap-3">
                       <Image
-                        src={`https://ddragon.leagueoflegends.com/cdn/14.10.1/img/champion/${myChampion.id}.png`}
+                        src={myChampion.icon}
                         alt={myChampion.name}
                         width={48}
                         height={48}
@@ -208,7 +209,7 @@ export default function ChampionCounterPage() {
                     <div className="text-xs text-gray-400">vs</div>
                     <div className="flex items-center gap-3">
                       <Image
-                        src={`https://ddragon.leagueoflegends.com/cdn/14.10.1/img/champion/${enemyChampion.id}.png`}
+                        src={enemyChampion.icon}
                         alt={enemyChampion.name}
                         width={48}
                         height={48}

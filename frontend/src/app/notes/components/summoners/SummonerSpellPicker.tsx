@@ -14,24 +14,39 @@ type Props = {
   selectedIds: string[];
   onToggle: (id: string) => void;
   readOnly?: boolean;
+  mode?: 'create' | 'display'; // ← 追加: 表示モード or 作成モード
 };
 
-export default function SummonerSpellPicker({ spells, selectedIds, onToggle, readOnly = false }: Props) {
+export default function SummonerSpellPicker({
+  spells,
+  selectedIds,
+  onToggle,
+  readOnly = false,
+  mode = 'create',
+}: Props) {
   return (
     <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
       {spells.map(s => {
         const active = selectedIds.includes(s.id);
-        // 非選択のときに選択上限(2)に達していれば追加不可として見た目を無効化
-        const disabled = readOnly || (!active && selectedIds.length >= 2);
+        // 非選択のときに選択上限(2)に達していれば追加不可（見た目で無効化）
+        const limitDisabled = !active && selectedIds.length >= 2;
+        // 操作自体は readOnly または limitDisabled で無効化するが、
+        // 見た目の無効化（opacity）は limitDisabled のみで行う
+        const interactionDisabled = readOnly || limitDisabled;
+        const styleDisabled = limitDisabled;
 
+        // display モードでは、選択されていないサモナースペルは枠ごと非表示にする
+        if (mode === 'display' && !active) return null;
+
+        // display/create 両方で表示するものは通常レンダリング
         return (
           <button
             key={s.id}
             type="button"
-            onClick={() => onToggle(s.id)}
-            disabled={disabled}
+            onClick={() => !interactionDisabled && onToggle(s.id)}
+            disabled={interactionDisabled}
             aria-pressed={active}
-            className={itemBtnClass({ active, disabled })}
+            className={itemBtnClass({ active, disabled: styleDisabled })}
           >
             <Image src={s.icon} alt={s.name} width={44} height={44} />
             <div className={`text-xs text-center ${active ? 'text-pink-700' : ''}`}>{s.name}</div>

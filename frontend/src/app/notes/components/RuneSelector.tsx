@@ -49,9 +49,11 @@ const getRunes = (pathId: number) => {
 export default function RuneSelector({
   value,
   onChange,
+  readOnly = false,
 }: {
   value: RuneSelection;
   onChange: (v: RuneSelection) => void;
+  readOnly?: boolean;
 }) {
   // ローカルで直近クリックされたカラム順を保持しておく（最後に押した列を末尾にする）
   // これを使って、ユニーク選択数が上限を超えた場合に「最後に選んだ列」を解除できるようにする
@@ -100,7 +102,7 @@ export default function RuneSelector({
     const unique = Array.from(new Set(selected));
 
     // もしユニーク数が 2 を超えるなら、直近で選択された（＝secondaryOrder の末尾）列のうち
-    // current row を除いた「最後に選んだ列」を解除して、今選んだものを有効にする
+    // current row を除った「最後に選んだ列」を解除して、今選んだものを有効にする
     if (unique.length > 2) {
       // 現在の order を更新（既にある row は先に取り除いて、新しい row を末尾にする）
       let order = secondaryOrder.filter(r => r !== row);
@@ -157,8 +159,9 @@ export default function RuneSelector({
               <button
                 key={path.id}
                 className={`p-1 rounded ${value.primaryPath === path.id ? 'ring-2 ring-blue-400' : ''}`}
-                onClick={() => handlePrimaryPath(path.id)}
+                onClick={() => !readOnly && handlePrimaryPath(path.id)}
                 type="button"
+                disabled={readOnly}
               >
                 <Image src={path.icon} alt={path.name} width={36} height={36} />
               </button>
@@ -170,8 +173,9 @@ export default function RuneSelector({
               <button
                 key={rune.id}
                 className={`p-1 rounded ${value.keystone === rune.id ? 'ring-2 ring-blue-400' : ''}`}
-                onClick={() => handleKeystone(rune.id)}
+                onClick={() => !readOnly && handleKeystone(rune.id)}
                 type="button"
+                disabled={readOnly}
               >
                 <Image src={rune.icon} alt={rune.name} width={36} height={36} />
               </button>
@@ -184,8 +188,9 @@ export default function RuneSelector({
                 <button
                   key={rune.id}
                   className={`p-1 rounded ${value.primaryRunes[i] === rune.id ? 'ring-2 ring-blue-400' : ''}`}
-                  onClick={() => handlePrimaryRune(i, rune.id)}
+                  onClick={() => !readOnly && handlePrimaryRune(i, rune.id)}
                   type="button"
+                  disabled={readOnly}
                 >
                   <Image src={rune.icon} alt={rune.name} width={32} height={32} />
                 </button>
@@ -201,8 +206,9 @@ export default function RuneSelector({
               <button
                 key={path.id}
                 className={`p-1 rounded ${value.secondaryPath === path.id ? 'ring-2 ring-purple-400' : ''}`}
-                onClick={() => handleSecondaryPath(path.id)}
+                onClick={() => !readOnly && handleSecondaryPath(path.id)}
                 type="button"
+                disabled={readOnly}
               >
                 <Image src={path.icon} alt={path.name} width={36} height={36} />
               </button>
@@ -215,8 +221,9 @@ export default function RuneSelector({
                 <button
                   key={rune.id}
                   className={`p-1 rounded ${value.secondaryRunes[i] === rune.id ? 'ring-2 ring-purple-400' : ''}`}
-                  onClick={() => handleSecondaryRune(i, rune.id)}
+                  onClick={() => !readOnly && handleSecondaryRune(i, rune.id)}
                   type="button"
+                  disabled={readOnly}
                 >
                   <Image src={rune.icon} alt={rune.name} width={32} height={32} />
                 </button>
@@ -233,8 +240,9 @@ export default function RuneSelector({
                 <button
                   key={shard.id}
                   className={`p-1 rounded ${value.shards[i] === shard.id ? 'ring-2 ring-green-400' : ''}`}
-                  onClick={() => handleShard(i, shard.id)}
+                  onClick={() => !readOnly && handleShard(i, shard.id)}
                   type="button"
+                  disabled={readOnly}
                 >
                   <Image src={shard.icon} alt={shard.name} width={28} height={28} />
                 </button>

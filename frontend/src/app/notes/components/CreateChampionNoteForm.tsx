@@ -277,7 +277,8 @@ export default function CreateChampionNoteForm({
         {/* ルーン */}
         <div className={BORDER_STYLE_1}>
           <div className="text-sm font-medium mb-3">ルーン</div>
-          {!readOnly ? <RuneSelector value={runes} onChange={v => setRunes(v)} /> : <pre className="text-xs bg-gray-50 p-2 rounded overflow-auto">{JSON.stringify(runes, null, 2)}</pre>}
+          {/* RuneSelector を常に表示し、readOnly プロップで編集可能/読み取り専用を切り替える */}
+          <RuneSelector value={runes} onChange={v => setRunes(v)} readOnly={readOnly} />
         </div>
 
         {/* 対策メモ（ルーンの下に表示）
@@ -291,7 +292,6 @@ export default function CreateChampionNoteForm({
             placeholder="対策メモを入力"
             className="mb-2 px-3 py-2 border border-gray-200 rounded w-full text-sm transition-colors duration-150 hover:border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-300 min-h-[120px] max-h-[320px] resize-vertical overflow-auto"
           />
-          {/* メモ領域下のリセットボタンは不要なので削除 */}
         </div>
       </div>
 
