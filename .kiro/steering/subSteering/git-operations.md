@@ -4,6 +4,35 @@
 
 This steering document defines the standardized Git workflow for committing changes and creating pull requests. This document should only be referenced when users request Git-related operations.
 
+## Standard Branch Creation Workflow
+
+When a user requests "XXブランチを作成して" (create XX branch), follow this exact sequence:
+
+### Step 1: Fetch Latest Changes
+```bash
+git fetch origin
+```
+
+### Step 2: Switch to Main Branch
+```bash
+git checkout main
+```
+
+### Step 3: Pull Latest Main
+```bash
+git pull origin main
+```
+
+### Step 4: Create New Branch from Main
+```bash
+git checkout -b [branch-name]
+```
+
+**Complete Command Sequence:**
+```bash
+git fetch origin ; git checkout main ; git pull origin main ; git checkout -b [branch-name]
+```
+
 ## Standard Commit Workflow
 
 When a user requests "コミットして" (commit), follow this exact sequence:
@@ -25,10 +54,11 @@ git commit -m "descriptive commit message"
 ```
 
 **Commit Message Format:**
-- Use conventional commit format: `type: description`
+- Use format: `[branch-name] type: Japanese description`
+- Example: `kiro-1 feat: Git操作ガイドラインを追加`
 - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
-- Keep description concise but descriptive
-- Use English for commit messages
+- Keep description concise but descriptive in Japanese
+- Include branch name prefix for traceability
 
 ### Step 3: Create Pull Request
 After successful commit, create a pull request:
@@ -94,8 +124,8 @@ git branch
 ## Pull Request Guidelines
 
 ### PR Title Format:
-- Use same format as commit messages
-- Be descriptive and concise
+- Use same format as commit messages: `[branch-name] type: Japanese description`
+- Be descriptive and concise in Japanese
 
 ### PR Description Should Include:
 - Summary of changes
@@ -104,6 +134,12 @@ git branch
 - Testing performed
 
 ## Automation Rules
+
+### When User Says "XXブランチを作成して":
+1. **MUST** execute git fetch origin ; git checkout main ; git pull origin main ; git checkout -b [branch-name]
+2. **MUST** verify branch creation was successful
+3. **MUST** confirm current branch is the newly created one
+4. **SHOULD** inform user of successful branch creation
 
 ### When User Says "コミットして":
 1. **MUST** execute git add . ; git status
