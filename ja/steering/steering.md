@@ -11,7 +11,8 @@
 この文書を読んだ後、以下の順序で進んでください：
 1. #[[file:subSteering/ai-coding-workflow.md]] - 開発ワークフローガイダンス
 2. 必要に応じて`subSteering/`内の他のステアリング文書
-3. 技術仕様のための関連する#[[file:docs/]]ファイル
+3. #[[file:subSteering/git-operations.md]] - **ユーザーがGit操作を要求した場合のみ**
+4. 技術仕様のための関連する#[[file:docs/]]ファイル
 
 ## 言語使用ルール
 
@@ -93,6 +94,11 @@ ja/
 - **フェーズ3（テスト）**: #[[file:docs/development-guidelines.md]], #[[file:docs/architecture.md]]
 - **フェーズ4（実装）**: #[[file:docs/development-guidelines.md]], #[[file:docs/glossary.md]]
 - **フェーズ5（レビュー）**: #[[file:docs/development-guidelines.md]], #[[file:docs/architecture.md]]
+
+## Git操作ガイドライン
+
+### ユーザーがGit操作を要求した場合：
+- 標準化されたGitワークフローのために#[[file:subSteering/git-operations.md]]を**必ず**参照する
 
 ## コンプライアンス要件
 

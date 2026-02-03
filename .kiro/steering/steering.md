@@ -11,7 +11,8 @@ This is the primary steering document that **MUST** be read first before any dev
 After reading this document, proceed to:
 1. #[[file:subSteering/ai-coding-workflow.md]] - For development workflow guidance
 2. Other steering documents in `subSteering/` as needed
-3. Relevant #[[file:docs/]] files for technical specifications
+3. #[[file:subSteering/git-operations.md]] - **ONLY when users request Git operations**
+4. Relevant #[[file:docs/]] files for technical specifications
 
 ## Language Usage Rules
 
@@ -93,6 +94,11 @@ ja/
 - **Phase 3 (Testing)**: #[[file:docs/development-guidelines.md]], #[[file:docs/architecture.md]]
 - **Phase 4 (Implementation)**: #[[file:docs/development-guidelines.md]], #[[file:docs/glossary.md]]
 - **Phase 5 (Review)**: #[[file:docs/development-guidelines.md]], #[[file:docs/architecture.md]]
+
+## Git Operations Guidelines
+
+### When Users Request Git Operations:
+- **MUST** reference #[[file:subSteering/git-operations.md]] for standardized Git workflow
 
 ## Compliance Requirements
 
