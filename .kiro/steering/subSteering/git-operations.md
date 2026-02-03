@@ -61,9 +61,9 @@ git commit -m "descriptive commit message"
 - Include branch name prefix for traceability
 
 ### Step 3: Create Pull Request
-After successful commit, create a pull request:
+After successful commit, push branch and create pull request:
 ```bash
-git push origin [current-branch-name]
+git push -u origin [current-branch-name]
 ```
 
 Then guide the user to create a pull request through their Git platform interface.
@@ -134,6 +134,12 @@ git branch
 - Testing performed
 
 ## Automation Rules
+
+### When User Says "ぷるりく" or "プルリクエスト":
+1. **MUST** execute git push -u origin [current-branch-name]
+2. **MUST** verify push was successful
+3. **SHOULD** provide PR template information
+4. **SHOULD** guide user to create PR through platform interface
 
 ### When User Says "XXブランチを作成して":
 1. **MUST** execute git fetch origin ; git checkout main ; git pull origin main ; git checkout -b [branch-name]

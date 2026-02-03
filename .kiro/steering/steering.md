@@ -4,16 +4,6 @@
 
 This is the primary steering document that **MUST** be read first before any development work. It defines the fundamental guidelines for managing multilingual documentation, user interactions, and development workflows in Kiro projects.
 
-## Critical Reading Order
-
-**This document MUST be read first before consulting any other steering documents or beginning development work.**
-
-After reading this document, proceed to:
-1. #[[file:subSteering/ai-coding-workflow.md]] - For development workflow guidance
-2. Other steering documents in `subSteering/` as needed
-3. #[[file:subSteering/git-operations.md]] - **ONLY when users request Git operations**
-4. Relevant #[[file:docs/]] files for technical specifications
-
 ## Language Usage Rules
 
 ### User Interactions
@@ -80,13 +70,11 @@ ja/
 - Japanese files: Same naming in respective `ja/` folders (e.g., `requirements.md`)
 - Maintain identical folder structures between English and Japanese versions
 
-## Mandatory Reading Requirements
+## Development Workflow Guidelines
 
-### Before Starting Any Development Work:
-1. **MUST** read this `steering.md` file completely
-2. **MUST** read `subSteering/ai-coding-workflow.md` for workflow guidance
-3. **MUST** reference appropriate #[[file:docs/]] files for technical specifications
-4. **MUST** follow the 5-phase development workflow without exception
+### When Starting Development Work:
+- **MUST** reference #[[file:subSteering/ai-coding-workflow.md]] for 5-phase workflow guidance
+- **MUST** follow the sequential development phases without exception
 
 ### Documentation References by Development Phase:
 - **Phase 1 (Requirements)**: #[[file:docs/product-requirements.md]], #[[file:docs/glossary.md]]
