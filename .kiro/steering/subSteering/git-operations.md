@@ -60,13 +60,16 @@ git commit -m "descriptive commit message"
 - Keep description concise but descriptive in Japanese
 - Include branch name prefix for traceability
 
-### Step 3: Create Pull Request
-After successful commit, push branch and create pull request:
+### Step 3: Automatic Pull Request Command Presentation
+After successful commit, **MUST** immediately present the pull request command:
 ```bash
 git push -u origin [current-branch-name]
 ```
 
-Then guide the user to create a pull request through their Git platform interface.
+**Automatic Workflow:**
+- Execute the push command immediately after commit success
+- Confirm push was successful
+- Guide the user to create a pull request through their Git platform interface
 
 ## Error Handling
 
@@ -135,12 +138,6 @@ git branch
 
 ## Automation Rules
 
-### When User Says "ぷるりく" or "プルリクエスト":
-1. **MUST** execute git push -u origin [current-branch-name]
-2. **MUST** verify push was successful
-3. **SHOULD** provide PR template information
-4. **SHOULD** guide user to create PR through platform interface
-
 ### When User Says "XXブランチを作成して":
 1. **MUST** execute git fetch origin ; git checkout main ; git pull origin main ; git checkout -b [branch-name]
 2. **MUST** verify branch creation was successful
@@ -152,7 +149,7 @@ git branch
 2. **MUST** review output carefully for any issues
 3. **MUST** only proceed if status is clean
 4. **MUST** execute git commit with appropriate message
-5. **SHOULD** offer to create pull request
+5. **MUST** immediately offer pull request creation after successful commit
 
 ### Error Response:
 - Report errors in Japanese to user
