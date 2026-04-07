@@ -1,7 +1,7 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Security Scan on Python Save",
-  "description": "Pythonファイル保存時にbanditでセキュリティ脆弱性をスキャン",
+  "description": "Pythonファイル保存時にbanditでセキュリティ脆弱性をスキャン - 現在無効化（Windows環境では手動実行を推奨）",
   "version": "1",
   "when": {
     "type": "fileEdited",
@@ -11,7 +11,7 @@
   },
   "then": {
     "type": "runCommand",
-    "command": "bandit -r backend -f txt --severity-level medium --confidence-level medium || exit 0",
+    "command": "python -m bandit -r backend -f txt --severity-level medium --confidence-level medium",
     "timeout": 60
   }
 }

@@ -16,37 +16,6 @@
 5. **データ管理** (storage.ts, champions.ts, items.ts, runeData.ts)
 6. **認証** (NextAuth, Google OAuth)
 
----
-
-## Phase 1: 基盤（Foundation）
-
-### Spec 1-1: 基本UI構造
-**目的**: アプリケーション全体の土台を構築
-
-**内容**:
-- RootLayout (layout.tsx)
-- Navbar (ロゴ、ナビゲーション、認証ボタン/アバター)
-- Footer (著作権表示)
-- GlobalLoading (右下固定ローディング)
-- グローバルスタイル (globals.css)
-
-**理由**: 全ての画面で使用される共通構造
-
-**期間**: 2-3時間
-
-**依存**: なし
-
-**ファイル**:
-```
-frontend/src/app/layout.tsx
-frontend/src/app/globals.css
-frontend/src/components/Navbar.tsx
-frontend/src/components/Footer.tsx
-frontend/src/components/GlobalLoading.tsx
-```
-
----
-
 ### Spec 1-2: 共通コンポーネント
 **目的**: 他の機能で再利用される基本部品を構築
 
@@ -218,7 +187,7 @@ frontend/src/lib/summonerSpells.ts
 ## 推奨実装順序（優先度順）
 
 ### 最優先（MVP）
-1. ✅ **Spec 1-1: 基本UI構造** ← まずこれ
+1. ✅ **Spec 1-1: 基本UI構造**
 2. ✅ **Spec 1-2: 共通コンポーネント**
 3. ✅ **Spec 1-3: 認証システム**
 4. ✅ **Spec 2-1: サモナー検索機能**
@@ -233,36 +202,6 @@ frontend/src/lib/summonerSpells.ts
 
 ---
 
-## 実装戦略
-
-### 削除対象
-Phase 1-2の実装開始前に以下を削除:
-```
-frontend/src/app/layout.tsx
-frontend/src/app/page.tsx
-frontend/src/app/globals.css
-frontend/src/components/Navbar.tsx
-frontend/src/components/Footer.tsx
-frontend/src/components/GlobalLoading.tsx
-frontend/src/components/SearchBar.tsx
-frontend/src/components/RecentChips.tsx
-frontend/src/components/PinnedChips.tsx
-frontend/src/components/ui/Panel.tsx
-frontend/src/app/notes/ (全体)
-```
-
-### 保持対象
-以下は削除せず、参照用として保持:
-```
-frontend/src/lib/champions.ts (データ定義)
-frontend/src/lib/items.ts (データ定義)
-frontend/src/lib/runeData.ts (データ定義)
-frontend/src/lib/summonerSpells.ts (データ定義)
-frontend/src/lib/supabase.ts (設定)
-frontend/src/app/api/auth/ (認証設定)
-frontend/src/app/providers.tsx (プロバイダー設定)
-```
-
 ### 参考資料
 - `ui-patterns.md`: UIパターンの詳細実装例
 - `docs/`: プロダクト要件、設計書
@@ -272,18 +211,10 @@ frontend/src/app/providers.tsx (プロバイダー設定)
 
 ## 次のアクション
 
-1. **Spec 1-1を作成**
+- **Spec 1-2: 共通コンポーネント**
    - 基本UI構造のSpec作成
    - Requirements-First または Design-First を選択
    - Kiroに実装させる
-
-2. **順次進める**
-   - 各Specを順番に作成・実装
-   - 前のSpecが完了してから次へ
-
-3. **検証**
-   - 各Spec完了後に動作確認
-   - 必要に応じて調整
 
 ---
 
