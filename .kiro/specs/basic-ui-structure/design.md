@@ -53,152 +53,72 @@ RootLayout (layout.tsx)
 
 **責務**:
 - アプリケーション全体の基本構造を提供
-- メタデータ設定
+- メタデータ設定（title, description）
 - グローバルスタイル適用
 - Providersでラップ
 
-**実装詳細**:
-
-```typescript
-import type { Metadata } from 'next';
-import { Providers } from './providers';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import './globals.css';
-
-export const metadata: Metadata = {
-  title: 'LoL Lab',
-  description: 'League of Legends戦略分析ツール',
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="ja">
-      <body>
-        <Providers>
-          <Navbar />
-          <main className="mx-auto max-w-6xl px-4">
-            {children}
-          </main>
-          <Footer />
-        </Providers>
-      </body>
-    </html>
-  );
-}
-```
-
-**レイアウト仕様**:
-- 言語: `lang="ja"`
-- 最大幅: `max-w-6xl` (1152px)
-- 水平中央揃え: `mx-auto`
-- 左右パディング: `px-4` (16px)
+**構成**:
+- HTML言語属性: `ja`
+- メインコンテンツ最大幅: 1152px
+- 水平中央揃え、左右パディング: 16px
 
 ### 2. Navbar (`components/Navbar.tsx`)
 
 **責務**:
-- アプリケーションロゴ表示
+- アプリケーションロゴとベータバッジ表示
 - ナビゲーションリンク提供
 - 認証状態表示
 - ログイン/ログアウト機能
 
-**実装詳細**:
-
-```typescript
-'use client';
-
-import Link from 'next/link';
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { useContext } from 'react';
-import { LoadingContext } from '@/lib/contexts/LoadingContext';
-
-export default function Navbar() {
-  const { data: session, status } = useSession();
-  const { setLoading } = useContext(LoadingContext);
-
-  const handleSignIn = () => {
-    setLoading(true);
-    signIn('google');
-  };
-
-  const handleSignOut = () => {
-    setLoading(true);
-    signOut();
-  };
-
-  return (
-    <header className="bg-white border-b border-[var(--border)] text-[var(--foreground)] sticky top-0 z-40">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        {/* Left: Logo */}
-        <div className="flex items-center gap-2">
-          <Link href="/" className="text-lg font-bold tracking-tight">
-            LoL Lab
-          </Link>
-          <span className="ml-1 bg-gray-100 text-gray-500 text-xs rounded px-2 py-0.5 border border-gray-200">
-            ベータ
-          </span>
-        </div>
-
-        {/* Center: Navigation */}
-        <nav className="hidden gap-8 md:flex">
-          <Link
-            href="/"
-            className="text-sm text-gray-500 hover:text-[var(--foreground)] transition"
-          >
-            ホーム
-          </Link>
-        </nav>
-
-        {/* Right: User Menu */}
-        <div className="flex items-center gap-2">
-          {status === 'loading' ? (
-            <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200" />
-          ) : session ? (
-            <>
-              {session.user?.image && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={session.user.image}
-                  alt={session.user.name || 'User'}
-                  className="h-8 w-8 rounded-full"
-                />
-              )}
-              <button
-                onClick={handleSignOut}
-                className="bg-gray-700 text-white px-4 py-1.5 rounded font-medium text-sm hover:bg-gray-900 transition"
-              >
-                ログアウト
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={handleSignIn}
-              className="bg-gray-700 text-white px-4 py-1.5 rounded font-medium text-sm hover:bg-gray-900 transition"
-            >
-              ログイン
-            </button>
-          )}
-        </div>
-      </div>
-    </header>
-  );
-}
-```
-
-**スタイル仕様**:
-- 高さ: `h-14` (56px)
-- 位置: `sticky top-0 z-40`
+**レイアウト**:
+- 高さ: 56px
+- 位置: 上部固定（sticky）
 - 背景: 白 + 下ボーダー
-- レスポンシブ: モバイルではナビゲーション非表示 (`hidden md:flex`)
+- レスポンシブ: モバイルではナビゲーションリンク非表示
 
-**認証状態**:
-- `loading`: アニメーションするプレースホルダー
-- `authenticated`: ユーザーアバター + ログアウトボタン
+**ロゴとベータバッジ**:
+- ロゴ「LoL Lab」:
+  - フォントサイズ: `text-2xl`（24px）
+  - フォントウェイト: `font-bold`（700）
+  - テキストカラー: `text-gray-900`（黒系）
+  - レタースペーシング: `tracking-tight`
+- ベータバッジ:
+  - 背景: `bg-gray-100`（グレー系）
+  - テキスト: `text-gray-600`
+  - フォントサイズ: `text-xs`
+  - パディング: `px-2.5 py-1`
+  - 角丸: `rounded-full`
+  - フォントウェイト: `font-semibold`（600）
+
+**認証状態UI**:
+- `loading`: アニメーションするプレースホルダー（円形、36px）
+- `authenticated`: 
+  - Googleアカウントのアバター画像を表示（円形、36px）
+  - クリックでドロップダウンメニュー表示
+  - メニュー内容: ユーザー名、メールアドレス、ログアウトボタン
 - `unauthenticated`: ログインボタン
+  - 背景: `bg-gray-800`（濃いグレー）
+  - テキスト: 白色、フォントウェイト: 600
+  - パディング: `px-6 py-2.5`
+  - 角丸: `rounded-lg`
+  - ホバー効果: `hover:bg-gray-900`
+  - トランジション: `transition-all duration-200`
+
+**ドロップダウンメニュー**:
+- 位置: アバター下部、右寄せ
+- 幅: 240px
+- 背景: 白、影付き、角丸
+- 内容:
+  - ユーザー名（太字、16px）
+  - メールアドレス（小サイズ、グレー、12px）
+  - 区切り線（グレー）
+  - ログアウトボタン（赤色テキスト、ホバーで背景色変更）
+- 外側クリックで閉じる
+- Escキーで閉じる
+
+**インタラクション**:
+- ログイン/ログアウト時にグローバルローディングを表示
+- ドロップダウンメニューの開閉アニメーション（フェードイン/アウト）
 
 ### 3. Footer (`components/Footer.tsx`)
 
@@ -206,31 +126,10 @@ export default function Navbar() {
 - 著作権情報表示
 - 免責事項表示
 
-**実装詳細**:
-
-```typescript
-export default function Footer() {
-  return (
-    <footer className="border-t mt-16">
-      <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-gray-600">
-        <p>
-          This is an unofficial fan site and is not endorsed by Riot Games.
-          <br />
-          © Riot Games. League of Legends and all related logos, characters,
-          names and distinctive likenesses thereof are exclusive property of
-          Riot Games, Inc.
-        </p>
-      </div>
-    </footer>
-  );
-}
-```
-
-**スタイル仕様**:
-- 上ボーダー: `border-t`
-- 上マージン: `mt-16` (64px)
-- パディング: `py-6` (24px)
-- テキスト: `text-sm text-gray-600`
+**レイアウト**:
+- 上ボーダー、上マージン: 64px
+- パディング: 24px
+- テキスト: 小サイズ、グレー
 
 ### 4. GlobalLoading (`components/GlobalLoading.tsx`)
 
@@ -239,40 +138,12 @@ export default function Footer() {
 - 画面右下に固定表示
 - GIFアニメーション表示
 
-**実装詳細**:
+**レイアウト**:
+- 位置: 右下固定（right: 24px, bottom: 24px）
+- z-index: 9999（最前面）
+- 画像: `/images/loading/nunu.gif`（240x240px）
 
-```typescript
-export default function GlobalLoading({ loading }: { loading: boolean }) {
-  if (!loading) return null;
-
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        right: '24px',
-        bottom: '24px',
-        zIndex: 9999,
-      }}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/images/loading/nunu.gif"
-        alt="Loading"
-        width={240}
-        height={240}
-      />
-    </div>
-  );
-}
-```
-
-**スタイル仕様**:
-- 位置: 右下固定 (`fixed`, `right: 24px`, `bottom: 24px`)
-- z-index: `9999` (最前面)
-- 画像: `/images/loading/nunu.gif`
-- サイズ: `240x240px`
-
-**重要**: GIFアニメーションは通常の`<img>`タグを使用（Next.js `<Image>`は非対応）
+**注意**: GIFアニメーションは通常の`<img>`タグを使用（Next.js `<Image>`は非対応）
 
 ### 5. HomePage (`app/page.tsx`)
 
@@ -280,29 +151,10 @@ export default function GlobalLoading({ loading }: { loading: boolean }) {
 - ホームページのコンテンツ表示
 - 将来的にサモナー検索機能を配置
 
-**実装詳細**:
-
-```typescript
-export default function HomePage() {
-  return (
-    <div className="py-8">
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-gray-900">
-          LoL Lab へようこそ
-        </h1>
-        <p className="text-gray-600">
-          League of Legends戦略分析ツール
-        </p>
-      </div>
-    </div>
-  );
-}
-```
-
-**スタイル仕様**:
-- パディング: `py-8` (32px)
-- 中央揃え: `text-center`
-- 見出し: `text-3xl font-bold`
+**レイアウト**:
+- パディング: 32px（上下）
+- 中央揃え
+- 見出し: 大サイズ、太字
 
 ## データモデル
 
@@ -344,69 +196,31 @@ interface Session {
 
 ### LoadingContext (`lib/contexts/LoadingContext.tsx`)
 
-**実装詳細**:
-
+**型定義**:
 ```typescript
-'use client';
-
-import { createContext } from 'react';
-
-export const LoadingContext = createContext<{
+interface LoadingContextType {
   loading: boolean;
   setLoading: (v: boolean) => void;
-}>({
-  loading: false,
-  setLoading: () => {},
-});
+}
 ```
 
-**使用方法**:
+**用途**:
+- アプリケーション全体でローディング状態を共有
+- 任意のコンポーネントからローディング表示を制御
 
+**使用パターン**:
 ```typescript
-import { useContext } from 'react';
-import { LoadingContext } from '@/lib/contexts/LoadingContext';
+const { loading, setLoading } = useContext(LoadingContext);
 
-function MyComponent() {
-  const { loading, setLoading } = useContext(LoadingContext);
-  
-  const handleAction = async () => {
-    setLoading(true);
-    try {
-      await someAsyncOperation();
-    } finally {
-      setLoading(false);
-    }
-  };
-}
+// 非同期処理の前後でローディング状態を制御
+setLoading(true);
+await someAsyncOperation();
+setLoading(false);
 ```
 
 ### Providers（既存）
 
 **場所**: `app/providers.tsx`
-
-**実装**:
-
-```typescript
-'use client';
-
-import { SessionProvider } from 'next-auth/react';
-import { LoadingContext } from '@/lib/contexts/LoadingContext';
-import { useState } from 'react';
-import GlobalLoading from '@/components/GlobalLoading';
-
-export function Providers({ children }: { children: React.ReactNode }) {
-  const [loading, setLoading] = useState(false);
-
-  return (
-    <SessionProvider>
-      <LoadingContext.Provider value={{ loading, setLoading }}>
-        {children}
-        <GlobalLoading loading={loading} />
-      </LoadingContext.Provider>
-    </SessionProvider>
-  );
-}
-```
 
 **責務**:
 - SessionProviderでラップ（NextAuth）
@@ -418,30 +232,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
 ## グローバルスタイル
 
 ### globals.css (`app/globals.css`)
-
-**実装詳細**:
-
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-  --background: #f5f7fa;
-  --foreground: #22223b;
-  --card-bg: #fafdff;
-  --border: #e3e8ee;
-  --button-bg: #fafdff;
-  --button-hover: #e9f1fa;
-  --button-text: #374151;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: 'Geist', 'Segoe UI', 'Meiryo', Arial, Helvetica, sans-serif;
-}
-```
 
 **カラーパレット**:
 - `--background`: `#f5f7fa` - サイト全体の背景
@@ -463,17 +253,6 @@ body {
 **シナリオ**: Google OAuth認証失敗
 
 **処理**:
-```typescript
-const handleSignIn = () => {
-  setLoading(true);
-  signIn('google').catch((error) => {
-    console.error('Authentication failed:', error);
-    setLoading(false);
-  });
-};
-```
-
-**ユーザー体験**:
 - ローディング表示を停止
 - NextAuthのデフォルトエラーページに遷移
 
@@ -482,19 +261,6 @@ const handleSignIn = () => {
 **シナリオ**: セッション情報の取得失敗
 
 **処理**:
-```typescript
-const { data: session, status } = useSession();
-
-if (status === 'loading') {
-  return <LoadingPlaceholder />;
-}
-
-if (status === 'unauthenticated') {
-  return <LoginButton />;
-}
-```
-
-**ユーザー体験**:
 - ローディング中: プレースホルダー表示
 - 未認証: ログインボタン表示
 
@@ -520,8 +286,12 @@ if (status === 'unauthenticated') {
 
 **認証フロー検証**:
 - [ ] ログインボタンをクリックするとGoogle OAuth画面に遷移する
-- [ ] 認証成功後、ユーザーアバターとログアウトボタンが表示される
+- [ ] 認証成功後、Googleアカウントのアバターが表示される
+- [ ] アバターをクリックするとドロップダウンメニューが表示される
+- [ ] メニューにユーザー名、メールアドレス、ログアウトボタンが表示される
 - [ ] ログアウトボタンをクリックするとログアウトされる
+- [ ] メニュー外側をクリックするとメニューが閉じる
+- [ ] Escキーを押すとメニューが閉じる
 - [ ] 認証処理中にローディング表示が出る
 
 **ローディング表示検証**:
@@ -536,6 +306,7 @@ if (status === 'unauthenticated') {
 **テストケース**:
 - ナビゲーションバー（未認証状態）
 - ナビゲーションバー（認証済み状態）
+- ナビゲーションバー（ドロップダウンメニュー表示状態）
 - ナビゲーションバー（ローディング状態）
 - フッター
 - ホームページ全体
@@ -555,17 +326,10 @@ if (status === 'unauthenticated') {
 
 **ツール**: Playwright
 
-**テストシナリオ**:
-```typescript
-test('ユーザーがログインしてログアウトできる', async ({ page }) => {
-  await page.goto('/');
-  await page.click('text=ログイン');
-  // Google OAuth フロー（モック）
-  await page.waitForSelector('img[alt*="User"]');
-  await page.click('text=ログアウト');
-  await page.waitForSelector('text=ログイン');
-});
-```
+**テストシナリオ例**:
+- ユーザーがログインしてログアウトできる
+- ナビゲーションリンクが正しく動作する
+- ローディング表示が適切に表示/非表示される
 
 ### テスト優先度
 
@@ -676,16 +440,8 @@ GOOGLE_CLIENT_SECRET=your-prod-client-secret
 ### ビルド設定
 
 **Next.js設定** (`next.config.ts`):
-```typescript
-const nextConfig = {
-  reactStrictMode: true,
-  images: {
-    domains: ['lh3.googleusercontent.com'], // Google アバター
-  },
-};
-
-export default nextConfig;
-```
+- React Strict Mode有効化
+- 外部画像ドメイン許可: `lh3.googleusercontent.com`（Googleアバター用）
 
 ### 静的アセット
 
