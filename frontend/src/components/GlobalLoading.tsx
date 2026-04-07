@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 export default function GlobalLoading({ loading }: { loading: boolean }) {
   if (!loading) return null;
   return (
@@ -11,12 +9,12 @@ export default function GlobalLoading({ loading }: { loading: boolean }) {
         zIndex: 9999,
       }}
     >
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src="/loading/nunu.gif"
         alt="Loading"
-        width={240}   // 48 x 5 = 240
-        height={240}  // 48 x 5 = 240
-        priority
+        width={240}
+        height={240}
       />
     </div>
   );
