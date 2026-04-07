@@ -111,7 +111,7 @@ export default function Navbar() {
             href="/notes"
             className="text-sm text-gray-600 hover:text-gray-900 transition"
           >
-            メモ
+            ノート
           </Link>
         </nav>
 

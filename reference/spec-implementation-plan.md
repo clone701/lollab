@@ -211,7 +211,7 @@ frontend/src/lib/summonerSpells.ts
 
 ## 次のアクション
 
-- **Spec 1-2: 共通コンポーネント**
+**Spec 1-2: 共通コンポーネント**
    - 基本UI構造のSpec作成
    - Requirements-First または Design-First を選択
    - Kiroに実装させる
