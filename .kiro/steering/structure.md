@@ -9,12 +9,12 @@
 ```
 lollab/
 ├── .kiro/                          # Kiro設定
+│   ├── specs/                      # Spec定義ファイル
 │   └── steering/                   # ステアリングファイル
 │       ├── tech.md                 # 技術スタック定義
 │       ├── product.md              # プロダクト定義
 │       ├── structure.md            # リポジトリ構造定義
-│       ├── ai-coding-workflow.md   # AIコーディングワークフロー
-│       ├── git-operations.md       # Git操作ガイドライン
+│       ├── coding-rules.md         # 共通コーディング規約
 │       ├── frontend-coding-guidelines.md  # フロントエンド規約
 │       └── backend-coding-guidelines.md   # バックエンド規約
 ├── docs/                           # プロジェクトドキュメント
@@ -24,18 +24,26 @@ lollab/
 │   ├── repository-structure.md     # リポジトリ構造定義書
 │   ├── development-guidelines.md   # 開発ガイドライン
 │   ├── db-schema.md                # データベーススキーマ
-│   └── glossary.md                 # ユビキタス言語定義
+│   ├── glossary.md                 # ユビキタス言語定義
+│   └── ai-coding-workflow.md       # Spec作成ワークフロー
+├── reference/                      # 参照用実装ファイル（実行不可）
+│   ├── frontend/                   # フロントエンド参照実装
+│   ├── backend/                    # バックエンド参照実装
+│   ├── spec-implementation-plan.md # Spec実装計画
+│   └── README.md                   # 参照ファイル説明
 ├── frontend/                       # Next.js フロントエンド
 │   ├── src/
 │   │   ├── app/                    # App Router
-│   │   │   ├── page.tsx            # ホームページ
-│   │   │   ├── layout.tsx          # ルートレイアウト
-│   │   │   ├── globals.css         # グローバルスタイル
-│   │   │   └── loading.tsx         # ローディングUI
-│   │   ├── components/             # UIコンポーネント
-│   │   │   └── GlobalLoading.tsx   # グローバルローディング
-│   │   ├── lib/                    # ユーティリティ・設定
-│   │   └── types/                  # TypeScript型定義
+│   │   │   ├── api/                # API Routes
+│   │   │   │   └── auth/           # NextAuth.js認証
+│   │   │   │       └── [...nextauth]/
+│   │   │   │           └── route.ts # 認証エンドポイント
+│   │   │   ├── favicon.ico         # ファビコン
+│   │   │   ├── metadata.ts         # メタデータ設定
+│   │   │   └── providers.tsx       # グローバルプロバイダー
+│   │   ├── components/             # UIコンポーネント（Specで作成）
+│   │   ├── lib/                    # ユーティリティ・設定（Specで作成）
+│   │   └── types/                  # TypeScript型定義（Specで作成）
 │   ├── public/                     # 静的ファイル
 │   │   └── images/                 # 画像ファイル
 │   │       ├── champion/           # チャンピオン画像 (171ファイル)
@@ -43,6 +51,7 @@ lollab/
 │   │       ├── runes/              # ルーン画像
 │   │       └── loading/            # ローディングGIF
 │   ├── .env.local.example          # 環境変数テンプレート
+│   ├── .env.local                  # 環境変数（Git除外）
 │   ├── .gitignore
 │   ├── eslint.config.mjs           # ESLint設定
 │   ├── next.config.ts              # Next.js設定
@@ -52,15 +61,12 @@ lollab/
 │   ├── tsconfig.json               # TypeScript設定
 │   └── README.md
 ├── backend/                        # FastAPI バックエンド
-│   ├── api/                        # APIエンドポイント
-│   │   ├── notes.py                # ノート管理API
-│   │   └── users.py                # ユーザー管理API
-│   ├── models/                     # データモデル
-│   │   └── note_model.py           # ノートモデル
+│   ├── api/                        # APIエンドポイント（Specで作成）
+│   ├── models/                     # データモデル（Specで作成）
 │   ├── .env.example                # 環境変数テンプレート
+│   ├── .env                        # 環境変数（Git除外）
 │   ├── .gitignore
 │   ├── config.py                   # 設定管理
-│   ├── main.py                     # アプリケーションエントリーポイント
 │   ├── requirements.txt            # Python依存関係
 │   └── README.md
 ├── .gitignore                      # Git除外設定
@@ -77,33 +83,53 @@ AIアシスタントがコードを書く際の具体的な指示とルールを
 - **tech.md**: 技術スタック、制約、環境変数
 - **product.md**: プロダクトビジョン、機能、ユーザーストーリー
 - **structure.md**: リポジトリ構造、命名規則
-- **ai-coding-workflow.md**: 5フェーズ開発ワークフロー
-- **git-operations.md**: Git操作の標準手順
-- **frontend-coding-guidelines.md**: フロントエンド技術規約
-- **backend-coding-guidelines.md**: バックエンド技術規約
+- **coding-rules.md**: 共通コーディング規約
+- **frontend-coding-guidelines.md**: フロントエンド固有規約
+- **backend-coding-guidelines.md**: バックエンド固有規約
+
+#### `/.kiro/specs/` - Spec定義ファイル
+Kiroを使った機能開発のSpec（要件・設計・タスク）を管理。
 
 #### `/docs/` - プロジェクトドキュメント
 プロダクトの「何を作るか」「どう作るか」を定義する恒久的なドキュメント。
+
+- **ai-coding-workflow.md**: Spec作成時の5フェーズワークフロー
+
+#### `/reference/` - 参照用実装ファイル
+過去の手動実装を参照用に保存。実行不可。Spec作成時の参考資料として使用。
+
+- **frontend/**: フロントエンド参照実装
+- **backend/**: バックエンド参照実装
+- **spec-implementation-plan.md**: Spec実装計画
+- **README.md**: 参照ファイルの説明
 
 ### フロントエンド構造
 
 #### `/frontend/src/app/` - App Router
 Next.js 15のファイルベースルーティング。
 
+**現在の状態**: 認証関連ファイルのみ存在。ページやレイアウトはSpecで作成予定。
+
+**保持されているファイル**:
+- `api/auth/[...nextauth]/route.ts`: NextAuth.js認証エンドポイント
+- `providers.tsx`: グローバルプロバイダー（SessionProvider等）
+- `metadata.ts`: メタデータ設定
+- `favicon.ico`: ファビコン
+
 ```typescript
-// ルーティング例
+// ルーティング例（Specで実装予定）
 /                    → app/page.tsx (ホーム)
-/summoner/na/player1 → app/summoner/[region]/[name]/page.tsx (今後)
-/notes               → app/notes/page.tsx (今後)
+/summoner/na/player1 → app/summoner/[region]/[name]/page.tsx
+/notes               → app/notes/page.tsx
 ```
 
 #### `/frontend/src/components/` - UIコンポーネント
-再利用可能なUIコンポーネント。
+再利用可能なUIコンポーネント。Specで作成予定。
 
 **命名規則**: PascalCase（例: `GlobalLoading.tsx`）
 
 #### `/frontend/src/lib/` - ユーティリティ
-アプリケーション全体で使用する共通機能。
+アプリケーション全体で使用する共通機能。Specで作成予定。
 
 - **api/**: API通信関連
 - **hooks/**: カスタムReactフック
@@ -122,24 +148,24 @@ Next.js 15のファイルベースルーティング。
 ### バックエンド構造
 
 #### `/backend/api/` - APIエンドポイント
-FastAPI エンドポイントの実装。
+FastAPI エンドポイントの実装。Specで作成予定。
 
 ```python
-# エンドポイント例
-GET  /api/summoner/{region}/{name}     (今後)
-GET  /api/notes                        → api/notes.py
-POST /api/notes                        → api/notes.py
-PUT  /api/notes/{id}                   → api/notes.py
-DELETE /api/notes/{id}                 → api/notes.py
+# エンドポイント例（Specで実装予定）
+GET  /api/summoner/{region}/{name}
+GET  /api/notes
+POST /api/notes
+PUT  /api/notes/{id}
+DELETE /api/notes/{id}
 ```
 
 #### `/backend/models/` - データモデル
-データベースモデル定義（今後SQLAlchemy使用予定）。
+データベースモデル定義。Specで作成予定（今後SQLAlchemy使用予定）。
 
 #### `/backend/` - 設定・エントリーポイント
-- **main.py**: FastAPIアプリケーション
-- **config.py**: 設定管理
-- **requirements.txt**: 依存関係
+- **config.py**: 設定管理（保持）
+- **requirements.txt**: 依存関係（保持）
+- **main.py**: FastAPIアプリケーション（Specで作成予定）
 
 ## ファイル命名規則
 
@@ -226,14 +252,14 @@ from models.note_model import Note
 
 ### Reactコンポーネント
 ```typescript
-// GlobalLoading.tsx
+// 例: GlobalLoading.tsx（Specで作成予定）
 export default function GlobalLoading({ loading }: { loading: boolean }) {
   if (!loading) return null;
   
   return (
     <div style={{ /* ... */ }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/loading/nunu.gif" alt="Loading" width={240} height={240} />
+      <img src="/images/loading/nunu.gif" alt="Loading" width={240} height={240} />
     </div>
   );
 }
@@ -241,7 +267,7 @@ export default function GlobalLoading({ loading }: { loading: boolean }) {
 
 ### FastAPIエンドポイント
 ```python
-# api/notes.py
+# 例: api/notes.py（Specで作成予定）
 from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/api/notes", tags=["notes"])
@@ -255,6 +281,23 @@ async def get_notes():
 async def create_note(note: NoteCreate):
     """ノートを作成"""
     pass
+```
+
+### 認証設定（保持されているファイル）
+```typescript
+// app/api/auth/[...nextauth]/route.ts
+import NextAuth from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+
+// NextAuth設定（変更不要）
+```
+
+```typescript
+// app/providers.tsx
+"use client";
+import { SessionProvider } from "next-auth/react";
+
+// グローバルプロバイダー（変更不要）
 ```
 
 ## 環境変数管理
@@ -400,33 +443,52 @@ import { useSummoner } from '@/lib/hooks/useSummoner';
 ### ステアリングファイル (`.kiro/steering/`)
 AIアシスタント向けの技術的指示。頻繁に参照される。
 
+### Spec定義ファイル (`.kiro/specs/`)
+Kiroを使った機能開発のSpec（要件・設計・タスク）を管理。
+
 ### プロジェクトドキュメント (`docs/`)
 人間向けの詳細ドキュメント。恒久的な設計情報。
+
+### 参照ファイル (`reference/`)
+過去の手動実装を参照用に保存。実行不可。Spec作成時の参考資料として使用。
 
 ### README
 各ディレクトリに配置し、そのディレクトリの概要を説明。
 
 ## 今後の構造拡張予定
 
-### 短期追加予定
+### Specで作成予定（短期）
 ```
 frontend/src/
+├── app/
+│   ├── page.tsx              # ホームページ
+│   ├── layout.tsx            # ルートレイアウト
+│   ├── globals.css           # グローバルスタイル
+│   └── notes/                # ノート機能
+├── components/               # UIコンポーネント
 ├── lib/
-│   ├── api/          # API通信
-│   ├── hooks/        # カスタムフック
-│   └── utils/        # ユーティリティ
+│   ├── api/                  # API通信
+│   ├── hooks/                # カスタムフック
+│   └── utils/                # ユーティリティ
+└── types/                    # TypeScript型定義
 
 backend/
-├── schemas/          # Pydanticスキーマ
-├── services/         # ビジネスロジック
-└── utils/            # ユーティリティ
+├── main.py                   # FastAPIエントリーポイント
+├── api/
+│   ├── notes.py              # ノート管理API
+│   └── users.py              # ユーザー管理API
+├── models/
+│   └── note_model.py         # ノートモデル
+├── schemas/                  # Pydanticスキーマ
+├── services/                 # ビジネスロジック
+└── utils/                    # ユーティリティ
 ```
 
 ### 中期追加予定
 ```
 frontend/
-└── __tests__/        # テストファイル
+└── __tests__/                # テストファイル
 
 backend/
-└── tests/            # テストファイル
+└── tests/                    # テストファイル
 ```

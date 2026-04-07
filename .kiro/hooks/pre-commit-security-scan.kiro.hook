@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Pre-Commit Security Scan",
+  "description": "コミット前にPythonコードのセキュリティ脆弱性をスキャン（bandit）",
+  "version": "1",
+  "when": {
+    "type": "promptSubmit"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "コミット前にbanditでセキュリティスキャンを実行してください。問題があれば報告し、なければコミットを続行してください。"
+  }
+}

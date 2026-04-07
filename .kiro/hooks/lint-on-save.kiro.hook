@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Frontend Code Quality Check on Save",
+  "description": "TypeScriptファイル保存時にESLint、型チェック、フォーマットチェックを実行",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "frontend/**/*.ts",
+      "frontend/**/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "cd frontend && npm run lint && npm run type-check && npm run format-check",
+    "timeout": 60
+  }
+}

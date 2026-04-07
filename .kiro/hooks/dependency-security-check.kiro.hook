@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Dependency Security Check",
+  "description": "依存関係の脆弱性をチェック（npm audit + pip-audit + safety）",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "Write-Host '=== Frontend Security Check ===' ; cd frontend ; npm audit --audit-level=moderate ; Write-Host '`n=== Backend Security Check ===' ; cd ../backend ; pip-audit ; safety check",
+    "timeout": 120
+  }
+}
