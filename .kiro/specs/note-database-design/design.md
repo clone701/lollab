@@ -108,19 +108,18 @@ Google認証で得たユーザー情報を管理する独自テーブル。NextA
 
 **インデックス**:
 - PRIMARY KEY: `id`
-- UNIQUE: `(provider, provider_id)` - 同一プロバイダーの重複登録防止
+- UNIQUE: `email` - メールアドレスの重複防止
 
 **SQL定義例**:
 ```sql
 CREATE TABLE app_users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  email text NOT NULL,
+  email text NOT NULL UNIQUE,
   name text,
   image text,
   provider text NOT NULL,
   provider_id text NOT NULL,
-  created_at timestamp with time zone DEFAULT now() NOT NULL,
-  UNIQUE(provider, provider_id)
+  created_at timestamp with time zone DEFAULT now()
 );
 ```
 
@@ -153,15 +152,14 @@ CREATE TABLE profiles (
 
 #### champion_notes テーブル
 
-チャンピオン戦略ノートを保存するメインテーブル。汎用ノート（General Note）と対策ノート（Matchup Note）の両方をサポート。
+チャンピオン対策ノート（Matchup Note）を保存するメインテーブル。
 
 | カラム名            | 型         | 制約           | 説明                                    |
 | ------------------- | ---------- | -------------- | --------------------------------------- |
 | id                  | bigint     | PK, NOT NULL   | 主キー、自動採番                        |
 | user_id             | uuid       | FK, NOT NULL   | 外部キー、app_users.id                  |
-| note_type           | text       | NOT NULL       | ノートタイプ（'general' or 'matchup'）  |
 | my_champion_id      | text       | NOT NULL       | 自分のチャンピオンID（例: "Ahri"）      |
-| enemy_champion_id   | text       | NULL           | 相手のチャンピオンID（matchupの場合必須）|
+| enemy_champion_id   | text       | NOT NULL       | 相手のチャンピオンID（必須）            |
 | runes               | jsonb      | NULL           | ルーン構成（JSON）                      |
 | spells              | jsonb      | NULL           | サモナースペル（配列JSON）              |
 | items               | jsonb      | NULL           | 初期アイテム（配列JSON）                |
@@ -169,43 +167,32 @@ CREATE TABLE profiles (
 | created_at          | timestamp  | NOT NULL       | 作成日時（デフォルト: now()）           |
 | updated_at          | timestamp  | NOT NULL       | 更新日時（デフォルト: now()）           |
 
-**制約**:
-- CHECK制約: `note_type IN ('general', 'matchup')`
-- CHECK制約: `(note_type = 'matchup' AND enemy_champion_id IS NOT NULL) OR (note_type = 'general' AND enemy_champion_id IS NULL)`
-
 **インデックス**:
 - PRIMARY KEY: `id`
 - FOREIGN KEY: `user_id` REFERENCES `app_users(id)` ON DELETE CASCADE
 - INDEX: `user_id` - ユーザーごとの検索高速化
 - INDEX: `my_champion_id` - チャンピオン検索最適化
 - INDEX: `enemy_champion_id` - マッチアップ検索最適化
-- INDEX: `note_type` - ノートタイプフィルタリング最適化
 
 **SQL定義例**:
 ```sql
 CREATE TABLE champion_notes (
   id bigserial PRIMARY KEY,
   user_id uuid NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
-  note_type text NOT NULL CHECK (note_type IN ('general', 'matchup')),
   my_champion_id text NOT NULL,
-  enemy_champion_id text,
+  enemy_champion_id text NOT NULL,
   runes jsonb,
   spells jsonb,
   items jsonb,
   memo text,
   created_at timestamp with time zone DEFAULT now() NOT NULL,
-  updated_at timestamp with time zone DEFAULT now() NOT NULL,
-  CHECK (
-    (note_type = 'matchup' AND enemy_champion_id IS NOT NULL) OR
-    (note_type = 'general' AND enemy_champion_id IS NULL)
-  )
+  updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 -- インデックス作成
 CREATE INDEX idx_champion_notes_user_id ON champion_notes(user_id);
 CREATE INDEX idx_champion_notes_my_champion_id ON champion_notes(my_champion_id);
 CREATE INDEX idx_champion_notes_enemy_champion_id ON champion_notes(enemy_champion_id);
-CREATE INDEX idx_champion_notes_note_type ON champion_notes(note_type);
 ```
 
 ### JSON構造定義
@@ -278,7 +265,6 @@ erDiagram
     champion_notes {
         bigint id PK
         uuid user_id FK
-        text note_type
         text my_champion_id
         text enemy_champion_id
         jsonb runes
@@ -311,10 +297,7 @@ erDiagram
    - クエリ例: `SELECT * FROM champion_notes WHERE enemy_champion_id = 'Yasuo'`
    - 重要度: 高
 
-4. **note_type インデックス**
-   - 目的: ノートタイプフィルタリング最適化
-   - クエリ例: `SELECT * FROM champion_notes WHERE note_type = 'matchup'`
-   - 重要度: 中
+
 
 ### 複合インデックス（今後検討）
 
@@ -391,38 +374,12 @@ WITH CHECK (auth.uid() = id);
 
 ## データ例
 
-### 汎用ノート（General Note）の例
+### 対策ノート（Matchup Note）の例
 
 ```json
 {
   "id": 1,
   "user_id": "550e8400-e29b-41d4-a716-446655440000",
-  "note_type": "general",
-  "my_champion_id": "Ahri",
-  "enemy_champion_id": null,
-  "runes": {
-    "primaryPath": 8100,
-    "secondaryPath": 8200,
-    "keystone": 8112,
-    "primaryRunes": [8126, 8138, 8135],
-    "secondaryRunes": [9111, 9104],
-    "shards": [5008, 5008, 5002]
-  },
-  "spells": ["SummonerFlash", "SummonerIgnite"],
-  "items": ["1055", "2003"],
-  "memo": "基本的なビルドとプレイスタイル。序盤はファームを優先し、レベル6以降にロームを狙う。",
-  "created_at": "2024-01-01T00:00:00Z",
-  "updated_at": "2024-01-01T00:00:00Z"
-}
-```
-
-### 対策ノート（Matchup Note）の例
-
-```json
-{
-  "id": 2,
-  "user_id": "550e8400-e29b-41d4-a716-446655440000",
-  "note_type": "matchup",
   "my_champion_id": "Ahri",
   "enemy_champion_id": "Yasuo",
   "runes": {
@@ -603,48 +560,30 @@ WITH CHECK (auth.uid() = id);
 
 ## マイグレーション戦略
 
-### 既存データの移行
+現在のSupabaseスキーマは既に対策ノート専用の構造になっているため、マイグレーションは不要です。
+
+### 現在のスキーマ確認
 
 ```sql
--- Step 1: note_type列を追加（デフォルト値'matchup'）
-ALTER TABLE champion_notes 
-ADD COLUMN note_type text DEFAULT 'matchup' NOT NULL;
-
--- Step 2: CHECK制約を追加
-ALTER TABLE champion_notes 
-ADD CONSTRAINT check_note_type 
-CHECK (note_type IN ('general', 'matchup'));
-
--- Step 3: enemy_champion_id整合性CHECK制約を追加
-ALTER TABLE champion_notes 
-ADD CONSTRAINT check_enemy_champion_id 
-CHECK (
-  (note_type = 'matchup' AND enemy_champion_id IS NOT NULL) OR
-  (note_type = 'general' AND enemy_champion_id IS NULL)
-);
-
--- Step 4: インデックスを追加
-CREATE INDEX idx_champion_notes_note_type ON champion_notes(note_type);
-
--- Step 5: 既存データの検証
-SELECT COUNT(*) FROM champion_notes 
-WHERE note_type = 'matchup' AND enemy_champion_id IS NULL;
--- 結果が0であることを確認
+-- 現在のスキーマを確認
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_name = 'champion_notes'
+ORDER BY ordinal_position;
 ```
 
-### ロールバック計画
+### 期待されるスキーマ
 
-```sql
--- インデックス削除
-DROP INDEX IF EXISTS idx_champion_notes_note_type;
-
--- CHECK制約削除
-ALTER TABLE champion_notes DROP CONSTRAINT IF EXISTS check_enemy_champion_id;
-ALTER TABLE champion_notes DROP CONSTRAINT IF EXISTS check_note_type;
-
--- note_type列削除
-ALTER TABLE champion_notes DROP COLUMN IF EXISTS note_type;
-```
+- `id`: bigint, NOT NULL
+- `user_id`: uuid, NOT NULL
+- `my_champion_id`: text, NOT NULL
+- `enemy_champion_id`: text, NOT NULL
+- `runes`: jsonb, NULL
+- `spells`: jsonb, NULL
+- `items`: jsonb, NULL
+- `memo`: text, NULL
+- `created_at`: timestamp with time zone, NOT NULL
+- `updated_at`: timestamp with time zone, NOT NULL
 
 ## 参考資料
 

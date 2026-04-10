@@ -16,51 +16,6 @@
 5. **データ管理** (storage.ts, champions.ts, items.ts, runeData.ts)
 6. **認証** (NextAuth, Google OAuth)
 
-### Spec 1-2: 共通コンポーネント
-**目的**: 他の機能で再利用される基本部品を構築
-
-**内容**:
-- Panel (汎用パネルコンテナ)
-- ボタンスタイル定数 (ITEM_BTN_BASE, ITEM_BTN_ACTIVE等)
-- itemBtnClass ユーティリティ関数
-- 入力フィールドスタイル定数 (BORDER_STYLE_1)
-
-**理由**: 他の機能で再利用される基本部品
-
-**期間**: 1-2時間
-
-**依存**: Spec 1-1
-
-**ファイル**:
-```
-frontend/src/components/ui/Panel.tsx
-```
-
----
-
-### Spec 1-3: 認証システム
-**目的**: ユーザー固有データの前提条件を構築
-
-**内容**:
-- NextAuth設定
-- Google OAuth連携
-- セッション管理
-- ユーザーID取得・保存
-
-**理由**: ユーザー固有データの前提条件
-
-**期間**: 2-3時間
-
-**依存**: Spec 1-1
-
-**ファイル**:
-```
-frontend/src/app/api/auth/[...nextauth]/route.ts
-frontend/src/app/providers.tsx
-```
-
----
-
 ## Phase 2: コア機能（Core Features）
 
 ### Spec 2-1: サモナー検索機能
@@ -187,9 +142,6 @@ frontend/src/lib/summonerSpells.ts
 ## 推奨実装順序（優先度順）
 
 ### 最優先（MVP）
-1. ✅ **Spec 1-1: 基本UI構造**
-2. ✅ **Spec 1-2: 共通コンポーネント**
-3. ✅ **Spec 1-3: 認証システム**
 4. ✅ **Spec 2-1: サモナー検索機能**
 5. ✅ **Spec 2-2: チャンピオンノート管理（基本）**
 
@@ -199,27 +151,3 @@ frontend/src/lib/summonerSpells.ts
 ### 将来（拡張）
 7. ⬜ **Spec 3-1: 検索・フィルタリング**
 8. ⬜ **Spec 3-2: お気に入り・タグ機能**
-
----
-
-### 参考資料
-- `ui-patterns.md`: UIパターンの詳細実装例
-- `docs/`: プロダクト要件、設計書
-- `.kiro/steering/`: 技術スタック、コーディング規約
-
----
-
-## 次のアクション
-
-**Spec 1-2: 共通コンポーネント**
-   - 基本UI構造のSpec作成
-   - Requirements-First または Design-First を選択
-   - Kiroに実装させる
-
----
-
-## メモ
-
-- **UI/UXは現状維持**: 技術スタック、デザインシステムは変更しない
-- **コーディング品質向上**: Kiroに作らせることで一貫性とベストプラクティスを確保
-- **段階的実装**: 一度に全部作らず、Specごとに確実に進める

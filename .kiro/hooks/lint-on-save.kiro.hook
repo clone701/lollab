@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "name": "Frontend Code Quality Check on Save",
-  "description": "TypeScriptファイル保存時にESLintを実行",
+  "description": "TypeScriptファイル保存時にgetDiagnosticsで診断を実行",
   "version": "1",
   "when": {
     "type": "fileEdited",
@@ -11,9 +11,7 @@
     ]
   },
   "then": {
-    "type": "runCommand",
-    "command": "npm run lint",
-    "timeout": 60,
-    "cwd": "frontend"
+    "type": "askAgent",
+    "prompt": "保存されたファイルに対してgetDiagnosticsツールを実行し、型エラー・lint警告・その他の問題をチェックしてください。問題があれば報告し、なければ「問題なし」と簡潔に返答してください。"
   }
 }

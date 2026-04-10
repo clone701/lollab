@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { supabase } from "@/lib/supabase";
 
 const handler = NextAuth({
   providers: [
@@ -10,31 +11,41 @@ const handler = NextAuth({
   ],
   callbacks: {
     async signIn({ user }) {
+      try {
+        // Supabaseのapp_usersテーブルにユーザー情報を保存
+        // emailをキーとしてupsert（既存ユーザーは更新、新規ユーザーは作成）
+        const { data, error } = await supabase
+          .from('app_users')
+          .upsert({
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            provider: 'google',
+            provider_id: user.id,
+          }, {
+            onConflict: 'email',
+            ignoreDuplicates: false,
+          })
+          .select()
+          .single();
 
-      const requestBody = {
-        email: user.email,
-        name: user.name,
-        image: user.image,
-        provider: "google",
-        provider_id: user.id,
-      };
-
-      const res = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL + "/api/users/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
-
-      const result = await res.json();
-
-      if (result.ok && result.user_id) {
-        // localStorageにuser_idを保存
-        if (typeof window !== "undefined") {
-          localStorage.setItem("user_id", result.user_id);
+        if (error) {
+          console.error('Failed to save user to Supabase:', error);
+          return false;
         }
-      }
 
-      return true;
+        return true;
+      } catch (error) {
+        console.error('Error during sign in:', error);
+        return false;
+      }
+    },
+    async session({ session, token }) {
+      // セッションにユーザー情報を追加
+      if (session.user) {
+        session.user.email = token.email as string;
+      }
+      return session;
     },
   },
 });
