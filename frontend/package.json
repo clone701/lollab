@@ -11,7 +11,8 @@
     "format-check": "prettier --check .",
     "audit": "npm audit --audit-level=moderate",
     "test": "jest --watch",
-    "test:ci": "jest --ci"
+    "test:ci": "jest --ci",
+    "prepare": "husky"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
@@ -34,11 +35,19 @@
     "eslint": "^9.36.0",
     "eslint-config-next": "15.5.7",
     "globals": "^16.4.0",
+    "husky": "^9.1.7",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.4.2",
     "tailwindcss": "^4.1.14",
     "typescript": "^5",
     "typescript-eslint": "^8.45.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   }
 }
