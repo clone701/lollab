@@ -77,7 +77,7 @@ function ItemBuildSelector({ value, onChange, disabled = false }: ItemBuildSelec
                             onClick={(e) => handleItemClick(item.id, e)}
                             onContextMenu={(e) => {
                                 e.preventDefault();
-                                handleItemClick(item.id, e as any);
+                                handleItemClick(item.id, e);
                             }}
                             disabled={disabled || wouldExceedLimit}
                             className={`relative flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] ${isSelected

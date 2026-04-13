@@ -196,8 +196,8 @@ const ChampionSelectorSidebar: React.FC<ChampionSelectorSidebarProps> = React.me
                                 if (onReset) {
                                     onReset();
                                 } else {
-                                    onMyChampionChange(null as any);
-                                    onEnemyChampionChange(null as any);
+                                    onMyChampionChange(null);
+                                    onEnemyChampionChange(null);
                                 }
                                 setSelectionMode('my');
                             }}

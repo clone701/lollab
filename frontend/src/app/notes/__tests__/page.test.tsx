@@ -33,7 +33,7 @@ jest.mock('@/lib/supabase', () => ({
 jest.mock('@/lib/contexts/LoadingContext', () => ({
     LoadingContext: {
         Provider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-        Consumer: ({ children }: { children: (value: any) => React.ReactNode }) =>
+        Consumer: ({ children }: { children: (value: { setLoading: () => void }) => React.ReactNode }) =>
             children({ setLoading: jest.fn() }),
     },
 }));

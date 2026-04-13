@@ -8,7 +8,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import GlobalLoading from '@/components/GlobalLoading';
 import TabNavigation, { TabType } from '@/components/notes/TabNavigation';
 import ChampionSelectorSidebar from '@/components/notes/ChampionSelectorSidebar';
@@ -33,7 +32,6 @@ import Image from 'next/image';
 export default function NotesPage() {
     // 認証状態の確認（要件: 12.2）
     const { user, session, loading } = useAuth();
-    const router = useRouter();
     const { toast, showToast, hideToast } = useToast();
 
     // 状態管理（要件: 5.2）

@@ -82,7 +82,7 @@ describe('EditNotePage - 統合テスト', () => {
             refresh: jest.fn(),
             replace: jest.fn(),
             prefetch: jest.fn(),
-        } as any);
+        } as ReturnType<typeof useRouter>);
 
         mockUseParams.mockReturnValue({
             id: '1',
