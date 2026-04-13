@@ -5,6 +5,9 @@ on:
     branches: [main, develop]
   push:
     branches: [main, develop]
+  schedule:
+    # 毎週月曜日 9:00 (JST) に脆弱性チェック
+    - cron: '0 0 * * 1'
 
 jobs:
   frontend:
@@ -26,6 +29,10 @@ jobs:
       
       - name: Install dependencies
         run: npm ci
+      
+      - name: Security audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
       
       - name: Type check
         run: npm run type-check
@@ -81,3 +88,4 @@ jobs:
       
       - name: Dependency audit (Safety)
         run: safety check --json || true
+        continue-on-error: true

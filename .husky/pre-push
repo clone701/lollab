@@ -5,3 +5,4 @@ cd frontend
 npm run type-check
 npm run lint
 npm run test:ci
+npm audit --audit-level=high
