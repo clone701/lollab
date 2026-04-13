@@ -39,17 +39,15 @@
 ## インフラストラクチャ
 
 ### デプロイメント
-- **Render**: フロントエンドホスティング
+- **Vercel**: フロントエンドホスティング
   - 自動デプロイ: GitHubプッシュ時に自動ビルド・デプロイ
-  - プレビューデプロイ: プルリクエスト毎にプレビュー環境生成
-  - 本番URL: https://lollab.onrender.com (または設定したURL)
-  - カスタムドメイン対応可能
-  - 無料プラン: 750時間/月、自動スリープ機能あり
-- **Vercel**: バックエンドホスティング
-  - Vercel Serverless Functions使用
+  - 本番URL: https://lollab.vercel.app (または設定したURL)
+  - グローバルCDN対応
+  - 無料プラン: 100GB帯域幅/月
+- **Render**: バックエンドホスティング
   - 自動デプロイ: GitHubプッシュ時に自動デプロイ
-  - 本番URL: https://lollab-backend.vercel.app (または設定したURL)
-  - 関数実行時間: 10秒 (Hobby), 60秒 (Pro)
+  - 本番URL: https://lollab-backend.onrender.com (または設定したURL)
+  - 無料プラン: 750時間/月、自動スリープ機能あり
 - **Supabase**: データベースホスティング
 
 ### 開発ツール
@@ -66,15 +64,15 @@
 
 ### リソース制約
 - **Riot API制限**: 100req/2min (個人キー)
-- **Render制限（フロントエンド）**: 
+- **Vercel制限（フロントエンド）**: 
+  - 無料プラン: 100GB帯域幅/月、100ビルド時間/月
+  - 関数実行時間: 10秒 (Hobby), 60秒 (Pro)
+  - 関数サイズ: 50MB (圧縮後)
+- **Render制限（バックエンド）**:
   - 無料プラン: 750時間/月、15分間非アクティブで自動スリープ
   - ビルド時間: 最大15分/ビルド
   - メモリ: 512MB (無料プラン)
   - 帯域幅: 100GB/月
-- **Vercel制限（バックエンド）**:
-  - 無料プラン: 100GB帯域幅/月、100ビルド時間/月
-  - 関数実行時間: 10秒 (Hobby), 60秒 (Pro)
-  - 関数サイズ: 50MB (圧縮後)
 
 ### セキュリティ制約
 - **認証**: OAuth 2.0必須
@@ -97,7 +95,7 @@
 
 ### フロントエンド (.env.local)
 ```bash
-NEXT_PUBLIC_API_URL=https://lollab-backend.vercel.app
+NEXT_PUBLIC_API_URL=https://lollab-backend.onrender.com
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 NEXTAUTH_SECRET=your-secret
@@ -108,10 +106,11 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 
 ### バックエンド (.env)
 ```bash
-RIOT_API_KEY=your-riot-api-key
 SUPABASE_URL=your-supabase-url
 SUPABASE_KEY=your-supabase-service-key
-CORS_ORIGINS=["http://localhost:3000","https://lollab.onrender.com"]
+RIOT_API_KEY=your-riot-api-key
+CORS_ORIGINS=["http://localhost:3000","https://lollab.vercel.app"]
+DEBUG=False
 ```
 
 ## 依存関係管理
@@ -216,77 +215,61 @@ uvicorn main:app --reload
 
 ## デプロイメント
 
-### フロントエンド: Renderへのデプロイ
+### フロントエンド: Vercelへのデプロイ
+
+#### 初回セットアップ
+1. GitHubリポジトリをVercelに接続
+2. 新しいWeb Serviceを作成
+3. プロジェクト設定:
+   - Framework Preset: Next.js
+   - Root Directory: `frontend`
+   - Build Command: `npm run build`
+   - Output Directory: `.next`
+4. 環境変数を設定（Vercel Dashboard）
+
+#### 環境変数設定（Vercel）
+```bash
+# Production環境
+NEXT_PUBLIC_API_URL=https://lollab-backend.onrender.com
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXTAUTH_SECRET=your-production-secret
+NEXTAUTH_URL=https://lollab.vercel.app
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+#### 注意事項
+- 無料プランでも十分な性能
+- 自動スリープなし
+- グローバルCDN対応
+
+### バックエンド: Renderへのデプロイ
 
 #### 初回セットアップ
 1. GitHubリポジトリをRenderに接続
 2. 新しいWeb Serviceを作成
 3. プロジェクト設定:
-   - Environment: Node
-   - Root Directory: `frontend`
-   - Build Command: `npm install && npm run build`
-   - Start Command: `npm start`
+   - Environment: Python 3
+   - Root Directory: `backend`
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `uvicorn main:app --host 0.0.0.0 --port 10000`
 4. 環境変数を設定（Render Dashboard）
 
 #### 環境変数設定（Render）
 ```bash
 # Production環境
-NEXT_PUBLIC_API_URL=https://lollab-backend.vercel.app
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-NEXTAUTH_SECRET=your-production-secret
-NEXTAUTH_URL=https://lollab.onrender.com
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
+SUPABASE_URL=your-supabase-url
+SUPABASE_KEY=your-supabase-service-key
+RIOT_API_KEY=your-riot-api-key
+CORS_ORIGINS=["https://lollab.vercel.app"]
+DEBUG=False
 ```
 
 #### 注意事項
 - 無料プランは15分間非アクティブで自動スリープ
 - 初回アクセス時にコールドスタート（30秒程度）
 - 本番運用には有料プラン推奨
-
-### バックエンド: Vercelへのデプロイ
-
-#### 初回セットアップ
-1. GitHubリポジトリをVercelに接続
-2. プロジェクト設定:
-   - Framework Preset: Other
-   - Root Directory: `backend`
-   - Build Command: `pip install -r requirements.txt`
-   - Output Directory: (空欄)
-3. 環境変数を設定（Vercel Dashboard）
-
-#### 環境変数設定（Vercel）
-```bash
-# Production環境
-RIOT_API_KEY=your-riot-api-key
-SUPABASE_URL=your-supabase-url
-SUPABASE_KEY=your-supabase-service-key
-CORS_ORIGINS=["https://lollab.onrender.com"]
-```
-
-#### Vercel設定ファイル
-`backend/vercel.json` を作成:
-```json
-{
-  "builds": [
-    {
-      "src": "main.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "main.py"
-    }
-  ]
-}
-```
-
-#### 自動デプロイ
-- **本番**: `main` ブランチへのプッシュで自動デプロイ
-- **プレビュー**: プルリクエスト作成時に自動プレビュー環境生成
 
 ## 今後の技術導入予定
 
