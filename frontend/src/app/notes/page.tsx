@@ -8,13 +8,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useSession, signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import GlobalLoading from '@/components/GlobalLoading';
 import TabNavigation, { TabType } from '@/components/notes/TabNavigation';
 import ChampionSelectorSidebar from '@/components/notes/ChampionSelectorSidebar';
 import TabContentPlaceholder from '@/components/notes/TabContentPlaceholder';
 import NoteList from '@/components/notes/NoteList';
 import NoteForm from '@/components/notes/NoteForm';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 /**
  * ノートページ
@@ -24,10 +25,11 @@ import NoteForm from '@/components/notes/NoteForm';
  */
 export default function NotesPage() {
     // 認証状態の確認（要件: 12.2）
-    const { data: session, status } = useSession();
+    const { user, session, loading } = useAuth();
+    const router = useRouter();
 
     // 状態管理（要件: 5.2）
-    const [activeTab, setActiveTab] = useState<TabType>('create'); // デフォルト: 新規ノート作成
+    const [activeTab, setActiveTab] = useState<TabType>('matchup'); // デフォルト: 対策ノート
     const [myChampionId, setMyChampionId] = useState<string | null>(null);
     const [enemyChampionId, setEnemyChampionId] = useState<string | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false); // モバイル用
@@ -35,35 +37,28 @@ export default function NotesPage() {
     const [refreshKey, setRefreshKey] = useState(0); // ノート一覧の再フェッチ用
 
     // ローディング中の表示（要件: 12.3, 13.1, 13.2）
-    if (status === 'loading') {
+    if (loading) {
         return <GlobalLoading loading={true} />;
     }
 
     // 未認証時の表示（要件: 1.3, 12.1）
-    if (status === 'unauthenticated') {
+    if (!session) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center p-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">
                         ログインが必要です
                     </h2>
-                    <p className="text-gray-600 mb-6">
+                    <p className="text-gray-600">
                         ノート機能を利用するには、ログインしてください。
                     </p>
-                    <button
-                        onClick={() => signIn()}
-                        className="px-6 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                        aria-label="ログイン"
-                    >
-                        ログイン
-                    </button>
                 </div>
             </div>
         );
     }
 
     // サイドバーを表示するかどうかの判定（要件: 2.4）
-    const shouldShowSidebar = activeTab === 'create' || activeTab === 'matchup';
+    const shouldShowSidebar = activeTab === 'matchup';
 
     // タブ切り替えハンドラー（要件: 2.3, 14.5）
     const handleTabChange = (tab: TabType) => {
@@ -158,8 +153,8 @@ export default function NotesPage() {
 
                 {/* 右メインエリア（要件: 5.3） */}
                 <div className="flex-1 min-h-screen">
-                    {/* 新規ノート作成タブ: NoteListとNoteFormを切り替え（要件: 2, 7, 10） */}
-                    {activeTab === 'create' && (
+                    {/* 対策ノートタブ: NoteListとNoteFormを切り替え（要件: 2, 7, 10） */}
+                    {activeTab === 'matchup' && (
                         <div className="p-6 max-w-5xl mx-auto">
                             {!myChampionId || !enemyChampionId ? (
                                 // チャンピオン未選択時
@@ -192,7 +187,7 @@ export default function NotesPage() {
                     )}
 
                     {/* その他のタブ: プレースホルダー表示 */}
-                    {activeTab !== 'create' && (
+                    {activeTab !== 'matchup' && (
                         <TabContentPlaceholder
                             tab={activeTab}
                             myChampionId={myChampionId}

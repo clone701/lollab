@@ -340,14 +340,13 @@ const NoteForm: React.FC<NoteFormProps> = ({
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     
-    if (!presetName.trim()) {
-      newErrors.presetName = 'プリセチE��名を入力してください';
-    } else if (presetName.length > 100) {
-      newErrors.presetName = 'プリセチE��名�E100斁E��以冁E��入力してください';
+    // プリセット名の検証（空でもOK、100文字以内のみチェック）
+    if (presetName.length > 100) {
+      newErrors.presetName = 'プリセット名は100文字以内で入力してください';
     }
     
     if (memo.length > 10000) {
-      newErrors.memo = '対策メモは10,000斁E��以冁E��入力してください';
+      newErrors.memo = '対策メモは10,000文字以内で入力してください';
     }
     
     setErrors(newErrors);
@@ -359,22 +358,33 @@ const NoteForm: React.FC<NoteFormProps> = ({
       return;
     }
     
+    // プリセット名が空の場合、デフォルト名を設定
+    let finalPresetName = presetName.trim();
+    if (!finalPresetName) {
+      const enemyChampion = getChampionById(enemyChampionId);
+      if (enemyChampion) {
+        finalPresetName = `VS${enemyChampion.name}`;
+      } else {
+        finalPresetName = 'デフォルトプリセット';
+      }
+    }
+    
     setSaving(true);
     try {
       await createNote({
         my_champion_id: myChampionId,
         enemy_champion_id: enemyChampionId,
-        preset_name: presetName,
+        preset_name: finalPresetName,
         runes,
         spells,
         items,
         memo
       });
       
-      showToast('ノ�Eトを作�Eしました', 'success');
+      showToast('ノートを作成しました', 'success');
       onSave();
     } catch (error) {
-      showToast('ノ�Eト�E作�Eに失敗しました', 'error');
+      showToast('ノートの作成に失敗しました', 'error');
     } finally {
       setSaving(false);
     }
@@ -1378,13 +1388,14 @@ if (!user) {
 }
 ```
 
-#### バリチE�Eションエラー
+#### バリデーションエラー
 ```typescript
 const validate = (): boolean => {
   const newErrors: Record<string, string> = {};
   
-  if (!presetName.trim()) {
-    newErrors.presetName = 'プリセチE��名を入力してください';
+  // プリセット名の検証（空でもOK、100文字以内のみチェック）
+  if (presetName.length > 100) {
+    newErrors.presetName = 'プリセット名は100文字以内で入力してください';
   }
   
   if (memo.length > 10000) {

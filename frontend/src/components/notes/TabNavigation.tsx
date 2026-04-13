@@ -10,7 +10,7 @@
 import React from 'react';
 
 /** タブの種類 */
-export type TabType = 'create' | 'general' | 'matchup';
+export type TabType = 'matchup' | 'general';
 
 interface TabNavigationProps {
     /** アクティブなタブ */
@@ -26,9 +26,8 @@ interface Tab {
 }
 
 const tabs: Tab[] = [
-    { id: 'create', label: '新規ノート作成' },
-    { id: 'general', label: '汎用ノート' },
-    { id: 'matchup', label: 'チャンピオン対策ノート' }
+    { id: 'matchup', label: '対策ノート' },
+    { id: 'general', label: '汎用ノート' }
 ];
 
 /**

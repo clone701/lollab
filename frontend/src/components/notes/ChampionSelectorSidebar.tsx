@@ -8,9 +8,10 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { champions, favoriteChampions } from '@/lib/data/champions';
+import { champions } from '@/lib/data/champions';
 import FavoriteChampions from './FavoriteChampions';
 import ChampionButton from './ChampionButton';
+import useRecentChampions from '@/lib/hooks/useRecentChampions';
 
 interface ChampionSelectorSidebarProps {
     /** 自分のチャンピオンID */
@@ -44,6 +45,9 @@ const ChampionSelectorSidebar: React.FC<ChampionSelectorSidebarProps> = React.me
     // 選択モード: 'my' | 'enemy'
     const [selectionMode, setSelectionMode] = useState<'my' | 'enemy'>('my');
 
+    // 直近選択したチャンピオンを管理
+    const { recentChampions, addRecentChampion } = useRecentChampions();
+
     // 選択されたチャンピオンを取得（要件: 14.3 - useMemoでメモ化）
     const myChampion = useMemo(() =>
         myChampionId ? champions.find(c => c.id === myChampionId) : null,
@@ -72,6 +76,9 @@ const ChampionSelectorSidebar: React.FC<ChampionSelectorSidebarProps> = React.me
     }, []);
 
     const handleChampionSelect = useCallback((championId: string) => {
+        // 履歴に追加
+        addRecentChampion(championId);
+
         if (selectionMode === 'my') {
             onMyChampionChange(championId);
             // 自分のチャンピオンを選択したら、次は相手のチャンピオン選択モードに
@@ -81,7 +88,7 @@ const ChampionSelectorSidebar: React.FC<ChampionSelectorSidebarProps> = React.me
         }
         // チャンピオン選択時に検索クエリをリセット
         setSearchQuery('');
-    }, [selectionMode, onMyChampionChange, onEnemyChampionChange]);
+    }, [selectionMode, onMyChampionChange, onEnemyChampionChange, addRecentChampion]);
 
     const handleMyChampionClick = useCallback(() => {
         setSelectionMode('my');
@@ -202,13 +209,13 @@ const ChampionSelectorSidebar: React.FC<ChampionSelectorSidebarProps> = React.me
                 )}
 
                 {/* よく使うチャンピオンセクション */}
-                {!(myChampionId && enemyChampionId) && (
+                {!(myChampionId && enemyChampionId) && recentChampions.length > 0 && (
                     <section className="mb-4">
                         <h2 className="text-sm font-semibold text-gray-800 mb-2">
                             よく使うチャンピオン
                         </h2>
                         <FavoriteChampions
-                            champions={favoriteChampions}
+                            champions={recentChampions}
                             selectedId={selectionMode === 'my' ? myChampionId : enemyChampionId}
                             onSelect={handleChampionSelect}
                         />

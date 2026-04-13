@@ -146,12 +146,12 @@
 
 #### 受け入れ基準
 
-1. THE Note_Form SHALL プリセット名が空でないことを検証する
-2. THE Note_Form SHALL プリセット名が100文字以内であることを検証する
-3. THE Note_Form SHALL 対策メモが10,000文字以内であることを検証する
-4. WHEN バリデーションエラーがある場合、THE Note_Form SHALL エラーメッセージを表示する
-5. WHEN バリデーションエラーがある場合、THE Note_Form SHALL 保存を実行しない
-6. THE Note_Form SHALL エラーメッセージを該当する入力欄の近くに表示する
+1. THE Note_Form SHALL プリセット名が100文字以内であることを検証する
+2. THE Note_Form SHALL 対策メモが10,000文字以内であることを検証する
+3. WHEN バリデーションエラーがある場合、THE Note_Form SHALL エラーメッセージを表示する
+4. WHEN バリデーションエラーがある場合、THE Note_Form SHALL 保存を実行しない
+5. THE Note_Form SHALL エラーメッセージを該当する入力欄の近くに表示する
+6. WHEN プリセット名が空の場合、THE Note_Form SHALL 「VS{相手チャンピオン名}」をデフォルト値として設定する
 
 ### 要件10: UI/UXフロー
 

@@ -35,25 +35,36 @@ import Image from 'next/image';
 
 **画像パス**: `/images/champion/`, `/images/item/`, `/images/runes/`, `/images/loading/`
 
-### 認証（NextAuth.js）
-
-**保持されているファイル（変更不要）**:
-- `app/api/auth/[...nextauth]/route.ts`: 認証エンドポイント
-- `app/providers.tsx`: SessionProvider
-- `app/metadata.ts`: メタデータ設定
+### 認証（Supabase Auth）
 
 ```tsx
 // 認証状態の取得
 'use client';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export default function Component() {
-  const { data: session, status } = useSession();
+  const { user, session, loading } = useAuth();
   
-  if (status === 'loading') return <div>Loading...</div>;
+  if (loading) return <div>Loading...</div>;
   if (!session) return <div>Not authenticated</div>;
   
-  return <div>Welcome {session.user?.name}</div>;
+  return <div>Welcome {user?.email}</div>;
+}
+```
+
+**ログイン・ログアウト**:
+```tsx
+'use client';
+import { useAuth } from '@/lib/contexts/AuthContext';
+
+export default function AuthButton() {
+  const { user, signInWithGoogle, signOut } = useAuth();
+  
+  if (user) {
+    return <button onClick={signOut}>ログアウト</button>;
+  }
+  
+  return <button onClick={signInWithGoogle}>ログイン</button>;
 }
 ```
 
@@ -65,7 +76,7 @@ export default function Component() {
 - インタラクティブな要素（onClick, onChange等）
 - React Hooks（useState, useEffect等）
 - ブラウザAPI（localStorage, window等）
-- NextAuth（useSession等）
+- Supabase Auth（useAuth等）
 
 ```tsx
 'use client';

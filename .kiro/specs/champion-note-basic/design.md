@@ -5,7 +5,7 @@
 本ドキュメントは、LoL Labアプリケーションのノートページ（`/notes`）の基本レイアウトとタブナビゲーションの設計を定義します。この機能は、ノート管理システムの土台となるUI骨組みを提供します。
 
 本Specでは、以下のみを実装します：
-- タブナビゲーション（新規ノート作成・汎用ノート・チャンピオン対策ノート）
+- タブナビゲーション（対策ノート・汎用ノート）
 - 左サイドバーのチャンピオン選択UI
 - 各タブのプレースホルダー表示
 
@@ -43,7 +43,7 @@ graph TB
 │ Navbar (既存)                                            │
 ├─────────────────────────────────────────────────────────┤
 │ Tab Navigation                                           │
-│ [新規ノート作成] [汎用ノート] [チャンピオン対策ノート]  │
+│ [対策ノート] [汎用ノート]                                │
 ├──────────────────┬──────────────────────────────────────┤
 │                  │                                      │
 │  Champion        │  Tab Content Area                    │
@@ -142,9 +142,8 @@ interface TabNavigationProps {
 **実装詳細**:
 ```typescript
 const tabs = [
-  { id: 'create', label: '新規ノート作成' },
-  { id: 'general', label: '汎用ノート' },
-  { id: 'matchup', label: 'チャンピオン対策ノート' }
+  { id: 'matchup', label: '対策ノート' },
+  { id: 'general', label: '汎用ノート' }
 ];
 
 // アクティブタブのスタイル
@@ -414,7 +413,7 @@ interface TabContentPlaceholderProps {
 
 **表示内容**:
 
-**新規ノート作成タブ**:
+**対策ノートタブ**:
 ```typescript
 <div className="flex items-center justify-center h-full p-8">
   <div className="text-center text-gray-500">
@@ -493,9 +492,8 @@ interface Tab {
 }
 
 const tabs: Tab[] = [
-  { id: 'create', label: '新規ノート作成', showSidebar: true },
-  { id: 'general', label: '汎用ノート', showSidebar: false },
-  { id: 'matchup', label: 'チャンピオン対策ノート', showSidebar: true }
+  { id: 'matchup', label: '対策ノート', showSidebar: true },
+  { id: 'general', label: '汎用ノート', showSidebar: false }
 ];
 ```
 
@@ -571,15 +569,9 @@ if (status === 'unauthenticated') {
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-4">ログインが必要です</h2>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600">
           ノート機能を利用するには、ログインしてください。
         </p>
-        <button 
-          onClick={() => signIn()}
-          className="px-6 py-3 bg-gray-800 text-white rounded hover:bg-black"
-        >
-          ログイン
-        </button>
       </div>
     </div>
   );
@@ -766,7 +758,7 @@ const breakpoints = {
 import Panel from '@/components/ui/Panel';
 
 <Panel className="mb-4">
-  <h2>新規ノート作成</h2>
+  <h2>対策ノート</h2>
   {/* コンテンツ */}
 </Panel>
 ```
@@ -876,8 +868,8 @@ frontend/src/
 
 以下の機能は本Specの範囲外とし、別Specで実装します：
 
-- **新規ノート作成機能**: チャンピオン選択後の作成フォーム、ルーン・スペル・アイテム選択、保存機能
+- **ノート作成機能**: チャンピオン選択後の作成フォーム、ルーン・スペル・アイテム選択、保存機能
 - **汎用ノート機能**: 汎用ノートのCRUD操作、一覧表示
-- **チャンピオン対策ノート一覧・編集機能**: 既存ノートの一覧表示、編集・削除機能
+- **ノート一覧・編集機能**: 既存ノートの一覧表示、編集・削除機能
 
 本Specでは、これらの機能のプレースホルダーのみを表示します。

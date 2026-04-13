@@ -8,6 +8,7 @@ import Toast from '@/components/ui/Toast';
 import { RuneConfig } from '@/types/note';
 import { createNote } from '@/lib/api/notes';
 import useToast from '@/lib/hooks/useToast';
+import { getChampionById } from '@/lib/utils/championHelpers';
 
 interface NoteFormProps {
     myChampionId: string;
@@ -50,10 +51,8 @@ export default function NoteForm({
     const validate = (): boolean => {
         const newErrors: Record<string, string> = {};
 
-        // プリセット名の検証
-        if (!presetName.trim()) {
-            newErrors.presetName = 'プリセット名を入力してください';
-        } else if (presetName.length > 100) {
+        // プリセット名の検証（空でもOK、100文字以内のみチェック）
+        if (presetName.length > 100) {
             newErrors.presetName = 'プリセット名は100文字以内で入力してください';
         }
 
@@ -75,13 +74,25 @@ export default function NoteForm({
             return;
         }
 
+        // プリセット名が空の場合、デフォルト名を設定
+        let finalPresetName = presetName.trim();
+        if (!finalPresetName) {
+            const enemyChampion = getChampionById(enemyChampionId);
+            if (enemyChampion) {
+                finalPresetName = `VS${enemyChampion.name}`;
+            } else {
+                // チャンピオンが見つからない場合のフォールバック
+                finalPresetName = 'デフォルトプリセット';
+            }
+        }
+
         setSaving(true);
         try {
-            // ノートを作成
+            // ノートを作成（RLSポリシーにより自動的にユーザーIDが適用される）
             await createNote({
                 my_champion_id: myChampionId,
                 enemy_champion_id: enemyChampionId,
-                preset_name: presetName,
+                preset_name: finalPresetName,
                 runes,
                 spells,
                 items,
@@ -120,7 +131,7 @@ export default function NoteForm({
             {/* プリセット名入力 */}
             <div className="mb-6">
                 <label htmlFor="preset-name" className="block text-sm font-medium text-gray-700 mb-2">
-                    プリセット名
+                    プリセット名（空欄の場合は「VS相手チャンピオン名」が自動設定されます）
                 </label>
                 <div className="flex gap-2">
                     <input

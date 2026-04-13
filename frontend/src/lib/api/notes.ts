@@ -2,6 +2,7 @@
  * ノートAPI関数
  * 
  * チャンピオン対策ノートのCRUD操作を提供します。
+ * Supabase AuthとRLSポリシーにより、ユーザーは自分のノートのみアクセス可能です。
  */
 
 import { createClient } from '@/lib/supabase/client';
@@ -43,7 +44,7 @@ export async function getNotes(
  * ノートを作成
  * 
  * 新しいチャンピオン対策ノートを作成します。
- * ユーザーIDは自動的に取得され、認証されていない場合はエラーをスローします。
+ * ユーザーIDはSupabase Authから自動的に取得され、RLSポリシーで検証されます。
  * 
  * @param note - 作成するノートデータ（id, user_id, created_at, updated_atは自動設定）
  * @returns 作成されたノート
@@ -54,7 +55,7 @@ export async function createNote(
 ): Promise<ChampionNote> {
     const supabase = createClient();
 
-    // ユーザーIDを取得
+    // ユーザー認証確認
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         throw new Error('認証が必要です');

@@ -12,12 +12,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useSession, signIn, signOut } from 'next-auth/react';
 import { useContext, useState, useEffect, useRef } from 'react';
 import { LoadingContext } from '@/lib/contexts/LoadingContext';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export default function Navbar() {
-  const { data: session, status } = useSession();
+  const { user, session, loading, signInWithGoogle, signOut } = useAuth();
   const { setLoading } = useContext(LoadingContext);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -25,18 +25,20 @@ export default function Navbar() {
   /**
    * ログイン処理
    */
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     setLoading(true);
-    signIn('google');
+    await signInWithGoogle();
+    setLoading(false);
   };
 
   /**
    * ログアウト処理
    */
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     setLoading(true);
     setIsMenuOpen(false);
-    signOut();
+    await signOut();
+    setLoading(false);
   };
 
   /**
@@ -117,7 +119,7 @@ export default function Navbar() {
 
         {/* Right: 認証状態に応じたUI表示 */}
         <div className="flex items-center gap-2">
-          {status === 'loading' ? (
+          {loading ? (
             // ローディング時: アニメーションするプレースホルダー（円形、36px）
             <div className="h-9 w-9 animate-pulse rounded-full bg-gray-200" />
           ) : session ? (
@@ -130,8 +132,8 @@ export default function Navbar() {
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={session.user?.image || '/images/default-avatar.png'}
-                  alt={session.user?.name || 'User'}
+                  src={user?.user_metadata?.avatar_url || '/images/default-avatar.png'}
+                  alt={user?.user_metadata?.name || 'User'}
                   className="h-9 w-9 rounded-full border-2 border-gray-200 hover:border-blue-400 transition cursor-pointer"
                 />
               </button>
@@ -147,10 +149,10 @@ export default function Navbar() {
                   {/* メニュー内容: ユーザー名、メールアドレス */}
                   <div className="px-4 py-3 border-b border-gray-200">
                     <p className="text-base font-semibold text-gray-900">
-                      {session.user?.name || 'ユーザー'}
+                      {user?.user_metadata?.name || 'ユーザー'}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {session.user?.email || ''}
+                      {user?.email || ''}
                     </p>
                   </div>
 
