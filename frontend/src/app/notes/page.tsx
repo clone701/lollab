@@ -81,11 +81,11 @@ export default function NotesPage() {
     };
 
     // チャンピオン選択ハンドラー（要件: 3.4, 5.5）
-    const handleMyChampionChange = (championId: string) => {
+    const handleMyChampionChange = (championId: string | null) => {
         setMyChampionId(championId);
     };
 
-    const handleEnemyChampionChange = (championId: string) => {
+    const handleEnemyChampionChange = (championId: string | null) => {
         setEnemyChampionId(championId);
     };
 
