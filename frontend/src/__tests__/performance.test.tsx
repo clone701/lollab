@@ -32,7 +32,7 @@ jest.mock('@/lib/supabase', () => ({
 jest.mock('@/lib/contexts/LoadingContext', () => ({
     LoadingContext: {
         Provider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-        Consumer: ({ children }: { children: (value: any) => React.ReactNode }) =>
+        Consumer: ({ children }: { children: (value: { setLoading: () => void }) => React.ReactNode }) =>
             children({ setLoading: jest.fn() }),
     },
 }));
@@ -187,7 +187,7 @@ describe('パフォーマンステスト', () => {
             };
 
             // ノート作成のモック（実際のAPI呼び出しをシミュレート）
-            mockCreateNote.mockImplementation(async (note) => {
+            mockCreateNote.mockImplementation(async (_note) => {
                 // 実際のネットワーク遅延をシミュレート（100-500ms）
                 await new Promise(resolve => setTimeout(resolve, 100));
                 return newNote;
@@ -232,7 +232,7 @@ describe('パフォーマンステスト', () => {
             };
 
             // ノート更新のモック（実際のAPI呼び出しをシミュレート）
-            mockUpdateNote.mockImplementation(async (id, updates) => {
+            mockUpdateNote.mockImplementation(async (_id, _updates) => {
                 // 実際のネットワーク遅延をシミュレート（100-500ms）
                 await new Promise(resolve => setTimeout(resolve, 150));
                 return updatedNote;
@@ -258,7 +258,7 @@ describe('パフォーマンステスト', () => {
             const noteCount = 5;
             const mockNotes = generateMockNotes(noteCount);
 
-            mockCreateNote.mockImplementation(async (note) => {
+            mockCreateNote.mockImplementation(async (_note) => {
                 await new Promise(resolve => setTimeout(resolve, 100));
                 return mockNotes[0];
             });
