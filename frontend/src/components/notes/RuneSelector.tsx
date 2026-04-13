@@ -61,7 +61,7 @@ function RuneSelector({ value, onChange, disabled = false }: RuneSelectorProps) 
         setPrimaryRunes([]);
         // サブパスが同じ場合はリセット
         setSecondaryPath(prev => prev === pathId ? null : prev);
-        setSecondaryRunes(prev => prev === pathId ? [] : prev);
+        setSecondaryRunes([]);
     }, []);
 
     const handleSecondaryPathChange = useCallback((pathId: number) => {

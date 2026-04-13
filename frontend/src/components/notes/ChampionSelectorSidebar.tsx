@@ -19,9 +19,9 @@ interface ChampionSelectorSidebarProps {
     /** 相手のチャンピオンID */
     enemyChampionId: string | null;
     /** 自分のチャンピオン変更ハンドラー */
-    onMyChampionChange: (championId: string) => void;
+    onMyChampionChange: (championId: string | null) => void;
     /** 相手のチャンピオン変更ハンドラー */
-    onEnemyChampionChange: (championId: string) => void;
+    onEnemyChampionChange: (championId: string | null) => void;
     /** リセットハンドラー */
     onReset?: () => void;
 }

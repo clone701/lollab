@@ -169,7 +169,9 @@ export default function NoteForm({
             }
 
             // 親コンポーネントのonSaveを呼び出し（一覧更新とフォームクローズ）
-            onSave();
+            if (onSave) {
+                onSave();
+            }
         } catch (error) {
             // エラートースト表示
             console.error('Failed to save note:', error);
