@@ -22,6 +22,7 @@ interface RuneConfig {
 interface RuneSelectorProps {
     value: RuneConfig | null;
     onChange: (runes: RuneConfig) => void;
+    disabled?: boolean;
 }
 
 /**
@@ -32,7 +33,7 @@ interface RuneSelectorProps {
  * - useCallbackでイベントハンドラーをメモ化
  * - 画像に loading="lazy" を追加して遅延読み込み
  */
-function RuneSelector({ value, onChange }: RuneSelectorProps) {
+function RuneSelector({ value, onChange, disabled = false }: RuneSelectorProps) {
     const [primaryPath, setPrimaryPath] = useState<number | null>(value?.primaryPath || null);
     const [secondaryPath, setSecondaryPath] = useState<number | null>(value?.secondaryPath || null);
     const [keystone, setKeystone] = useState<number | null>(value?.keystone || null);
@@ -162,9 +163,12 @@ function RuneSelector({ value, onChange }: RuneSelectorProps) {
                                 <button
                                     key={path.id}
                                     onClick={() => handlePrimaryPathChange(path.id)}
+                                    disabled={disabled}
                                     className={`p-1 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 ${primaryPath === path.id
                                         ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50'
-                                        : 'hover:ring-2 hover:ring-gray-300 bg-white'
+                                        : disabled
+                                            ? 'opacity-50 cursor-not-allowed bg-white'
+                                            : 'hover:ring-2 hover:ring-gray-300 bg-white'
                                         }`}
                                     aria-label={`メインルーンパス: ${path.name}`}
                                     aria-pressed={primaryPath === path.id}
@@ -184,9 +188,12 @@ function RuneSelector({ value, onChange }: RuneSelectorProps) {
                                     <button
                                         key={rune.id}
                                         onClick={() => setKeystone(rune.id)}
+                                        disabled={disabled}
                                         className={`p-1 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 ${keystone === rune.id
                                             ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50'
-                                            : 'hover:ring-2 hover:ring-gray-300 bg-white'
+                                            : disabled
+                                                ? 'opacity-50 cursor-not-allowed bg-white'
+                                                : 'hover:ring-2 hover:ring-gray-300 bg-white'
                                             }`}
                                         aria-label={`キーストーン: ${rune.name}`}
                                         aria-pressed={keystone === rune.id}
@@ -208,9 +215,12 @@ function RuneSelector({ value, onChange }: RuneSelectorProps) {
                                         <button
                                             key={rune.id}
                                             onClick={() => handlePrimaryRuneChange(slot, rune.id)}
+                                            disabled={disabled}
                                             className={`p-1 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 ${primaryRunes[slot] === rune.id
                                                 ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50'
-                                                : 'hover:ring-2 hover:ring-gray-300 bg-white'
+                                                : disabled
+                                                    ? 'opacity-50 cursor-not-allowed bg-white'
+                                                    : 'hover:ring-2 hover:ring-gray-300 bg-white'
                                                 }`}
                                             aria-label={`メインルーン ${slot + 1}: ${rune.name}`}
                                             aria-pressed={primaryRunes[slot] === rune.id}
@@ -237,9 +247,12 @@ function RuneSelector({ value, onChange }: RuneSelectorProps) {
                                     <button
                                         key={path.id}
                                         onClick={() => handleSecondaryPathChange(path.id)}
+                                        disabled={disabled}
                                         className={`p-1 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 ${secondaryPath === path.id
                                             ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50'
-                                            : 'hover:ring-2 hover:ring-gray-300 bg-white'
+                                            : disabled
+                                                ? 'opacity-50 cursor-not-allowed bg-white'
+                                                : 'hover:ring-2 hover:ring-gray-300 bg-white'
                                             }`}
                                         aria-label={`サブルーンパス: ${path.name}`}
                                         aria-pressed={secondaryPath === path.id}
@@ -259,9 +272,12 @@ function RuneSelector({ value, onChange }: RuneSelectorProps) {
                                 <button
                                     key={rune.id}
                                     onClick={() => handleSecondaryRuneToggle(rune.id)}
+                                    disabled={disabled}
                                     className={`p-1 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 ${secondaryRunes.includes(rune.id)
                                         ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50'
-                                        : 'hover:ring-2 hover:ring-gray-300 bg-white'
+                                        : disabled
+                                            ? 'opacity-50 cursor-not-allowed bg-white'
+                                            : 'hover:ring-2 hover:ring-gray-300 bg-white'
                                         }`}
                                     aria-label={`サブルーン: ${rune.name}`}
                                     aria-pressed={secondaryRunes.includes(rune.id)}
@@ -284,9 +300,12 @@ function RuneSelector({ value, onChange }: RuneSelectorProps) {
                                     <button
                                         key={shard.id}
                                         onClick={() => handleShardChange(slot, shard.id)}
+                                        disabled={disabled}
                                         className={`p-1 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 ${shards[slot] === shard.id
                                             ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50'
-                                            : 'hover:ring-2 hover:ring-gray-300 bg-white'
+                                            : disabled
+                                                ? 'opacity-50 cursor-not-allowed bg-white'
+                                                : 'hover:ring-2 hover:ring-gray-300 bg-white'
                                             }`}
                                         aria-label={`${['攻撃', 'フレックス', '防御'][slot]}シャード: ${shard.name}`}
                                         aria-pressed={shards[slot] === shard.id}

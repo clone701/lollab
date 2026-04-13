@@ -6,7 +6,7 @@
  */
 
 import { createClient } from '@/lib/supabase/client';
-import { ChampionNote } from '@/types/note';
+import { ChampionNote, RuneConfig } from '@/types/note';
 
 /**
  * ノート一覧を取得
@@ -76,4 +76,113 @@ export async function createNote(
     }
 
     return data;
+}
+
+/**
+ * ノートを取得
+ * 
+ * 指定されたIDのノートを取得します。
+ * RLSポリシーにより、現在のユーザーのノートのみが返されます。
+ * 
+ * @param noteId - ノートID
+ * @param userId - ユーザーID
+ * @returns ノート、または見つからない場合はnull
+ */
+export async function fetchNoteById(
+    noteId: string,
+    userId: string
+): Promise<ChampionNote | null> {
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+        .from('champion_notes')
+        .select('*')
+        .eq('id', noteId)
+        .eq('user_id', userId)
+        .single();
+
+    if (error) {
+        console.error('Failed to fetch note:', error);
+        return null;
+    }
+
+    return data;
+}
+
+/**
+ * ノート更新データ型
+ */
+export interface NoteUpdateData {
+    preset_name: string;
+    runes: RuneConfig | null;
+    spells: string[] | null;
+    items: string[] | null;
+    memo: string | null;
+}
+
+/**
+ * ノートを更新
+ * 
+ * 指定されたIDのノートを更新します。
+ * RLSポリシーにより、現在のユーザーのノートのみが更新されます。
+ * updated_atは自動的に現在時刻に設定されます。
+ * 
+ * @param noteId - ノートID
+ * @param userId - ユーザーID
+ * @param data - 更新するノートデータ
+ * @returns 更新されたノート、または失敗した場合はnull
+ * @throws ノートの更新に失敗した場合
+ */
+export async function updateNote(
+    noteId: string,
+    userId: string,
+    data: NoteUpdateData
+): Promise<ChampionNote | null> {
+    const supabase = createClient();
+
+    const { data: updatedNote, error } = await supabase
+        .from('champion_notes')
+        .update({
+            ...data,
+            updated_at: new Date().toISOString(),
+        })
+        .eq('id', noteId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Failed to update note:', error);
+        throw new Error('ノートの更新に失敗しました');
+    }
+
+    return updatedNote;
+}
+
+/**
+ * ノートを削除
+ * 
+ * 指定されたIDのノートを削除します。
+ * RLSポリシーにより、現在のユーザーのノートのみが削除されます。
+ * 
+ * @param noteId - ノートID
+ * @param userId - ユーザーID
+ * @throws ノートの削除に失敗した場合
+ */
+export async function deleteNote(
+    noteId: string,
+    userId: string
+): Promise<void> {
+    const supabase = createClient();
+
+    const { error } = await supabase
+        .from('champion_notes')
+        .delete()
+        .eq('id', noteId)
+        .eq('user_id', userId);
+
+    if (error) {
+        console.error('Failed to delete note:', error);
+        throw new Error('ノートの削除に失敗しました');
+    }
 }

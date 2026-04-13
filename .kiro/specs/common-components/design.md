@@ -1,17 +1,23 @@
 # 設計書: 共通コンポーネント
 
+## 概要
+
+本ドキュメントは、プロジェクト全体で使用する共通UIコンポーネントとスタイルユーティリティの設計を定義します。
+
 ## ファイル構成
 
 ```
 frontend/src/components/ui/Panel.tsx
+frontend/src/components/ui/styles.ts
 ```
-
----
 
 ## Panel コンポーネント
 
-### Props
+**場所**: `frontend/src/components/ui/Panel.tsx`
 
+**責務**: 汎用的なパネルコンテナ
+
+**Props**:
 ```typescript
 interface PanelProps {
   children: React.ReactNode;
@@ -19,133 +25,134 @@ interface PanelProps {
 }
 ```
 
-### 実装
+**スタイル仕様**:
+- パディング: 16px
+- ボーダー: 透明
+- 角丸: 4px
+- 背景: 白
 
+**使用例**:
 ```typescript
-export default function Panel({ children, className = '' }: PanelProps) {
-  return (
-    <div className={`p-4 border border-transparent rounded bg-white ${className}`.trim()}>
-      {children}
-    </div>
-  );
-}
-```
-
-**スタイル**:
-- `p-4`: 16pxパディング
-- `border border-transparent`: 透明ボーダー
-- `rounded`: 4px角丸
-- `bg-white`: 白背景
-
-### 使用例
-
-```typescript
-// 基本
 <Panel>
   <h2>タイトル</h2>
   <p>コンテンツ</p>
 </Panel>
 
-// カスタムスタイル
 <Panel className="shadow-lg mb-4">
   <div>カスタムパネル</div>
 </Panel>
 ```
 
----
-
 ## アイテムボタンスタイル定数
 
-### 定数定義
+**場所**: `frontend/src/components/ui/styles.ts`
 
+**責務**: アイテム選択ボタンの共通スタイル定義
+
+**定数**:
 ```typescript
-export const ITEM_BTN_BASE =
-  'relative flex flex-col items-center gap-1 p-3 rounded border transition-colors duration-150';
-
-export const ITEM_BTN_ACTIVE =
-  'bg-pink-100 border-pink-200 text-pink-700 shadow-sm ring-2 ring-pink-50';
-
-export const ITEM_BTN_INACTIVE =
-  'bg-white border-gray-200 text-gray-700 hover:bg-pink-50 hover:border-pink-100';
-
-export const ITEM_BTN_DISABLED = 
-  'opacity-60 cursor-not-allowed';
+export const ITEM_BTN_BASE: string;
+export const ITEM_BTN_ACTIVE: string;
+export const ITEM_BTN_INACTIVE: string;
+export const ITEM_BTN_DISABLED: string;
 ```
 
----
+**スタイル仕様**:
+- **ITEM_BTN_BASE**: 基本スタイル（レイアウト、トランジション）
+- **ITEM_BTN_ACTIVE**: アクティブ状態（ピンク背景、ピンクボーダー、シャドウ）
+- **ITEM_BTN_INACTIVE**: 非アクティブ状態（白背景、グレーボーダー、ホバー効果）
+- **ITEM_BTN_DISABLED**: 無効状態（opacity-60、cursor-not-allowed）
 
 ## itemBtnClass ユーティリティ関数
 
-### 型定義
+**場所**: `frontend/src/components/ui/styles.ts`
 
+**責務**: アイテムボタンのクラス名を生成
+
+**シグネチャ**:
 ```typescript
 interface ItemBtnClassOptions {
   active?: boolean;
   disabled?: boolean;
   extra?: string;
 }
+
+function itemBtnClass(options?: ItemBtnClassOptions): string
 ```
 
-### 実装
-
-```typescript
-export function itemBtnClass(options: ItemBtnClassOptions = {}): string {
-  const { active = false, disabled = false, extra = '' } = options;
-  
-  return `${ITEM_BTN_BASE} ${active ? ITEM_BTN_ACTIVE : ITEM_BTN_INACTIVE} ${disabled ? ITEM_BTN_DISABLED : ''} ${extra}`.trim();
-}
-```
-
-### 使用例
-
+**使用例**:
 ```typescript
 // 基本（非アクティブ）
-<button className={itemBtnClass()}>
-  <Image src="/icon.png" alt="Item" width={44} height={44} />
-  <div className="text-xs">アイテム名</div>
-</button>
+<button className={itemBtnClass()}>アイテム</button>
 
 // アクティブ
-<button className={itemBtnClass({ active: true })}>
-  <Image src="/icon.png" alt="Item" width={44} height={44} />
-  <div className="text-xs">選択中</div>
-</button>
+<button className={itemBtnClass({ active: true })}>選択中</button>
 
 // 無効
-<button className={itemBtnClass({ disabled: true })} disabled>
-  <Image src="/icon.png" alt="Item" width={44} height={44} />
-  <div className="text-xs">無効</div>
+<button className={itemBtnClass({ disabled: true })} disabled>無効</button>
+
+// カスタムクラス追加
+<button className={itemBtnClass({ active: true, extra: 'w-full' })}>
+  フル幅
 </button>
 ```
-
----
 
 ## 入力フィールドスタイル定数
 
-### 定数定義
+**場所**: `frontend/src/components/ui/styles.ts`
 
+**責務**: 入力フィールドの共通スタイル定義
+
+**定数**:
 ```typescript
-export const BORDER_STYLE_1 =
-  'mb-2 px-3 py-2 border border-gray-200 rounded w-full text-sm transition-colors duration-150 hover:border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-300';
+export const BORDER_STYLE_1: string;
 ```
 
-### 使用例
+**スタイル仕様**:
+- パディング: 12px（横）、8px（縦）
+- ボーダー: グレー、1px
+- 角丸: 4px
+- ホバー: グレーボーダー（濃）
+- フォーカス: グレーボーダー（濃）、アウトラインなし
 
+**使用例**:
 ```typescript
 // input
 <input
   type="text"
-  placeholder="テキストを入力"
   className={BORDER_STYLE_1}
-  value={value}
-  onChange={(e) => setValue(e.target.value)}
+  placeholder="テキストを入力"
 />
 
 // textarea
 <textarea
+  className={`${BORDER_STYLE_1} min-h-[120px]`}
   placeholder="メモを入力"
-  className={`${BORDER_STYLE_1} min-h-[120px] resize-vertical`}
-  value={memo}
-  onChange={(e) => setMemo(e.target.value)}
 />
 ```
+
+## 技術的制約
+
+- Tailwind CSS 4を使用
+- TypeScript 5を使用
+- React 19を使用
+
+## 使用方針
+
+### Panelコンポーネント
+
+- コンテンツをグループ化する際に使用
+- カスタムスタイルはclassName propで追加
+- ネストも可能
+
+### アイテムボタンスタイル
+
+- ルーン、スペル、アイテム選択ボタンで使用
+- active/disabled状態を適切に管理
+- 一貫したUI/UXを提供
+
+### 入力フィールドスタイル
+
+- テキスト入力、テキストエリアで使用
+- 一貫したフォーカス状態を提供
+- カスタムスタイルは追加で指定

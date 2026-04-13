@@ -119,16 +119,10 @@ interface AuthContextType {
 - セッション永続化の設定を追加
 - ブラウザのlocalStorageを使用してセッションを保存
 
-**実装**:
-```typescript
-import { createBrowserClient } from '@supabase/ssr';
-
-export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
+**実装方針**:
+- `createBrowserClient`を使用してSupabaseクライアントを作成
+- 環境変数からSupabase URLとAnon Keyを取得
+- セッション永続化の設定を追加（デフォルトでlocalStorageを使用）
 ```
 
 ### 3. UIコンポーネント
@@ -143,15 +137,9 @@ export function createClient() {
 - ログイン・ログアウト処理をSupabase Authに変更
 
 **主要な変更箇所**:
-```typescript
-// Before: NextAuth.js
-import { useSession, signIn, signOut } from 'next-auth/react';
-const { data: session, status } = useSession();
-
-// After: Supabase Auth
-import { useAuth } from '@/lib/contexts/AuthContext';
-const { user, session, loading, signInWithGoogle, signOut } = useAuth();
-```
+- NextAuth.jsの`useSession`を削除
+- AuthContextの`useAuth`フックを使用
+- ログイン・ログアウト処理をSupabase Authに変更
 
 #### NotesPage（既存修正）
 
@@ -313,15 +301,10 @@ export interface AuthContextType {
 
 **エラーメッセージ**: "ログインに失敗しました。もう一度お試しください。"
 
-**処理**:
-```typescript
-try {
-  await supabase.auth.signInWithOAuth({ provider: 'google' });
-} catch (error) {
-  console.error('Authentication error:', error);
-  alert('ログインに失敗しました。もう一度お試しください。');
-}
-```
+**処理方針**:
+- try-catchでエラーをキャッチ
+- エラーメッセージをコンソールに出力
+- ユーザーにアラートで通知
 
 #### 2. ネットワークエラー
 
@@ -329,16 +312,10 @@ try {
 
 **エラーメッセージ**: "ネットワークエラーが発生しました。接続を確認してください。"
 
-**処理**:
-```typescript
-try {
-  const { data, error } = await supabase.from('champion_notes').select();
-  if (error) throw error;
-} catch (error) {
-  console.error('Network error:', error);
-  alert('ネットワークエラーが発生しました。接続を確認してください。');
-}
-```
+**処理方針**:
+- try-catchでエラーをキャッチ
+- エラーメッセージをコンソールに出力
+- ユーザーにアラートで通知
 
 #### 3. セッション復元エラー
 
@@ -346,16 +323,10 @@ try {
 
 **エラーメッセージ**: なし（自動的に未認証状態に遷移）
 
-**処理**:
-```typescript
-useEffect(() => {
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    setSession(session);
-    setUser(session?.user ?? null);
-    setLoading(false);
-  });
-}, []);
-```
+**処理方針**:
+- useEffectでセッション復元を試行
+- 成功時はセッション情報を状態に設定
+- 失敗時は未認証状態に遷移
 
 #### 4. RLSポリシーエラー
 
@@ -363,18 +334,10 @@ useEffect(() => {
 
 **エラーメッセージ**: "認証が必要です。ログインしてください。"
 
-**処理**:
-```typescript
-const { data, error } = await supabase.from('champion_notes').insert(note);
-if (error) {
-  if (error.code === 'PGRST301') {
-    alert('認証が必要です。ログインしてください。');
-  } else {
-    console.error('Database error:', error);
-    alert('データの保存に失敗しました。');
-  }
-}
-```
+**処理方針**:
+- データ操作時のエラーをキャッチ
+- RLSポリシーエラー（PGRST301）を特別に処理
+- その他のエラーは汎用メッセージを表示
 
 ### エラーログ
 

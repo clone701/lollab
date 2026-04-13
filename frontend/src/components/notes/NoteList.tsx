@@ -20,12 +20,14 @@ interface NoteListProps {
     myChampionId: string | null;
     enemyChampionId: string | null;
     onCreateNew: () => void;
+    onNoteClick?: (noteId: number) => void;
 }
 
 export default function NoteList({
     myChampionId,
     enemyChampionId,
-    onCreateNew
+    onCreateNew,
+    onNoteClick
 }: NoteListProps) {
     const [notes, setNotes] = useState<ChampionNote[]>([]);
     const [loading, setLoading] = useState(true);
@@ -132,7 +134,11 @@ export default function NoteList({
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {notes.map(note => (
-                        <NoteCard key={note.id} note={note} />
+                        <NoteCard
+                            key={note.id}
+                            note={note}
+                            onClick={onNoteClick}
+                        />
                     ))}
                 </div>
             )}

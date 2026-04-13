@@ -15,14 +15,24 @@ import { formatDate } from '@/lib/utils/dateHelpers';
 
 interface NoteCardProps {
     note: ChampionNote;
+    onClick?: (noteId: number) => void;
 }
 
-function NoteCard({ note }: NoteCardProps) {
+function NoteCard({ note, onClick }: NoteCardProps) {
     const myChampion = getChampionById(note.my_champion_id);
     const enemyChampion = getChampionById(note.enemy_champion_id);
 
+    const handleClick = () => {
+        if (onClick) {
+            onClick(note.id);
+        }
+    };
+
     return (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition cursor-default">
+        <div
+            className="bg-white rounded-lg border border-gray-200 p-4 transition-all duration-150 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-pink-300"
+            onClick={handleClick}
+        >
             {/* チャンピオンアイコン */}
             <div className="flex items-center gap-3 mb-3">
                 {myChampion && (

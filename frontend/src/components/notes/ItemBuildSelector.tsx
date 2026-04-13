@@ -6,6 +6,7 @@ import { STARTER_ITEMS } from '@/lib/data/items';
 interface ItemBuildSelectorProps {
     value: string[];
     onChange: (items: string[]) => void;
+    disabled?: boolean;
 }
 
 /**
@@ -16,7 +17,7 @@ interface ItemBuildSelectorProps {
  * - 数量表示: 同じアイテムを複数選択した場合、右上に「x2」などの数量バッジを表示
  * - 選択不可UI: 500g超過により選択できないアイテムは半透明で表示
  */
-function ItemBuildSelector({ value, onChange }: ItemBuildSelectorProps) {
+function ItemBuildSelector({ value, onChange, disabled = false }: ItemBuildSelectorProps) {
     // 選択中のアイテムの合計金額を計算
     const totalGold = useMemo(() => {
         return value.reduce((sum, itemId) => {
@@ -78,16 +79,16 @@ function ItemBuildSelector({ value, onChange }: ItemBuildSelectorProps) {
                                 e.preventDefault();
                                 handleItemClick(item.id, e as any);
                             }}
-                            disabled={wouldExceedLimit}
+                            disabled={disabled || wouldExceedLimit}
                             className={`relative flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] ${isSelected
                                 ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50'
-                                : wouldExceedLimit
+                                : wouldExceedLimit || disabled
                                     ? 'border border-gray-200 opacity-50 cursor-not-allowed bg-gray-50'
                                     : 'border border-gray-200 hover:ring-2 hover:ring-gray-300 bg-white'
                                 }`}
                             aria-label={`初期アイテム: ${item.name} ${item.gold}g${count > 0 ? ` (x${count})` : ''}`}
                             aria-pressed={isSelected}
-                            aria-disabled={wouldExceedLimit}
+                            aria-disabled={disabled || wouldExceedLimit}
                         >
                             {/* 数量バッジ（2個以上選択時） */}
                             {count > 1 && (
@@ -106,7 +107,7 @@ function ItemBuildSelector({ value, onChange }: ItemBuildSelectorProps) {
                                 loading="lazy"
                             />
                             <span className="text-xs text-gray-700 text-center leading-tight mt-1">{item.name}</span>
-                            <span className={`text-xs ${wouldExceedLimit ? 'text-gray-400' : 'text-gray-500'}`}>
+                            <span className={`text-xs ${wouldExceedLimit || disabled ? 'text-gray-400' : 'text-gray-500'}`}>
                                 {item.gold}g
                             </span>
                         </button>

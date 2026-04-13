@@ -6,6 +6,7 @@ import { SUMMONER_SPELLS } from '@/lib/data/summonerSpells';
 interface SummonerSpellPickerProps {
     value: string[];
     onChange: (spells: string[]) => void;
+    disabled?: boolean;
 }
 
 /**
@@ -13,7 +14,7 @@ interface SummonerSpellPickerProps {
  * 
  * 縦並びレイアウトで英語名を表示（コンパクト版）
  */
-function SummonerSpellPicker({ value, onChange }: SummonerSpellPickerProps) {
+function SummonerSpellPicker({ value, onChange, disabled = false }: SummonerSpellPickerProps) {
     const handleSpellClick = (spellId: string) => {
         if (value.includes(spellId)) {
             // 既に選択されている場合は解除
@@ -33,12 +34,16 @@ function SummonerSpellPicker({ value, onChange }: SummonerSpellPickerProps) {
                 <button
                     key={spell.id}
                     onClick={() => handleSpellClick(spell.id)}
+                    disabled={disabled}
                     className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 ${value.includes(spell.id)
                         ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50'
-                        : 'hover:ring-2 hover:ring-gray-300 bg-white'
+                        : disabled
+                            ? 'opacity-50 cursor-not-allowed bg-white'
+                            : 'hover:ring-2 hover:ring-gray-300 bg-white'
                         }`}
                     aria-label={`サモナースペル: ${spell.name}`}
                     aria-pressed={value.includes(spell.id)}
+                    aria-disabled={disabled}
                 >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
