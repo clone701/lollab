@@ -23,18 +23,21 @@ TabContentPlaceholder
 ### タブごとの表示内容
 
 #### 新規ノート作成タブ（'create'）
+
 ```
 チャンピオンを選択してください
 左のパネルで自分のチャンピオンと相手のチャンピオンを選択してください
 ```
 
 #### 汎用ノートタブ（'general'）
+
 ```
 汎用ノート機能
 汎用ノート機能は別Specで実装予定です
 ```
 
 #### チャンピオン対策ノートタブ（'matchup'）
+
 ```
 チャンピオンを選択してください
 対策ノート一覧機能は別Specで実装予定です
@@ -48,7 +51,9 @@ TabContentPlaceholder
 import TabContentPlaceholder from '@/components/notes/TabContentPlaceholder';
 
 function NotesPage() {
-  const [activeTab, setActiveTab] = useState<'create' | 'general' | 'matchup'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'general' | 'matchup'>(
+    'create'
+  );
   const [myChampionId, setMyChampionId] = useState<string | null>(null);
   const [enemyChampionId, setEnemyChampionId] = useState<string | null>(null);
 
@@ -68,17 +73,20 @@ function NotesPage() {
 ## 要件との対応
 
 ### 要件7: 新規ノート作成タブのコンテンツ
+
 - ✅ 7.1: 左サイドバーを表示（親コンポーネントで制御）
 - ✅ 7.2: 右側にプレースホルダーメッセージを表示
 - ✅ 7.3: 「チャンピオンを選択してください」メッセージを表示
 - ✅ 7.4: 「左のパネルで...」説明を表示
 
 ### 要件8: 汎用ノートタブのコンテンツ
+
 - ✅ 8.1: プレースホルダーメッセージを表示
 - ✅ 8.2: 「汎用ノート機能は別Specで実装予定です」メッセージを表示
 - ✅ 8.3: 左サイドバーを非表示（親コンポーネントで制御）
 
 ### 要件9: チャンピオン対策ノートタブのコンテンツ
+
 - ✅ 9.1: 左サイドバーを表示（親コンポーネントで制御）
 - ✅ 9.2: 右側にプレースホルダーメッセージを表示
 - ✅ 9.3: 「チャンピオンを選択してください」メッセージを表示

@@ -58,11 +58,7 @@ interface NoteFormProps {
 #### 作成モード
 
 ```tsx
-<NoteForm
-  onSubmit={handleSubmit}
-  onCancel={handleCancel}
-  loading={loading}
-/>
+<NoteForm onSubmit={handleSubmit} onCancel={handleCancel} loading={loading} />
 ```
 
 #### 編集モード

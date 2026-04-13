@@ -26,9 +26,7 @@ export default function RootLayout({
       <body className={notoSansJP.className}>
         <Providers>
           <Navbar />
-          <main className="mx-auto max-w-6xl px-4">
-            {children}
-          </main>
+          <main className="mx-auto max-w-6xl px-4">{children}</main>
           <Footer />
         </Providers>
       </body>

@@ -8,17 +8,20 @@ if [ -n "$BACKEND_FILES" ]; then
   echo "Running backend checks..."
   cd backend
   
+  # backend/プレフィックスを削除
+  BACKEND_FILES_RELATIVE=$(echo "$BACKEND_FILES" | sed 's|^backend/||')
+  
   # フォーマットチェック
-  black --check $BACKEND_FILES || exit 1
+  black --check $BACKEND_FILES_RELATIVE || exit 1
   
   # インポート順序チェック
-  isort --check-only $BACKEND_FILES || exit 1
+  isort --check-only $BACKEND_FILES_RELATIVE || exit 1
   
   # Lintチェック
-  flake8 $BACKEND_FILES || exit 1
+  flake8 $BACKEND_FILES_RELATIVE || exit 1
   
   # 型チェック
-  mypy $BACKEND_FILES || exit 1
+  mypy $BACKEND_FILES_RELATIVE || exit 1
   
   echo "Backend checks passed!"
 fi
