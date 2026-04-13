@@ -38,7 +38,7 @@
 #### 主要ドキュメント
 - 参照: 技術的制約のために `docs/architecture.md`
 - 参照: 設計パターンのために `docs/functional-design.md`
-- 参照: ファイル構成のために `docs/repository-structure.md`
+- 参照: ファイル構成のために `.kiro/steering/structure.md`
 - 出力: specディレクトリの `design.md`
 
 #### 品質ゲート
@@ -133,7 +133,7 @@
 
 ### フェーズ別必須 docs/ ファイル参照:
 - **フェーズ1（要件定義）**: `docs/product-requirements.md`, `docs/glossary.md`
-- **フェーズ2（設計）**: `docs/architecture.md`, `docs/functional-design.md`, `docs/repository-structure.md`
+- **フェーズ2（設計）**: `docs/architecture.md`, `docs/functional-design.md`, `.kiro/steering/structure.md`
 - **フェーズ3（テスト）**: `docs/development-guidelines.md`, `docs/architecture.md`
 - **フェーズ4（実装）**: `docs/development-guidelines.md`, `docs/glossary.md`
 - **フェーズ5（レビュー）**: `docs/development-guidelines.md`, `docs/architecture.md`
@@ -195,7 +195,7 @@
 - `docs/functional-design.md`: 設計パターンとアーキテクチャ
 - `docs/architecture.md`: 技術仕様と制約
 - `docs/development-guidelines.md`: コーディング基準と実践
-- `docs/repository-structure.md`: ファイル構成と命名
+- `.kiro/steering/structure.md`: ファイル構成と命名
 - `docs/glossary.md`: 用語と命名規則
 
 ### 使用ガイドライン
