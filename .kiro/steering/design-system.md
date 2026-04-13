@@ -100,11 +100,11 @@ const black = {
 
 ### ハイライトカラー
 
-**重要**: 選択状態のハイライトは**黒（ブラック）**を使用する
+**重要**: 選択状態のハイライトは**ゴールド（金色）アクセント + シャドウ**を使用する
 
 ```typescript
 // ✅ 正しい例
-<div className="bg-gray-100 border-2 border-black">選択中</div>
+<div className="ring-2 ring-yellow-500 shadow-lg shadow-yellow-500/50 bg-yellow-50">選択中</div>
 
 // ❌ 間違った例
 <div className="bg-pink-100 border-2 border-pink-300">選択中</div>
@@ -112,34 +112,32 @@ const black = {
 
 ### 選択状態のパターン
 
-#### パターン1: 背景 + ボーダー
+#### パターン1: リング + シャドウ + 背景
 ```typescript
 <button className={`
   ${selected 
-    ? 'bg-gray-100 border-2 border-black' 
-    : 'hover:bg-gray-50'
+    ? 'ring-2 ring-amber-400 shadow-md shadow-amber-400/30 bg-amber-50/50' 
+    : 'hover:ring-2 hover:ring-gray-300 bg-white'
   }
 `}>
 ```
 
-#### パターン2: リング（円形画像など）
-```typescript
-<img className={`
-  rounded-full
-  ${selected 
-    ? 'ring-2 ring-black' 
-    : 'hover:ring-2 hover:ring-gray-300'
-  }
-`} />
-```
-
-#### パターン3: 下線（タブなど）
+#### パターン2: グラデーションボーダー風
 ```typescript
 <button className={`
-  border-b-2
-  ${isActive 
-    ? 'border-black text-black' 
-    : 'border-transparent text-gray-600'
+  ${selected 
+    ? 'ring-2 ring-amber-400 bg-gradient-to-br from-amber-50/30 to-orange-50/30' 
+    : 'hover:ring-1 hover:ring-gray-300 bg-white'
+  }
+`}>
+```
+
+#### パターン3: 控えめな発光エフェクト
+```typescript
+<button className={`
+  ${selected 
+    ? 'ring-2 ring-amber-400 shadow-md shadow-amber-400/20 bg-slate-50' 
+    : 'hover:ring-1 hover:ring-gray-300 bg-white'
   }
 `}>
 ```
@@ -335,10 +333,10 @@ const containerWidth = {
 ```typescript
 <button className={`
   flex items-center gap-2 p-1.5 rounded w-full
-  transition-colors duration-150
+  transition-all duration-150
   ${selected 
-    ? 'bg-gray-100 border-2 border-black' 
-    : 'hover:bg-gray-50'
+    ? 'ring-2 ring-amber-400 shadow-md shadow-amber-400/30 bg-amber-50/50' 
+    : 'hover:ring-2 hover:ring-gray-300 bg-white'
   }
 `}>
   <img className="w-8 h-8 rounded-full" />
@@ -353,7 +351,7 @@ const containerWidth = {
   px-3 py-2 text-sm font-medium
   border-b-2 transition-colors duration-150
   ${isActive 
-    ? 'border-black text-black' 
+    ? 'border-amber-500 text-amber-700' 
     : 'border-transparent text-gray-600 hover:text-gray-800'
   }
 `}>
@@ -368,7 +366,7 @@ const containerWidth = {
   w-12 h-12 rounded-full
   transition-all duration-150
   ${selected 
-    ? 'ring-2 ring-black' 
+    ? 'ring-2 ring-amber-400 shadow-md shadow-amber-400/30' 
     : 'hover:ring-2 hover:ring-gray-300'
   }
 `} />
@@ -376,14 +374,15 @@ const containerWidth = {
 
 ## 禁止事項
 
-### ❌ 選択状態にピンク色を使用しない
+### ❌ 選択状態に黒ボーダーや派手な背景色を使用しない
 
 ```typescript
 // ❌ 間違い
-<div className="bg-pink-100 border-2 border-pink-300">選択中</div>
+<div className="bg-gray-100 border-2 border-black">選択中</div>
+<div className="bg-yellow-50 ring-2 ring-yellow-500">選択中</div>
 
 // ✅ 正しい
-<div className="bg-gray-100 border-2 border-black">選択中</div>
+<div className="ring-2 ring-amber-400 shadow-md shadow-amber-400/30 bg-amber-50/50">選択中</div>
 ```
 
 ### ❌ 過度に大きいサイズを使用しない

@@ -1,17 +1,1 @@
 @import "tailwindcss";
-
-:root {
-  --background: #f5f7fa;
-  --foreground: #22223b;
-  --card-bg: #fafdff;
-  --border: #e3e8ee;
-  --button-bg: #fafdff;
-  --button-hover: #e9f1fa;
-  --button-text: #374151;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: 'Geist', 'Segoe UI', 'Meiryo', Arial, Helvetica, sans-serif;
-}

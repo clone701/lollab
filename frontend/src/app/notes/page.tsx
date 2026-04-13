@@ -13,6 +13,8 @@ import GlobalLoading from '@/components/GlobalLoading';
 import TabNavigation, { TabType } from '@/components/notes/TabNavigation';
 import ChampionSelectorSidebar from '@/components/notes/ChampionSelectorSidebar';
 import TabContentPlaceholder from '@/components/notes/TabContentPlaceholder';
+import NoteList from '@/components/notes/NoteList';
+import NoteForm from '@/components/notes/NoteForm';
 
 /**
  * ノートページ
@@ -29,6 +31,8 @@ export default function NotesPage() {
     const [myChampionId, setMyChampionId] = useState<string | null>(null);
     const [enemyChampionId, setEnemyChampionId] = useState<string | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false); // モバイル用
+    const [showForm, setShowForm] = useState(false); // フォーム表示状態（要件: 2, 7, 10）
+    const [refreshKey, setRefreshKey] = useState(0); // ノート一覧の再フェッチ用
 
     // ローディング中の表示（要件: 12.3, 13.1, 13.2）
     if (status === 'loading') {
@@ -38,7 +42,7 @@ export default function NotesPage() {
     // 未認証時の表示（要件: 1.3, 12.1）
     if (status === 'unauthenticated') {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+            <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center p-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">
                         ログインが必要です
@@ -48,7 +52,8 @@ export default function NotesPage() {
                     </p>
                     <button
                         onClick={() => signIn()}
-                        className="px-6 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors duration-150"
+                        className="px-6 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        aria-label="ログイン"
                     >
                         ログイン
                     </button>
@@ -63,6 +68,8 @@ export default function NotesPage() {
     // タブ切り替えハンドラー（要件: 2.3, 14.5）
     const handleTabChange = (tab: TabType) => {
         setActiveTab(tab);
+        // タブ切り替え時はフォームを閉じる
+        setShowForm(false);
     };
 
     // チャンピオン選択ハンドラー（要件: 3.4, 5.5）
@@ -78,6 +85,24 @@ export default function NotesPage() {
     const handleReset = () => {
         setMyChampionId(null);
         setEnemyChampionId(null);
+        setShowForm(false);
+    };
+
+    // ノート作成ハンドラー（要件: 7, 10）
+    const handleCreateNew = () => {
+        setShowForm(true);
+    };
+
+    // ノート保存ハンドラー（要件: 7, 10）
+    const handleSave = () => {
+        setShowForm(false);
+        // ノート一覧を再フェッチするためにキーを更新
+        setRefreshKey(prev => prev + 1);
+    };
+
+    // キャンセルハンドラー（要件: 7, 10）
+    const handleCancel = () => {
+        setShowForm(false);
     };
 
     // サイドバー開閉ハンドラー（モバイル用）
@@ -90,7 +115,7 @@ export default function NotesPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen">
             {/* タブナビゲーション（要件: 2.1, 2.5, 5.4） */}
             <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
 
@@ -133,11 +158,47 @@ export default function NotesPage() {
 
                 {/* 右メインエリア（要件: 5.3） */}
                 <div className="flex-1 min-h-screen">
-                    <TabContentPlaceholder
-                        tab={activeTab}
-                        myChampionId={myChampionId}
-                        enemyChampionId={enemyChampionId}
-                    />
+                    {/* 新規ノート作成タブ: NoteListとNoteFormを切り替え（要件: 2, 7, 10） */}
+                    {activeTab === 'create' && (
+                        <div className="p-6 max-w-5xl mx-auto">
+                            {!myChampionId || !enemyChampionId ? (
+                                // チャンピオン未選択時
+                                <div className="flex items-center justify-center h-96">
+                                    <div className="text-center text-gray-500">
+                                        <p className="text-lg mb-2">チャンピオンを選択してください</p>
+                                        <p className="text-sm">
+                                            左のパネルで自分のチャンピオンと相手のチャンピオンを選択してください
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : showForm ? (
+                                // フォーム表示
+                                <NoteForm
+                                    myChampionId={myChampionId}
+                                    enemyChampionId={enemyChampionId}
+                                    onCancel={handleCancel}
+                                    onSave={handleSave}
+                                />
+                            ) : (
+                                // ノート一覧表示
+                                <NoteList
+                                    key={refreshKey}
+                                    myChampionId={myChampionId}
+                                    enemyChampionId={enemyChampionId}
+                                    onCreateNew={handleCreateNew}
+                                />
+                            )}
+                        </div>
+                    )}
+
+                    {/* その他のタブ: プレースホルダー表示 */}
+                    {activeTab !== 'create' && (
+                        <TabContentPlaceholder
+                            tab={activeTab}
+                            myChampionId={myChampionId}
+                            enemyChampionId={enemyChampionId}
+                        />
+                    )}
                 </div>
             </div>
 

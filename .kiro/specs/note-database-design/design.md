@@ -160,6 +160,7 @@ CREATE TABLE profiles (
 | user_id             | uuid       | FK, NOT NULL   | 外部キー、app_users.id                  |
 | my_champion_id      | text       | NOT NULL       | 自分のチャンピオンID（例: "Ahri"）      |
 | enemy_champion_id   | text       | NOT NULL       | 相手のチャンピオンID（必須）            |
+| preset_name         | text       | NOT NULL       | プリセット名（例: "序盤安定型"）        |
 | runes               | jsonb      | NULL           | ルーン構成（JSON）                      |
 | spells              | jsonb      | NULL           | サモナースペル（配列JSON）              |
 | items               | jsonb      | NULL           | 初期アイテム（配列JSON）                |
@@ -181,6 +182,7 @@ CREATE TABLE champion_notes (
   user_id uuid NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
   my_champion_id text NOT NULL,
   enemy_champion_id text NOT NULL,
+  preset_name text NOT NULL,
   runes jsonb,
   spells jsonb,
   items jsonb,
@@ -267,6 +269,7 @@ erDiagram
         uuid user_id FK
         text my_champion_id
         text enemy_champion_id
+        text preset_name
         jsonb runes
         jsonb spells
         jsonb items
@@ -382,6 +385,7 @@ WITH CHECK (auth.uid() = id);
   "user_id": "550e8400-e29b-41d4-a716-446655440000",
   "my_champion_id": "Ahri",
   "enemy_champion_id": "Yasuo",
+  "preset_name": "序盤安定型",
   "runes": {
     "primaryPath": 8100,
     "secondaryPath": 8300,
@@ -578,6 +582,7 @@ ORDER BY ordinal_position;
 - `user_id`: uuid, NOT NULL
 - `my_champion_id`: text, NOT NULL
 - `enemy_champion_id`: text, NOT NULL
+- `preset_name`: text, NOT NULL
 - `runes`: jsonb, NULL
 - `spells`: jsonb, NULL
 - `items`: jsonb, NULL

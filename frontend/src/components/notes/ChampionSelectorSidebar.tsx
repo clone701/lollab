@@ -79,6 +79,8 @@ const ChampionSelectorSidebar: React.FC<ChampionSelectorSidebarProps> = React.me
         } else {
             onEnemyChampionChange(championId);
         }
+        // チャンピオン選択時に検索クエリをリセット
+        setSearchQuery('');
     }, [selectionMode, onMyChampionChange, onEnemyChampionChange]);
 
     const handleMyChampionClick = useCallback(() => {
@@ -100,7 +102,7 @@ const ChampionSelectorSidebar: React.FC<ChampionSelectorSidebarProps> = React.me
                             w-full p-3 rounded-lg transition-colors
                             ${selectionMode === 'my'
                                 ? 'bg-blue-100 border-2 border-blue-400'
-                                : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
+                                : 'bg-blue-50 border border-blue-200 hover:bg-blue-100'
                             }
                         `}
                     >
@@ -137,7 +139,7 @@ const ChampionSelectorSidebar: React.FC<ChampionSelectorSidebarProps> = React.me
                             w-full p-3 rounded-lg transition-colors
                             ${selectionMode === 'enemy'
                                 ? 'bg-red-100 border-2 border-red-400'
-                                : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
+                                : 'bg-red-50 border border-red-200 hover:bg-red-100'
                             }
                         `}
                     >

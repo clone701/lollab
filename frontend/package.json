@@ -14,6 +14,7 @@
     "test:ci": "jest --ci"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.43.4",
     "next": "15.5.9",
     "next-auth": "^4.24.11",
