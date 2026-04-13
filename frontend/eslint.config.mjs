@@ -22,6 +22,21 @@ const eslintConfig = [
       "jest.setup.js",
     ],
   },
+  {
+    rules: {
+      // React Hooks依存配列チェック
+      "react-hooks/exhaustive-deps": "warn",
+
+      // 未使用変数の検出
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }],
+
+      // console.logの警告（本番前に削除推奨）
+      "no-console": ["warn", { "allow": ["warn", "error"] }],
+    },
+  },
 ];
 
 export default eslintConfig;

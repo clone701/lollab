@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# フロントエンドチェック
+cd frontend
+npx lint-staged
+
+# バックエンドチェック
+cd ..
+.husky/pre-commit-backend
