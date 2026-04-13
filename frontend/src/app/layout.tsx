@@ -1,19 +1,34 @@
-import './globals.css';
-import { Inter } from 'next/font/google';
+import type { Metadata } from 'next';
+import { Noto_Sans_JP } from 'next/font/google';
+import { Providers } from './providers';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Providers } from './providers';
+import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+const notoSansJP = Noto_Sans_JP({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-noto-sans-jp',
+});
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // loading状態を子コンポーネントに渡すなど工夫が必要です
+export const metadata: Metadata = {
+  title: 'LoL Lab',
+  description: 'League of Legends戦略分析ツール',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="ja">
-      <body className={inter.className}>
+    <html lang="ja" className={notoSansJP.variable}>
+      <body className={notoSansJP.className}>
         <Providers>
           <Navbar />
-          <main className="mx-auto max-w-6xl px-4">{children}</main>
+          <main className="mx-auto max-w-6xl px-4">
+            {children}
+          </main>
           <Footer />
         </Providers>
       </body>

@@ -1,7 +1,13 @@
-import Image from 'next/image';
+/**
+ * GlobalLoading コンポーネント
+ * 
+ * アプリケーション全体で使用するローディング表示
+ * 非同期処理中に画面右下にGIFアニメーションを表示する
+ */
 
 export default function GlobalLoading({ loading }: { loading: boolean }) {
   if (!loading) return null;
+
   return (
     <div
       style={{
@@ -11,12 +17,13 @@ export default function GlobalLoading({ loading }: { loading: boolean }) {
         zIndex: 9999,
       }}
     >
-      <Image
-        src="/loading/nunu.gif"
+      {/* GIFアニメーションは通常のimgタグを使用（Next.js Imageは非対応） */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/loading/nunu.gif"
         alt="Loading"
-        width={240}   // 48 x 5 = 240
-        height={240}  // 48 x 5 = 240
-        priority
+        width={240}
+        height={240}
       />
     </div>
   );

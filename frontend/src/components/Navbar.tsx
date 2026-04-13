@@ -1,127 +1,195 @@
+/**
+ * Navbar コンポーネント
+ * 
+ * アプリケーション全体で使用するナビゲーションバー
+ * - ロゴとベータバッジを表示
+ * - ナビゲーションリンク（レスポンシブ対応）
+ * - 認証状態に応じたUI表示（ユーザーアイコン）
+ * - ドロップダウンメニュー（ユーザー名、メールアドレス、ログアウトボタン）
+ * - ログイン・ログアウト時のローディング制御
+ */
+
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
-import { signIn, signOut, useSession } from 'next-auth/react';
-import { useState, useRef, useEffect } from 'react';
-import GlobalLoading from './GlobalLoading';
+import { useContext, useState, useEffect, useRef } from 'react';
+import { LoadingContext } from '@/lib/contexts/LoadingContext';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export default function Navbar() {
-  const { data: session } = useSession();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const { user, session, loading, signInWithGoogle, signOut } = useAuth();
+  const { setLoading } = useContext(LoadingContext);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // セッション復元時にuser_id取得
-  useEffect(() => {
-    if (session?.user?.email && !localStorage.getItem("user_id")) {
-      fetch(
-        process.env.NEXT_PUBLIC_BACKEND_URL +
-          `/api/users/by_email?email=${session.user.email}`
-      )
-        .then((res) => res.json())
-        .then((result) => {
-          if (result.ok && result.user_id) {
-            localStorage.setItem("user_id", result.user_id);
-            console.log("user_id set in localStorage (Navbar):", result.user_id);
-          }
-        });
-    }
-  }, [session]);
+  /**
+   * ログイン処理
+   */
+  const handleSignIn = async () => {
+    setLoading(true);
+    await signInWithGoogle();
+    setLoading(false);
+  };
 
-  // メニュー外クリックで閉じる
+  /**
+   * ログアウト処理
+   */
+  const handleSignOut = async () => {
+    setLoading(true);
+    setIsMenuOpen(false);
+    await signOut();
+    setLoading(false);
+  };
+
+  /**
+   * メニュー外側クリックで閉じる
+   */
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false);
+        setIsMenuOpen(false);
       }
-    }
-    if (menuOpen) {
+    };
+
+    if (isMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [menuOpen]);
+  }, [isMenuOpen]);
+
+  /**
+   * Escキーで閉じる
+   */
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('keydown', handleEscKey);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [isMenuOpen]);
 
   return (
-    <>
-      <header className="bg-white border-b border-[var(--border)] text-[var(--foreground)] sticky top-0 z-40">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          {/* Left: Logo */}
-          <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="text-lg font-bold tracking-tight text-[var(--foreground)]"
-            >
-              LoL Lab
-            </Link>
-            <span className="ml-1 bg-gray-100 text-gray-500 text-xs rounded px-2 py-0.5 border border-gray-200">
-              ベータ
-            </span>
-          </div>
-
-          {/* Center: simple nav */}
-          <nav className="hidden gap-8 md:flex">
-            <Link href="/" className="text-sm text-gray-500 hover:text-[var(--foreground)] transition">ホーム</Link>
-            <Link href="/champions" className="text-sm text-gray-500 hover:text-[var(--foreground)] transition">チャンピオン</Link>
-            <Link href="/notes/createNote" className="text-sm text-gray-500 hover:text-[var(--foreground)] transition">メモ</Link>
-          </nav>
-
-          {/* Right */}
-          <div className="flex items-center gap-2" ref={menuRef}>
-            {!session && (
-              <>
-                <button
-                  onClick={() => {
-                    setLoading(true);
-                    signIn('google');
-                  }}
-                  className="bg-gray-700 text-white px-4 py-1.5 rounded font-medium text-sm hover:bg-gray-900 transition"
-                  aria-label="ログイン"
-                >
-                  ログイン
-                </button>
-              </>
-            )}
-            {session && (
-              <div className="relative">
-                <button
-                  onClick={() => setMenuOpen((v) => !v)}
-                  className="flex items-center focus:outline-none"
-                  aria-label="アカウントメニュー"
-                >
-                  <Image
-                    src={session.user?.image ?? ''}
-                    alt="User"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 rounded-full border border-gray-300"
-                    referrerPolicy="no-referrer"
-                  />
-                </button>
-                {menuOpen && (
-                  <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
-                    <div className="px-4 py-2 text-sm text-gray-700">{session.user?.name}</div>
-                    <div className="px-4 py-2 text-xs text-gray-500 truncate">{session.user?.email}</div>
-                    <button
-                      onClick={() => {
-                        setLoading(true);
-                        setMenuOpen(false);
-                        signOut();
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                    >
-                      ログアウト
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+        {/* Left: ロゴとベータバッジ */}
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="text-2xl font-bold text-gray-900 tracking-tight hover:text-gray-700 transition-all"
+          >
+            LoL Lab
+          </Link>
+          <span className="bg-gray-100 text-gray-600 text-xs font-semibold rounded-full px-2.5 py-1">
+            ベータ
+          </span>
         </div>
-      </header>
-      <GlobalLoading loading={loading} />
-    </>
+
+        {/* Center: ナビゲーションリンク（レスポンシブ対応） */}
+        <nav className="hidden gap-8 md:flex">
+          <Link
+            href="/"
+            className="text-sm text-gray-600 hover:text-gray-900 transition"
+          >
+            ホーム
+          </Link>
+          <Link
+            href="/champion"
+            className="text-sm text-gray-600 hover:text-gray-900 transition"
+          >
+            チャンピオン
+          </Link>
+          <Link
+            href="/notes"
+            className="text-sm text-gray-600 hover:text-gray-900 transition"
+          >
+            ノート
+          </Link>
+        </nav>
+
+        {/* Right: 認証状態に応じたUI表示 */}
+        <div className="flex items-center gap-2">
+          {loading ? (
+            // ローディング時: アニメーションするプレースホルダー（円形、36px）
+            <div className="h-9 w-9 animate-pulse rounded-full bg-gray-200" />
+          ) : session ? (
+            // ログイン時: Googleアカウントのアバター画像（円形、36px）
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="relative group"
+                aria-label="ユーザーメニュー"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={user?.user_metadata?.avatar_url || '/images/default-avatar.png'}
+                  alt={user?.user_metadata?.name || 'User'}
+                  className="h-9 w-9 rounded-full border-2 border-gray-200 hover:border-blue-400 transition cursor-pointer"
+                />
+              </button>
+
+              {/* ドロップダウンメニュー: フェードイン/アウトアニメーション */}
+              {isMenuOpen && (
+                <div
+                  className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg border border-gray-200 py-2 animate-fadeIn"
+                  style={{
+                    animation: 'fadeIn 0.2s ease-in-out',
+                  }}
+                >
+                  {/* メニュー内容: ユーザー名、メールアドレス */}
+                  <div className="px-4 py-3 border-b border-gray-200">
+                    <p className="text-base font-semibold text-gray-900">
+                      {user?.user_metadata?.name || 'ユーザー'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {user?.email || ''}
+                    </p>
+                  </div>
+
+                  {/* ログアウトボタン */}
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                  >
+                    ログアウト
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            // 未ログイン時: 濃いグレーボタン（bg-gray-800）、ホバー効果（hover:bg-gray-900）
+            <button
+              onClick={handleSignIn}
+              className="px-6 py-2.5 text-sm font-semibold text-white bg-gray-800 hover:bg-gray-900 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              ログイン
+            </button>
+          )}
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </header>
   );
 }

@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Commit After Task Completion",
+  "description": "タスク完了後にGitコミットを促し、適切なコミットメッセージを提案",
+  "version": "1",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "タスクが完了しました。変更をGitにコミットしますか？完了したタスクの内容に基づいて、適切なコミットメッセージを提案してください。"
+  }
+}

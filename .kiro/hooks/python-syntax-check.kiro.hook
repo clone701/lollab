@@ -1,0 +1,18 @@
+{
+  "enabled": false,
+  "name": "Python Code Quality Check on Save",
+  "description": "Pythonファイル保存時にflake8でコード品質をチェック（Windows環境では無効化 - 手動実行を推奨: cd backend; python -m flake8 .）",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "backend/**/*.py"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "python -m flake8 .",
+    "timeout": 30,
+    "cwd": "backend"
+  }
+}

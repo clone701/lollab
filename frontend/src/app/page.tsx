@@ -1,27 +1,14 @@
-import SearchBar from '@/components/SearchBar';
-import RecentChips from '@/components/RecentChips';
-import PinnedChips from '@/components/PinnedChips';
-
 export default function HomePage() {
   return (
-    <div className="py-10">
-      {/* Hero */}
-      <section className="mb-10">
-
-        {/* Search */}
-        <div className="mt-6">
-          <SearchBar />
-        </div>
-      </section>
-
-      {/* Body: left content + right card */}
-      <section className="grid gap-8 md:grid-cols-[1fr,320px]">
-        <div className="space-y-8">
-          <RecentChips />
-          <PinnedChips />
-        </div>
-
-      </section>
+    <div className="py-8">
+      <div className="text-center space-y-4">
+        <h1 className="text-3xl font-bold text-gray-900">
+          LoL Lab へようこそ
+        </h1>
+        <p className="text-gray-600">
+          League of Legends戦略分析ツール
+        </p>
+      </div>
     </div>
   );
 }
