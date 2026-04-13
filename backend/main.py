@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from config import settings
 
 app = FastAPI(title=settings.app_name)
@@ -13,10 +14,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 async def root():
     """ヘルスチェック用エンドポイント"""
     return {"status": "ok", "message": "LoL Lab API is running"}
+
 
 @app.get("/health")
 async def health_check():

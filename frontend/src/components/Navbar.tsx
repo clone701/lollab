@@ -1,6 +1,6 @@
 /**
  * Navbar コンポーネント
- * 
+ *
  * アプリケーション全体で使用するナビゲーションバー
  * - ロゴとベータバッジを表示
  * - ナビゲーションリンク（レスポンシブ対応）
@@ -132,7 +132,10 @@ export default function Navbar() {
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={user?.user_metadata?.avatar_url || '/images/default-avatar.png'}
+                  src={
+                    user?.user_metadata?.avatar_url ||
+                    '/images/default-avatar.png'
+                  }
                   alt={user?.user_metadata?.name || 'User'}
                   className="h-9 w-9 rounded-full border-2 border-gray-200 hover:border-blue-400 transition cursor-pointer"
                 />

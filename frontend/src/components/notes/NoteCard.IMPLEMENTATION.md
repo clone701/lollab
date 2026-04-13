@@ -1,6 +1,7 @@
 # NoteCard コンポーネント実装サマリー
 
 ## 実装日時
+
 2024年（Spec 2-2: champion-note-basic - Task 4 & 4.1）
 
 ## 実装内容
@@ -128,22 +129,28 @@ interface NoteCardProps {
 ## 要件との対応
 
 ### 要件1.3: ノート一覧の表示内容
+
 - ✅ チャンピオン画像を表示
 - ✅ ノートタイプを識別可能な形で表示（バッジ）
 
 ### 要件1.4: 作成日時の表示
+
 - ✅ 各ノートの作成日時を表示（日本語形式）
 
 ### 要件1.5: ノートタイプの識別
+
 - ✅ 汎用/対策を識別可能な形で表示（色分けバッジ）
 
 ### 要件7.1: 削除ボタンの表示
+
 - ✅ 各ノートに削除ボタンを表示
 
 ### 要件13.1: レスポンシブデザイン
+
 - ✅ モバイルデバイスで適切に表示される
 
 ### 要件14.5: パフォーマンス最適化
+
 - ✅ React.memoを使用して不要な再レンダリングを防止
 
 ## 設計との対応
@@ -151,6 +158,7 @@ interface NoteCardProps {
 ### コンポーネント設計（design.md）
 
 #### Props
+
 ```typescript
 interface NoteCardProps {
   note: ChampionNote;
@@ -158,9 +166,11 @@ interface NoteCardProps {
   onEdit: (id: number) => void;
 }
 ```
+
 ✅ 設計通りに実装
 
 #### 表示内容
+
 - ✅ チャンピオン画像（マイ・敵）
 - ✅ ノートタイプバッジ（汎用/対策）
 - ✅ メモのプレビュー（100文字制限）
@@ -168,6 +178,7 @@ interface NoteCardProps {
 - ✅ 編集・削除ボタン
 
 #### パフォーマンス最適化
+
 - ✅ React.memoでメモ化
 
 ## 動作確認
@@ -221,7 +232,7 @@ Task 5以降で、このNoteCardコンポーネントを使用してノート一
 
 ### 使用予定箇所
 
-- **ノート一覧ページ** (`/notes`): 
+- **ノート一覧ページ** (`/notes`):
   - ノート一覧をグリッドレイアウトで表示
   - 各ノートをNoteCardで表示
   - 編集・削除機能を統合
@@ -232,7 +243,9 @@ Task 5以降で、このNoteCardコンポーネントを使用してノート一
 
 ```typescript
 const myChampion = getChampionById(note.my_champion_id);
-const enemyChampion = note.enemy_champion_id ? getChampionById(note.enemy_champion_id) : null;
+const enemyChampion = note.enemy_champion_id
+  ? getChampionById(note.enemy_champion_id)
+  : null;
 ```
 
 - `getChampionById`が`undefined`を返す可能性があるため、条件付きレンダリングで対応
@@ -241,9 +254,8 @@ const enemyChampion = note.enemy_champion_id ? getChampionById(note.enemy_champi
 ### メモの切り捨て
 
 ```typescript
-const memoPreview = note.memo.length > 100 
-  ? note.memo.substring(0, 100) + '...' 
-  : note.memo;
+const memoPreview =
+  note.memo.length > 100 ? note.memo.substring(0, 100) + '...' : note.memo;
 ```
 
 - `substring`を使用して最初の100文字を取得
@@ -255,7 +267,7 @@ const memoPreview = note.memo.length > 100
 const formattedDate = new Date(note.updated_at).toLocaleDateString('ja-JP', {
   year: 'numeric',
   month: 'long',
-  day: 'numeric'
+  day: 'numeric',
 });
 ```
 

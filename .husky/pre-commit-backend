@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# バックエンドファイルが変更された場合のみ実行
+BACKEND_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '^backend/.*\.py$' || true)
+
+if [ -n "$BACKEND_FILES" ]; then
+  echo "Running backend checks..."
+  cd backend
+  
+  # backend/プレフィックスを削除
+  BACKEND_FILES_RELATIVE=$(echo "$BACKEND_FILES" | sed 's|^backend/||')
+  
+  # フォーマットチェック
+  black --check $BACKEND_FILES_RELATIVE || exit 1
+  
+  # インポート順序チェック
+  isort --check-only $BACKEND_FILES_RELATIVE || exit 1
+  
+  # Lintチェック
+  flake8 $BACKEND_FILES_RELATIVE || exit 1
+  
+  # 型チェック
+  mypy $BACKEND_FILES_RELATIVE || exit 1
+  
+  echo "Backend checks passed!"
+fi

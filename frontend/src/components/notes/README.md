@@ -12,7 +12,7 @@
 - **検索機能**: チャンピオン名で検索（部分一致、大文字小文字区別なし）
 - **選択状態管理**: 選択されたチャンピオンを視覚的に表示（ピンク色のボーダー）
 - **レスポンシブデザイン**: 画面サイズに応じてグリッド列数を調整（4列→6列→8列）
-- **パフォーマンス最適化**: 
+- **パフォーマンス最適化**:
   - React.memoでコンポーネントをメモ化
   - useMemoでフィルタリング結果をメモ化
   - 画像の遅延読み込み（loading="lazy"）
@@ -37,11 +37,11 @@ function MyComponent() {
 
 ### Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| value | string \| null | Yes | 選択されているチャンピオンID |
-| onChange | (championId: string) => void | Yes | チャンピオン選択時のコールバック |
-| label | string | Yes | セレクターのラベル |
+| Prop     | Type                         | Required | Description                      |
+| -------- | ---------------------------- | -------- | -------------------------------- |
+| value    | string \| null               | Yes      | 選択されているチャンピオンID     |
+| onChange | (championId: string) => void | Yes      | チャンピオン選択時のコールバック |
+| label    | string                       | Yes      | セレクターのラベル               |
 
 ### テスト
 
@@ -73,6 +73,7 @@ http://localhost:3000/test-champion-selector
 ```
 
 このページでは以下を確認できます：
+
 - チャンピオン選択の動作
 - 検索機能
 - 選択状態の視覚的表示
@@ -125,28 +126,28 @@ function NotesPage() {
 
 ### Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| note | ChampionNote | Yes | 表示するノートデータ |
-| onDelete | (id: number) => void | Yes | 削除ボタンクリック時のコールバック |
-| onEdit | (id: number) => void | Yes | 編集ボタンクリック時のコールバック |
+| Prop     | Type                 | Required | Description                        |
+| -------- | -------------------- | -------- | ---------------------------------- |
+| note     | ChampionNote         | Yes      | 表示するノートデータ               |
+| onDelete | (id: number) => void | Yes      | 削除ボタンクリック時のコールバック |
+| onEdit   | (id: number) => void | Yes      | 編集ボタンクリック時のコールバック |
 
 ### 表示内容
 
-- **ノートタイプバッジ**: 
+- **ノートタイプバッジ**:
   - 汎用ノート: 青色バッジ（`bg-blue-600`）
   - 対策ノート: 緑色バッジ（`bg-green-600`）
-- **チャンピオン画像**: 
+- **チャンピオン画像**:
   - マイチャンピオン: 常に表示（48x48px）
   - 敵チャンピオン: 対策ノートの場合のみ表示（48x48px）
   - 画像パス: `/images/champion/{ChampionName}.png`
-- **メモプレビュー**: 
+- **メモプレビュー**:
   - 100文字以内: そのまま表示
   - 100文字超: 最初の100文字 + "..."
-- **作成日時**: 
+- **作成日時**:
   - 日本語形式: `2024年1月15日`
   - `updated_at`フィールドを使用
-- **ボタン**: 
+- **ボタン**:
   - 編集ボタン: 青色（`bg-blue-600`）
   - 削除ボタン: 赤色（`bg-red-600`）
 
@@ -155,6 +156,7 @@ function NotesPage() {
 単体テストは `__tests__/NoteCard.test.tsx` に実装されています。
 
 テストカバレッジ:
+
 - 基本表示（バッジ、画像、メモ、日時、ボタン）
 - メモプレビューの切り捨て（100文字制限）
 - ボタンクリック機能（編集・削除）
