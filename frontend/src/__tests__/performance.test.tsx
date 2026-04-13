@@ -16,7 +16,6 @@ import NotesPage from '@/app/notes/page';
 import CreateNotePage from '@/app/notes/createNote/page';
 import { fetchNotes, createNote, updateNote } from '@/lib/api/notes';
 import { ChampionNote } from '@/types/note';
-import ChampionSelector from '@/components/notes/ChampionSelector';
 
 // モック設定
 jest.mock('next-auth/react');
@@ -291,136 +290,6 @@ describe('パフォーマンステスト', () => {
         });
     });
 
-    describe('要件14.3: チャンピオン選択UIの表示時間テスト', () => {
-        it('チャンピオン選択UIを1秒以内に表示する', async () => {
-            const mockOnChange = jest.fn();
-
-            const startTime = performance.now();
-
-            render(
-                <ChampionSelector
-                    value={null}
-                    onChange={mockOnChange}
-                    label="マイチャンピオン"
-                />
-            );
-
-            // チャンピオン選択UIが表示されることを確認
-            await waitFor(() => {
-                expect(screen.getByText('マイチャンピオン')).toBeInTheDocument();
-            });
-
-            const endTime = performance.now();
-            const renderTime = endTime - startTime;
-
-            // 1秒（1000ms）以内に表示されることを確認
-            expect(renderTime).toBeLessThan(1000);
-            console.log(`チャンピオン選択UIの表示時間: ${renderTime.toFixed(2)}ms`);
-        });
-
-        it('チャンピオン選択UIの検索機能が1秒以内に応答する', async () => {
-            const mockOnChange = jest.fn();
-
-            render(
-                <ChampionSelector
-                    value={null}
-                    onChange={mockOnChange}
-                    label="マイチャンピオン"
-                />
-            );
-
-            // 検索入力欄を取得
-            const searchInput = screen.getByPlaceholderText('チャンピオン名で検索...');
-
-            const startTime = performance.now();
-
-            // 検索を実行
-            fireEvent.change(searchInput, { target: { value: 'Ahri' } });
-
-            // 検索結果が表示されることを確認
-            await waitFor(() => {
-                expect(screen.getByAltText('Ahri')).toBeInTheDocument();
-            });
-
-            const endTime = performance.now();
-            const searchTime = endTime - startTime;
-
-            // 1秒（1000ms）以内に応答することを確認
-            expect(searchTime).toBeLessThan(1000);
-            console.log(`チャンピオン検索の応答時間: ${searchTime.toFixed(2)}ms`);
-        });
-
-        it('チャンピオン選択が1秒以内に完了する', async () => {
-            const mockOnChange = jest.fn();
-
-            render(
-                <ChampionSelector
-                    value={null}
-                    onChange={mockOnChange}
-                    label="マイチャンピオン"
-                />
-            );
-
-            // チャンピオンボタンを取得
-            await waitFor(() => {
-                expect(screen.getByAltText('Ahri')).toBeInTheDocument();
-            });
-
-            const championButton = screen.getByAltText('Ahri').closest('button');
-
-            const startTime = performance.now();
-
-            // チャンピオンを選択
-            if (championButton) {
-                fireEvent.click(championButton);
-            }
-
-            // onChangeが呼ばれることを確認
-            await waitFor(() => {
-                expect(mockOnChange).toHaveBeenCalledWith('Ahri');
-            });
-
-            const endTime = performance.now();
-            const selectTime = endTime - startTime;
-
-            // 1秒（1000ms）以内に完了することを確認
-            expect(selectTime).toBeLessThan(1000);
-            console.log(`チャンピオン選択の処理時間: ${selectTime.toFixed(2)}ms`);
-        });
-
-        it('チャンピオン画像の遅延読み込みが正しく動作する', async () => {
-            const mockOnChange = jest.fn();
-
-            const startTime = performance.now();
-
-            render(
-                <ChampionSelector
-                    value={null}
-                    onChange={mockOnChange}
-                    label="マイチャンピオン"
-                />
-            );
-
-            // 最初のチャンピオン画像が表示されることを確認
-            await waitFor(() => {
-                const images = screen.getAllByRole('img');
-                expect(images.length).toBeGreaterThan(0);
-
-                // Next.js Imageコンポーネントがloading="lazy"を使用していることを確認
-                // Next.js Imageは自動的に遅延読み込みを適用する
-                const firstImage = images[0] as HTMLImageElement;
-                expect(firstImage.getAttribute('loading')).toBe('lazy');
-            });
-
-            const endTime = performance.now();
-            const lazyLoadTime = endTime - startTime;
-
-            // 1秒（1000ms）以内に表示されることを確認
-            expect(lazyLoadTime).toBeLessThan(1000);
-            console.log(`チャンピオン画像の遅延読み込み時間: ${lazyLoadTime.toFixed(2)}ms`);
-        });
-    });
-
     describe('統合パフォーマンステスト', () => {
         it('ノート作成ページ全体が3秒以内に表示される', async () => {
             const startTime = performance.now();
@@ -492,34 +361,6 @@ describe('パフォーマンステスト', () => {
             // 2秒（2000ms）以内に表示されることを確認
             expect(loadTime).toBeLessThan(2000);
             console.log(`大量ノート（200件）の読み込み時間: ${loadTime.toFixed(2)}ms`);
-        });
-
-        it('チャンピオン選択UIで全171チャンピオンが1秒以内に表示される', async () => {
-            const mockOnChange = jest.fn();
-
-            const startTime = performance.now();
-
-            render(
-                <ChampionSelector
-                    value={null}
-                    onChange={mockOnChange}
-                    label="マイチャンピオン"
-                />
-            );
-
-            // 全チャンピオンが表示されることを確認
-            await waitFor(() => {
-                const images = screen.getAllByRole('img');
-                // 171チャンピオン全てが表示されることを確認
-                expect(images.length).toBeGreaterThanOrEqual(171);
-            });
-
-            const endTime = performance.now();
-            const renderTime = endTime - startTime;
-
-            // 1秒（1000ms）以内に表示されることを確認
-            expect(renderTime).toBeLessThan(1000);
-            console.log(`全チャンピオン（171件）の表示時間: ${renderTime.toFixed(2)}ms`);
         });
     });
 });

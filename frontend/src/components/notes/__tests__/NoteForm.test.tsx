@@ -4,32 +4,6 @@ import '@testing-library/jest-dom';
 import NoteForm from '../NoteForm';
 import { ChampionNote } from '@/types/note';
 
-// ChampionSelectorをモック
-jest.mock('../ChampionSelector', () => {
-    return function MockChampionSelector({
-        value,
-        onChange,
-        label,
-    }: {
-        value: string | null;
-        onChange: (id: string) => void;
-        label: string;
-    }) {
-        return (
-            <div data-testid={`champion-selector-${label}`}>
-                <label>{label}</label>
-                <button
-                    onClick={() => onChange('Ahri')}
-                    data-testid={`select-champion-${label}`}
-                >
-                    Select Ahri
-                </button>
-                {value && <span data-testid={`selected-${label}`}>{value}</span>}
-            </div>
-        );
-    };
-});
-
 describe('NoteForm', () => {
     const mockOnSubmit = jest.fn();
     const mockOnCancel = jest.fn();
