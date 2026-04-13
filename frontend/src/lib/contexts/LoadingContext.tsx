@@ -4,7 +4,7 @@ import { createContext } from 'react';
 
 /**
  * LoadingContext
- * 
+ *
  * アプリケーション全体でローディング状態を管理するためのContext
  * 任意のコンポーネントからローディング表示を制御できる
  */

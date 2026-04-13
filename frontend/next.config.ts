@@ -1,5 +1,5 @@
 // Next.jsの型定義をインポート
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 // Next.jsの設定オブジェクト
 const nextConfig: NextConfig = {
@@ -8,13 +8,13 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       // LoL公式画像（ddragon.leagueoflegends.com）を許可
       {
-        protocol: "https",
-        hostname: "ddragon.leagueoflegends.com",
+        protocol: 'https',
+        hostname: 'ddragon.leagueoflegends.com',
       },
       // Googleアカウント画像（lh3.googleusercontent.com）を許可
       {
-        protocol: "https",
-        hostname: "lh3.googleusercontent.com",
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
       },
     ],
   },
