@@ -12,7 +12,7 @@ export interface NotesPageContentProps {
   selectedNote: ChampionNote | null;
   noteLoading: boolean;
   showDeleteDialog: boolean;
-  toast: { message: string; type: 'success' | 'error' } | null;
+  toast: { message: string; type: 'success' | 'error' | 'info' } | null;
   onTabChange: (tab: TabType) => void;
   onMyChampionChange: (id: string | null) => void;
   onEnemyChampionChange: (id: string | null) => void;
