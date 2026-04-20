@@ -9,11 +9,6 @@ interface SummonerSpellPickerProps {
   disabled?: boolean;
 }
 
-/**
- * SummonerSpellPicker - サモナースペル選択UIコンポーネント
- *
- * 縦並びレイアウトで英語名を表示（コンパクト版）
- */
 function SummonerSpellPicker({
   value,
   onChange,
@@ -21,13 +16,10 @@ function SummonerSpellPicker({
 }: SummonerSpellPickerProps) {
   const handleSpellClick = (spellId: string) => {
     if (value.includes(spellId)) {
-      // 既に選択されている場合は解除
       onChange(value.filter((id) => id !== spellId));
     } else if (value.length < 2) {
-      // 2つ未満の場合は追加
       onChange([...value, spellId]);
     } else {
-      // 2つ選択済みの場合は最初のスペルを置き換え
       onChange([value[1], spellId]);
     }
   };
@@ -37,9 +29,10 @@ function SummonerSpellPicker({
       {SUMMONER_SPELLS.map((spell) => (
         <button
           key={spell.id}
+          type="button"
           onClick={() => handleSpellClick(spell.id)}
           disabled={disabled}
-          className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+          className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
             value.includes(spell.id)
               ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50'
               : disabled
@@ -48,7 +41,6 @@ function SummonerSpellPicker({
           }`}
           aria-label={`サモナースペル: ${spell.name}`}
           aria-pressed={value.includes(spell.id)}
-          aria-disabled={disabled}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

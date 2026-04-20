@@ -13,7 +13,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ChampionNote } from '@/types/note';
-import { getNotes } from '@/lib/api/notes';
+import { getNotes } from '@/adapters/supabase';
 import NoteCard from './NoteCard';
 
 interface NoteListProps {
@@ -128,7 +128,7 @@ export default function NoteList({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-2">
           {notes.map((note) => (
             <NoteCard key={note.id} note={note} onClick={onNoteClick} />
           ))}

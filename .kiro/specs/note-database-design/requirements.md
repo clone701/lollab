@@ -7,10 +7,8 @@
 ## 用語集
 
 - **Note_System**: ノート管理システム全体
-- **Champion_Note**: チャンピオン関連のノート（汎用・対策の両方を含む）
-- **General_Note**: 汎用ノート（特定のマッチアップに依存しない一般的なメモ・戦略）
+- **General_Note**: 汎用ノート（チャンピオンに紐付かない自由なメモ）
 - **Matchup_Note**: 対策ノート（特定のマッチアップに対する詳細な対策情報）
-- **Note_Type**: ノートの種類を識別する列挙型（general, matchup）
 - **User**: 認証済みユーザー（app_usersテーブル）
 - **Champion_ID**: チャンピオンを識別する文字列（例: "Ahri", "Yasuo"）
 - **Rune_Config**: ルーン構成を表すJSON形式のデータ
@@ -21,42 +19,39 @@
 
 ## 要件
 
-### 要件1: ノートタイプの識別
+### 要件1: テーブル分離設計
 
-**ユーザーストーリー:** 開発者として、汎用ノートと対策ノートを明確に区別したい。そうすることで、適切なUIとバリデーションを提供できる。
+**ユーザーストーリー:** 開発者として、汎用ノートと対策ノートを別テーブルで管理したい。そうすることで、それぞれの関心事を明確に分離し、スキーマをシンプルに保てる。
 
 #### 受け入れ基準
 
-1. THE Champion_Note SHALL ノートタイプを識別するnote_type列を持つ
-2. THE note_type列 SHALL 'general'または'matchup'の値のみを許可する
-3. WHEN note_typeが'general'の場合、THE Champion_Note SHALL enemy_champion_idをNULLとして保存する
-4. WHEN note_typeが'matchup'の場合、THE Champion_Note SHALL enemy_champion_idを必須とする
+1. THE Note_System SHALL 汎用ノートを `general_notes` テーブルで管理する
+2. THE Note_System SHALL 対策ノートを `champion_notes` テーブルで管理する
+3. THE general_notes テーブル SHALL `champion_notes` テーブルと独立したスキーマを持つ
 
 ### 要件2: 汎用ノートのデータ構造
 
-**ユーザーストーリー:** プレイヤーとして、特定のチャンピオンに関する一般的な戦略やメモを記録したい。そうすることで、そのチャンピオンを使用する際の基本的な知識を蓄積できる。
+**ユーザーストーリー:** プレイヤーとして、チャンピオンに紐付かない自由なメモを記録したい。そうすることで、ゲーム全般の学びや戦略を蓄積できる。
 
 #### 受け入れ基準
 
-1. WHEN note_typeが'general'の場合、THE Champion_Note SHALL my_champion_idを必須とする
-2. WHEN note_typeが'general'の場合、THE Champion_Note SHALL enemy_champion_idをNULLとして保存する
-3. THE General_Note SHALL ルーン構成（runes）をJSONB形式で保存できる
-4. THE General_Note SHALL サモナースペル（spells）をJSONB形式で保存できる
-5. THE General_Note SHALL アイテムビルド（items）をJSONB形式で保存できる
-6. THE General_Note SHALL 自由形式のメモ（memo）をテキスト形式で保存できる
+1. THE General_Note SHALL タイトル（title）を必須で保存できる
+2. THE General_Note SHALL 本文（body）をテキスト形式で保存できる
+3. THE General_Note SHALL タグ（tags）をtext[]配列形式で保存できる
+4. THE tags SHALL 最大10個まで保存できる
+5. THE General_Note SHALL created_at・updated_at を持つ
 
-### 要件3: 対策ノートのデータ構造
+### 要件3: 対策ノートのデータ構造（既存）
 
 **ユーザーストーリー:** プレイヤーとして、特定のマッチアップに対する詳細な対策情報を記録したい。そうすることで、同じマッチアップに再度遭遇した際に効果的な戦略を素早く参照できる。
 
 #### 受け入れ基準
 
-1. WHEN note_typeが'matchup'の場合、THE Champion_Note SHALL my_champion_idを必須とする
-2. WHEN note_typeが'matchup'の場合、THE Champion_Note SHALL enemy_champion_idを必須とする
-3. THE Matchup_Note SHALL ルーン構成（runes）をJSONB形式で保存できる
-4. THE Matchup_Note SHALL サモナースペル（spells）をJSONB形式で保存できる
-5. THE Matchup_Note SHALL アイテムビルド（items）をJSONB形式で保存できる
-6. THE Matchup_Note SHALL 対策メモ（memo）をテキスト形式で保存できる
+1. THE Matchup_Note SHALL my_champion_id・enemy_champion_id を必須で保存できる
+2. THE Matchup_Note SHALL ルーン構成（runes）をJSONB形式で保存できる
+3. THE Matchup_Note SHALL サモナースペル（spells）をJSONB形式で保存できる
+4. THE Matchup_Note SHALL アイテムビルド（items）をJSONB形式で保存できる
+5. THE Matchup_Note SHALL 対策メモ（memo）をテキスト形式で保存できる
 
 ### 要件4: ユーザーデータの分離
 
@@ -64,9 +59,9 @@
 
 #### 受け入れ基準
 
-1. THE Champion_Note SHALL user_id列を持つ
+1. THE general_notes SHALL user_id列を持つ
 2. THE user_id列 SHALL app_users.idへの外部キー制約を持つ
-3. WHEN ノートを作成する場合、THE Note_System SHALL 認証済みユーザーのIDをuser_idに設定する
+3. WHEN ユーザーが削除された場合、THE Note_System SHALL そのユーザーのgeneral_notesをCASCADE削除する
 4. WHEN ノートを取得する場合、THE Note_System SHALL 現在のユーザーのIDでフィルタリングする
 
 ### 要件5: データの整合性とバリデーション
@@ -75,11 +70,11 @@
 
 #### 受け入れ基準
 
-1. THE Champion_Note SHALL id列を主キーとして持つ
+1. THE general_notes SHALL id列を主キーとして持つ
 2. THE id列 SHALL 自動採番される
-3. THE my_champion_id列 SHALL NOT NULL制約を持つ
-4. WHEN note_typeが'matchup'の場合、THE Champion_Note SHALL enemy_champion_idがNULLでないことを検証する
-5. THE Champion_Note SHALL created_at列とupdated_at列を持つ
+3. THE title列 SHALL NOT NULL制約を持つ
+4. THE tags列 SHALL `array_length(tags, 1) <= 10` のCHECK制約を持つ
+5. THE general_notes SHALL created_at・updated_at列を持つ
 6. WHEN ノートを作成する場合、THE Note_System SHALL created_atに現在時刻を設定する
 7. WHEN ノートを更新する場合、THE Note_System SHALL updated_atに現在時刻を設定する
 
@@ -89,57 +84,27 @@
 
 #### 受け入れ基準
 
-1. THE Champion_Note SHALL user_id列にインデックスを持つ
-2. THE Champion_Note SHALL my_champion_id列にインデックスを持つ
-3. THE Champion_Note SHALL enemy_champion_id列にインデックスを持つ
-4. THE Champion_Note SHALL note_type列にインデックスを持つ
-5. WHEN ユーザーが自分のノートを検索する場合、THE Note_System SHALL インデックスを使用して200ms以内に結果を返す
+1. THE general_notes SHALL `(user_id, updated_at DESC)` の複合インデックスを持つ
+2. THE general_notes SHALL tagsにGINインデックスを持つ
+3. WHEN ユーザーが自分のノート一覧を取得する場合、THE Note_System SHALL インデックスを使用して200ms以内に結果を返す
 
-### 要件7: JSONデータ構造の定義
+### 要件7: JSONデータ構造の定義（対策ノート用）
 
 **ユーザーストーリー:** 開発者として、ルーン・スペル・アイテムのJSON構造を明確に定義したい。そうすることで、フロントエンドとバックエンドで一貫したデータ形式を使用できる。
 
 #### 受け入れ基準
 
-1. THE Rune_Config SHALL primaryPath（メインルーンパスID）を含む
-2. THE Rune_Config SHALL secondaryPath（サブルーンパスID）を含む
-3. THE Rune_Config SHALL keystone（キーストーンルーンID）を含む
-4. THE Rune_Config SHALL primaryRunes（メインルーン配列）を含む
-5. THE Rune_Config SHALL secondaryRunes（サブルーン配列）を含む
-6. THE Rune_Config SHALL shards（シャード配列）を含む
-7. THE Summoner_Spell SHALL 2つの文字列要素を持つ配列である
-8. THE Item_Build SHALL 文字列要素の配列である
+1. THE Rune_Config SHALL primaryPath・secondaryPath・keystone・primaryRunes・secondaryRunes・shardsを含む
+2. THE Summoner_Spell SHALL 2つの文字列要素を持つ配列である
+3. THE Item_Build SHALL 文字列要素の配列である
 
-### 要件8: 既存データとの互換性
-
-**ユーザーストーリー:** 開発者として、既存の`champion_notes`テーブルのデータを新しい構造に移行したい。そうすることで、既存ユーザーのデータを失うことなく新機能を提供できる。
-
-#### 受け入れ基準
-
-1. THE Note_System SHALL 既存のchampion_notesテーブル構造を拡張する
-2. WHEN 既存のノートが存在する場合、THE Note_System SHALL それらをnote_type='matchup'として扱う
-3. THE Note_System SHALL 既存のカラム（id, user_id, my_champion_id, enemy_champion_id, runes, spells, items, memo, created_at, updated_at）を保持する
-4. THE Note_System SHALL note_type列を新規追加する
-
-### 要件9: マイグレーション戦略
-
-**ユーザーストーリー:** 開発者として、安全にデータベーススキーマを更新したい。そうすることで、ダウンタイムなしで新機能をデプロイできる。
-
-#### 受け入れ基準
-
-1. THE Note_System SHALL note_type列をデフォルト値'matchup'で追加する
-2. WHEN note_type列を追加する場合、THE Note_System SHALL 既存のレコードに'matchup'を設定する
-3. THE Note_System SHALL CHECK制約を追加してnote_typeの値を検証する
-4. THE Note_System SHALL 必要なインデックスを作成する
-5. WHEN マイグレーションが失敗した場合、THE Note_System SHALL ロールバック可能である
-
-### 要件10: Supabase Row Level Security (RLS)
+### 要件8: Supabase Row Level Security (RLS)
 
 **ユーザーストーリー:** プレイヤーとして、自分のノートが確実に保護されていることを知りたい。そうすることで、安心してアプリケーションを使用できる。
 
 #### 受け入れ基準
 
-1. THE Champion_Note SHALL Row Level Security (RLS)を有効にする
+1. THE general_notes SHALL Row Level Security (RLS)を有効にする
 2. THE Note_System SHALL ユーザーが自分のノートのみを読み取れるポリシーを持つ
 3. THE Note_System SHALL ユーザーが自分のノートのみを作成できるポリシーを持つ
 4. THE Note_System SHALL ユーザーが自分のノートのみを更新できるポリシーを持つ
@@ -153,20 +118,9 @@
 {
   "id": 1,
   "user_id": "uuid-here",
-  "note_type": "general",
-  "my_champion_id": "Ahri",
-  "enemy_champion_id": null,
-  "runes": {
-    "primaryPath": 8100,
-    "secondaryPath": 8200,
-    "keystone": 8112,
-    "primaryRunes": [8126, 8138, 8135],
-    "secondaryRunes": [9111, 9104],
-    "shards": [5008, 5008, 5002]
-  },
-  "spells": ["SummonerFlash", "SummonerIgnite"],
-  "items": ["1055", "2003"],
-  "memo": "基本的なビルドとプレイスタイル",
+  "title": "ランクマッチ学習メモ",
+  "body": "## 序盤\n- ウェーブクリアを優先\n\n## 学びまとめ\n- /yasuo のウィンドウォールに注意",
+  "tags": ["ウェーブ", "ローム"],
   "created_at": "2024-01-01T00:00:00Z",
   "updated_at": "2024-01-01T00:00:00Z"
 }
@@ -177,17 +131,10 @@
 {
   "id": 2,
   "user_id": "uuid-here",
-  "note_type": "matchup",
   "my_champion_id": "Ahri",
   "enemy_champion_id": "Yasuo",
-  "runes": {
-    "primaryPath": 8100,
-    "secondaryPath": 8300,
-    "keystone": 8112,
-    "primaryRunes": [8126, 8138, 8135],
-    "secondaryRunes": [8304, 8345],
-    "shards": [5008, 5008, 5002]
-  },
+  "preset_name": "序盤安定型",
+  "runes": { "primaryPath": 8100, "secondaryPath": 8300, "keystone": 8112, "primaryRunes": [8126, 8138, 8135], "secondaryRunes": [8304, 8345], "shards": [5008, 5008, 5002] },
   "spells": ["SummonerFlash", "SummonerExhaust"],
   "items": ["1056", "2003"],
   "memo": "Yasuoのウィンドウォールに注意。Eでハラスしてから距離を取る。",
@@ -199,13 +146,15 @@
 ## 技術的制約
 
 - PostgreSQL 14以上（Supabaseの標準バージョン）
-- JSONB型のサポート必須
+- JSONB型のサポート必須（champion_notes用）
+- text[]型のサポート必須（general_notes.tags用）
 - Row Level Security (RLS)のサポート必須
 - インデックス作成によるパフォーマンス最適化
 
 ## 非機能要件
 
 - 検索クエリは200ms以内に応答する
-- 1ユーザーあたり最大1000ノートをサポート
-- JSONBデータは最大10KBまで
+- 1ユーザーあたり最大1,000ノートをサポート
+- JSONBデータは最大10KBまで（champion_notes）
+- タグ: 最大10個、各20文字以内（general_notes）
 - データベース接続はSupabase Clientを使用

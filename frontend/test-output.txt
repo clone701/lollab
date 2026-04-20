@@ -1,0 +1,185 @@
+﻿node.exe :  笞 Warning: Next.js inferred your workspace root, but it may not be 
+correct.
+発生場所 行:1 文字:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( 笞 Warning: Ne...not be correct.: 
+   String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ We detected multiple lockfiles and selected the directory of C:\Users\clone\lol
+lab\package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or
+ consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#ca
+veats for more information.
+ Detected additional lockfiles: 
+   * C:\Users\clone\lollab\frontend\package-lock.json
+
+FAIL src/__tests__/fe-refactor-steering.property.test.ts
+  Property 1: 繝輔ぃ繧､繝ｫ繧ｵ繧､繧ｺ蛻ｶ邏・    竏・components\notes\NoteForm\index.ts 縺ｮimport
+髯､縺崎｡梧焚縺・0莉･荳・(2 ms)
+    竏・components\notes\NoteForm\NoteForm.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・compone
+nts\notes\NoteForm\NoteFormActions.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・(1 ms)
+    竏・components\notes\NoteForm\NoteFormFields.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・c
+omponents\notes\NoteForm\NoteFormHeader.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・componen
+ts\notes\NoteForm\NoteFormMemoField.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・(1 ms)
+    竏・components\notes\NoteForm\NoteFormRuneSection.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・  
+  竏・components\notes\NoteForm\NoteFormView.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・compo
+nents\notes\NoteForm\types.ts 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・(1 ms)
+    ﾃ・components\notes\NoteForm\useNoteForm.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・comp
+onents\notes\NoteForm\validateNoteForm.ts 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・components
+\notes\RuneSelector\index.ts 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・components\notes\RuneSe
+lector\PrimaryRuneSection.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・components\notes\RuneS
+elector\RuneButton.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・components\notes\RuneSelector
+\RuneSelector.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・components\notes\RuneSelector\Rune
+SelectorView.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・components\notes\RuneSelector\Secon
+daryRuneSection.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・components\notes\RuneSelector\Sh
+ardsSection.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・(1 ms)
+    ﾃ・components\notes\RuneSelector\useRuneSelector.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・  
+  竏・components\notes\ChampionSelectorSidebar\ChampionList.tsx 縺ｮimport髯､縺崎｡梧焚縺・0
+莉･荳・    竏・components\notes\ChampionSelectorSidebar\ChampionPickButton.tsx 縺ｮimpo
+rt髯､縺崎｡梧焚縺・0莉･荳・(1 ms)
+    竏・components\notes\ChampionSelectorSidebar\ChampionSelectorSidebar.tsx 縺ｮimp
+ort髯､縺崎｡梧焚縺・0莉･荳・    ﾃ・components\notes\ChampionSelectorSidebar\ChampionSelector
+SidebarView.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・components\notes\ChampionSelectorSid
+ebar\index.ts 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    ﾃ・components\notes\ChampionSelectorSideb
+ar\useChampionSelector.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・(1 ms)
+    竏・app\notes\MatchupTabContent.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・app\notes\Note
+DetailView.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・app\notes\NotesPageContent.tsx 縺ｮimpo
+rt髯､縺崎｡梧焚縺・0莉･荳・(1 ms)
+    竏・app\notes\page.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・app\notes\SidebarLayout.tsx
+ 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・app\notes\types.ts 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・    竏・app\
+notes\useNoteActions.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・(1 ms)
+    竏・app\notes\useNotesPage.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・  Property 2: 繧ｻ繝槭Φ繝・ぅ繝・け
+HTML蛻ｶ邏・    竏・components\notes\NoteForm\NoteForm.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・
+    竏・components\notes\NoteForm\NoteFormActions.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・ 
+   竏・components\notes\NoteForm\NoteFormFields.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・(1 
+ms)
+    竏・components\notes\NoteForm\NoteFormHeader.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・  
+  竏・components\notes\NoteForm\NoteFormMemoField.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・ 
+   竏・components\notes\NoteForm\NoteFormRuneSection.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑
+縺・    竏・components\notes\NoteForm\NoteFormView.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・(1
+ ms)
+    竏・components\notes\NoteForm\useNoteForm.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・    竏
+・components\notes\RuneSelector\PrimaryRuneSection.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺
+・    竏・components\notes\RuneSelector\RuneButton.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・ 
+   竏・components\notes\RuneSelector\RuneSelector.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・(
+1 ms)
+    竏・components\notes\RuneSelector\RuneSelectorView.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺
+励↑縺・    竏・components\notes\RuneSelector\SecondaryRuneSection.tsx 縺ｫ <div onClick
+> 縺悟ｭ伜惠縺励↑縺・    竏・components\notes\RuneSelector\ShardsSection.tsx 縺ｫ <div onClic
+k> 縺悟ｭ伜惠縺励↑縺・    竏・components\notes\RuneSelector\useRuneSelector.tsx 縺ｫ <div onC
+lick> 縺悟ｭ伜惠縺励↑縺・    竏・components\notes\ChampionSelectorSidebar\ChampionList.tsx 
+縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・(1 ms)
+    竏・components\notes\ChampionSelectorSidebar\ChampionPickButton.tsx 縺ｫ <div on
+Click> 縺悟ｭ伜惠縺励↑縺・    竏・components\notes\ChampionSelectorSidebar\ChampionSelector
+Sidebar.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・    竏・components\notes\ChampionSelectorSi
+debar\ChampionSelectorSidebarView.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・    竏・component
+s\notes\ChampionSelectorSidebar\useChampionSelector.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励
+↑縺・(1 ms)
+    竏・app\notes\MatchupTabContent.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・    竏・app\notes
+\NoteDetailView.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・    竏・app\notes\NotesPageContent.
+tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・    竏・app\notes\page.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励
+↑縺・    竏・app\notes\SidebarLayout.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・(1 ms)
+    竏・app\notes\useNoteActions.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・    竏・app\notes\us
+eNotesPage.tsx 縺ｫ <div onClick> 縺悟ｭ伜惠縺励↑縺・  Property 3: Public API 繝代ち繝ｼ繝ｳ驕ｵ螳・  
+  竏・components/notes/NoteForm/ 縺ｫ index.ts 縺悟ｭ伜惠縺吶ｋ
+    竏・components/notes/NoteForm/index.ts 縺ｮ import 縺ｯ逶ｸ蟇ｾ繝代せ・・/・峨ｒ菴ｿ逕ｨ縺吶ｋ (1 ms)
+    竏・components/notes/RuneSelector/ 縺ｫ index.ts 縺悟ｭ伜惠縺吶ｋ
+    竏・components/notes/RuneSelector/index.ts 縺ｮ import 縺ｯ逶ｸ蟇ｾ繝代せ・・/・峨ｒ菴ｿ逕ｨ縺吶ｋ
+    竏・components/notes/ChampionSelectorSidebar/ 縺ｫ index.ts 縺悟ｭ伜惠縺吶ｋ
+    竏・components/notes/ChampionSelectorSidebar/index.ts 縺ｮ import 縺ｯ逶ｸ蟇ｾ繝代せ・・/・峨
+ｒ菴ｿ逕ｨ縺吶ｋ (1 ms)
+    竏・adapters/supabase/ 縺ｫ index.ts 縺悟ｭ伜惠縺吶ｋ
+    竏・adapters/supabase/index.ts 縺ｮ import 縺ｯ逶ｸ蟇ｾ繝代せ・・/・峨ｒ菴ｿ逕ｨ縺吶ｋ
+
+  笳・Property 1: 繝輔ぃ繧､繝ｫ繧ｵ繧､繧ｺ蛻ｶ邏・窶ｺ components\notes\NoteForm\useNoteForm.tsx 縺ｮ
+import髯､縺崎｡梧焚縺・0莉･荳・
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 60
+    Received:    65
+
+    [0m [90m 51 |[39m       [36mconst[39m rel [33m=[39m path[33m.[39mre
+lative([33mSRC[39m[33m,[39m file)[33m;[39m
+     [90m 52 |[39m       it([32m`${rel} 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳義[39m[33m,[39
+m () [33m=>[39m {
+    [31m[1m>[22m[39m[90m 53 |[39m         expect(nonImportLines(file))[33
+m.[39mtoBeLessThanOrEqual([35m60[39m)[33m;[39m
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 54 |[39m       })[33m;[39m
+     [90m 55 |[39m     }
+     [90m 56 |[39m   }[0m
+
+      at Object.toBeLessThanOrEqual (src/__tests__/fe-refactor-steering.property
+.test.ts:53:38)
+
+  笳・Property 1: 繝輔ぃ繧､繝ｫ繧ｵ繧､繧ｺ蛻ｶ邏・窶ｺ components\notes\RuneSelector\useRuneSelecto
+r.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 60
+    Received:    70
+
+    [0m [90m 51 |[39m       [36mconst[39m rel [33m=[39m path[33m.[39mre
+lative([33mSRC[39m[33m,[39m file)[33m;[39m
+     [90m 52 |[39m       it([32m`${rel} 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳義[39m[33m,[39
+m () [33m=>[39m {
+    [31m[1m>[22m[39m[90m 53 |[39m         expect(nonImportLines(file))[33
+m.[39mtoBeLessThanOrEqual([35m60[39m)[33m;[39m
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 54 |[39m       })[33m;[39m
+     [90m 55 |[39m     }
+     [90m 56 |[39m   }[0m
+
+      at Object.toBeLessThanOrEqual (src/__tests__/fe-refactor-steering.property
+.test.ts:53:38)
+
+  笳・Property 1: 繝輔ぃ繧､繝ｫ繧ｵ繧､繧ｺ蛻ｶ邏・窶ｺ components\notes\ChampionSelectorSidebar\Cha
+mpionSelectorSidebarView.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 60
+    Received:    64
+
+    [0m [90m 51 |[39m       [36mconst[39m rel [33m=[39m path[33m.[39mre
+lative([33mSRC[39m[33m,[39m file)[33m;[39m
+     [90m 52 |[39m       it([32m`${rel} 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳義[39m[33m,[39
+m () [33m=>[39m {
+    [31m[1m>[22m[39m[90m 53 |[39m         expect(nonImportLines(file))[33
+m.[39mtoBeLessThanOrEqual([35m60[39m)[33m;[39m
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 54 |[39m       })[33m;[39m
+     [90m 55 |[39m     }
+     [90m 56 |[39m   }[0m
+
+      at Object.toBeLessThanOrEqual (src/__tests__/fe-refactor-steering.property
+.test.ts:53:38)
+
+  笳・Property 1: 繝輔ぃ繧､繝ｫ繧ｵ繧､繧ｺ蛻ｶ邏・窶ｺ components\notes\ChampionSelectorSidebar\use
+ChampionSelector.tsx 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳・
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 60
+    Received:    63
+
+    [0m [90m 51 |[39m       [36mconst[39m rel [33m=[39m path[33m.[39mre
+lative([33mSRC[39m[33m,[39m file)[33m;[39m
+     [90m 52 |[39m       it([32m`${rel} 縺ｮimport髯､縺崎｡梧焚縺・0莉･荳義[39m[33m,[39
+m () [33m=>[39m {
+    [31m[1m>[22m[39m[90m 53 |[39m         expect(nonImportLines(file))[33
+m.[39mtoBeLessThanOrEqual([35m60[39m)[33m;[39m
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 54 |[39m       })[33m;[39m
+     [90m 55 |[39m     }
+     [90m 56 |[39m   }[0m
+
+      at Object.toBeLessThanOrEqual (src/__tests__/fe-refactor-steering.property
+.test.ts:53:38)
+
+Test Suites: 1 failed, 1 total
+Tests:       4 failed, 64 passed, 68 total
+Snapshots:   0 total
+Time:        0.505 s, estimated 1 s
+Ran all test suites matching fe-refactor-steering.property.
