@@ -14,6 +14,9 @@ const notoSansJP = Noto_Sans_JP({
 export const metadata: Metadata = {
   title: 'LoL Lab',
   description: 'League of Legends戦略分析ツール',
+  icons: {
+    icon: '/images/loading/nunu.gif',
+  },
 };
 
 export default function RootLayout({
