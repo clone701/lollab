@@ -39,7 +39,7 @@ const tabs: Tab[] = [
 const TabNavigation: React.FC<TabNavigationProps> = React.memo(
   ({ activeTab, onTabChange }) => {
     return (
-      <div className="border-b border-gray-200 bg-white">
+      <div className="border-b border-gray-200 bg-white sticky top-14 z-30">
         <div className="flex gap-1 px-4 overflow-x-auto">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;

@@ -1,0 +1,1 @@
+export { GeneralNoteCard } from './GeneralNoteCard';

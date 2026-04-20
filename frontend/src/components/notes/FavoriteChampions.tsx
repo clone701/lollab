@@ -51,17 +51,17 @@ const FavoriteChampions: React.FC<FavoriteChampionsProps> = React.memo(
                 src={champion.imagePath}
                 alt={champion.name}
                 className={`
-                                w-12 h-12 rounded-full
+                                w-10 h-10 rounded-full
                                 transition-all duration-150
                                 ${
                                   selectedId === champion.id
-                                    ? 'ring-2 ring-black'
-                                    : 'hover:ring-2 hover:ring-gray-300'
+                                    ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20'
+                                    : 'hover:ring-2 hover:ring-blue-400'
                                 }
                             `}
                 loading="lazy"
-                width={48}
-                height={48}
+                width={40}
+                height={40}
               />
               <span className="text-[10px] text-center text-gray-700 leading-tight">
                 {champion.name}

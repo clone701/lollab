@@ -22,19 +22,13 @@ function NoteCard({ note, onClick }: NoteCardProps) {
   const myChampion = getChampionById(note.my_champion_id);
   const enemyChampion = getChampionById(note.enemy_champion_id);
 
-  const handleClick = () => {
-    if (onClick) {
-      onClick(note.id);
-    }
-  };
-
   return (
     <div
-      className="bg-white rounded-lg border border-gray-200 p-4 transition-all duration-150 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-pink-300"
-      onClick={handleClick}
+      className="bg-white rounded-lg border border-gray-200 p-3 transition-all duration-150 cursor-pointer hover:ring-2 hover:ring-blue-400 flex items-center gap-3"
+      onClick={() => onClick?.(note.id)}
     >
       {/* チャンピオンアイコン */}
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-1 shrink-0">
         {myChampion && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -46,7 +40,7 @@ function NoteCard({ note, onClick }: NoteCardProps) {
             loading="lazy"
           />
         )}
-        <span className="text-gray-400">vs</span>
+        <span className="text-gray-400 text-xs">vs</span>
         {enemyChampion && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -61,15 +55,14 @@ function NoteCard({ note, onClick }: NoteCardProps) {
       </div>
 
       {/* プリセット名 */}
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+      <p className="flex-1 text-sm font-semibold text-gray-900 truncate">
         {note.preset_name}
-      </h3>
+      </p>
 
-      {/* 日時情報 */}
-      <div className="text-xs text-gray-500 space-y-1">
-        <p>作成: {formatDate(note.created_at)}</p>
-        <p>更新: {formatDate(note.updated_at)}</p>
-      </div>
+      {/* 更新日時 */}
+      <span className="text-xs text-gray-400 shrink-0">
+        {formatDate(note.updated_at)}
+      </span>
     </div>
   );
 }

@@ -92,61 +92,10 @@ sequenceDiagram
 
 ### 1. 認証・ユーザー情報
 
-#### app_users テーブル（Google認証ユーザー管理用）
+Supabaseの組み込み認証テーブル `auth.users` を使用します。独自の `app_users` テーブルは作成しません。
 
-Google認証で得たユーザー情報を管理する独自テーブル。NextAuth.jsのGoogle認証後、FastAPI経由でこのテーブルにINSERT/UPSERTする運用を想定。
-
-| カラム名      | 型        | 制約           | 説明                                    |
-| ------------- | --------- | -------------- | --------------------------------------- |
-| id            | uuid      | PK, NOT NULL   | ユーザーID（主キー、自動生成）          |
-| email         | text      | NOT NULL       | メールアドレス                          |
-| name          | text      | NULL           | 表示名                                  |
-| image         | text      | NULL           | アイコンURL                             |
-| provider      | text      | NOT NULL       | 認証プロバイダー名（例: "google"）      |
-| provider_id   | text      | NOT NULL       | プロバイダー側のID（Google sub等）      |
-| created_at    | timestamp | NOT NULL       | 作成日時（デフォルト: now()）           |
-
-**インデックス**:
-- PRIMARY KEY: `id`
-- UNIQUE: `email` - メールアドレスの重複防止
-
-**SQL定義例**:
-```sql
-CREATE TABLE app_users (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  email text NOT NULL UNIQUE,
-  name text,
-  image text,
-  provider text NOT NULL,
-  provider_id text NOT NULL,
-  created_at timestamp with time zone DEFAULT now()
-);
-```
-
-#### profiles テーブル（任意の追加プロフィール情報）
-
-ユーザーの追加プロフィール情報を保存する場合に使用。app_usersテーブルと1:1の関係。
-
-| カラム名      | 型         | 制約           | 説明                                    |
-| ------------- | ---------- | -------------- | --------------------------------------- |
-| id            | uuid       | PK, FK         | 主キー、app_users.idへの外部キー        |
-| display_name  | text       | NULL           | 表示名（任意）                          |
-| icon_url      | text       | NULL           | アイコンURL（任意）                     |
-| created_at    | timestamp  | NOT NULL       | 作成日時（デフォルト: now()）           |
-
-**インデックス**:
-- PRIMARY KEY: `id`
-- FOREIGN KEY: `id` REFERENCES `app_users(id)` ON DELETE CASCADE
-
-**SQL定義例**:
-```sql
-CREATE TABLE profiles (
-  id uuid PRIMARY KEY REFERENCES app_users(id) ON DELETE CASCADE,
-  display_name text,
-  icon_url text,
-  created_at timestamp with time zone DEFAULT now() NOT NULL
-);
-```
+- ユーザーIDは `auth.users.id`（uuid）を参照
+- RLSポリシーで `auth.uid()` と照合してデータを分離
 
 ### 2. チャンピオン対策ノート
 
@@ -157,7 +106,7 @@ CREATE TABLE profiles (
 | カラム名            | 型         | 制約           | 説明                                    |
 | ------------------- | ---------- | -------------- | --------------------------------------- |
 | id                  | bigint     | PK, NOT NULL   | 主キー、自動採番                        |
-| user_id             | uuid       | FK, NOT NULL   | 外部キー、app_users.id                  |
+| user_id             | uuid       | FK, NULLABLE   | 外部キー、auth.users.id                 |
 | my_champion_id      | text       | NOT NULL       | 自分のチャンピオンID（例: "Ahri"）      |
 | enemy_champion_id   | text       | NOT NULL       | 相手のチャンピオンID（必須）            |
 | preset_name         | text       | NOT NULL       | プリセット名（例: "序盤安定型"）        |
@@ -165,37 +114,12 @@ CREATE TABLE profiles (
 | spells              | jsonb      | NULL           | サモナースペル（配列JSON）              |
 | items               | jsonb      | NULL           | 初期アイテム（配列JSON）                |
 | memo                | text       | NULL           | 対策メモ                                |
-| created_at          | timestamp  | NOT NULL       | 作成日時（デフォルト: now()）           |
-| updated_at          | timestamp  | NOT NULL       | 更新日時（デフォルト: now()）           |
+| created_at          | timestamp  | NULL           | 作成日時                                |
+| updated_at          | timestamp  | NULL           | 更新日時                                |
 
 **インデックス**:
 - PRIMARY KEY: `id`
-- FOREIGN KEY: `user_id` REFERENCES `app_users(id)` ON DELETE CASCADE
-- INDEX: `user_id` - ユーザーごとの検索高速化
-- INDEX: `my_champion_id` - チャンピオン検索最適化
-- INDEX: `enemy_champion_id` - マッチアップ検索最適化
-
-**SQL定義例**:
-```sql
-CREATE TABLE champion_notes (
-  id bigserial PRIMARY KEY,
-  user_id uuid NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
-  my_champion_id text NOT NULL,
-  enemy_champion_id text NOT NULL,
-  preset_name text NOT NULL,
-  runes jsonb,
-  spells jsonb,
-  items jsonb,
-  memo text,
-  created_at timestamp with time zone DEFAULT now() NOT NULL,
-  updated_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
--- インデックス作成
-CREATE INDEX idx_champion_notes_user_id ON champion_notes(user_id);
-CREATE INDEX idx_champion_notes_my_champion_id ON champion_notes(my_champion_id);
-CREATE INDEX idx_champion_notes_enemy_champion_id ON champion_notes(enemy_champion_id);
-```
+- FOREIGN KEY: `user_id` REFERENCES `auth.users(id)`
 
 ### JSON構造定義
 
@@ -244,26 +168,21 @@ CREATE INDEX idx_champion_notes_enemy_champion_id ON champion_notes(enemy_champi
 
 ```mermaid
 erDiagram
-    app_users ||--o{ champion_notes : "1:N"
-    app_users ||--o| profiles : "1:1 optional"
-    
-    app_users {
+    auth_users ||--o{ champion_notes : "1:N"
+    auth_users ||--o{ general_notes : "1:N"
+    auth_users ||--o| profiles : "1:1 optional"
+
+    auth_users {
         uuid id PK
-        text email
-        text name
-        text image
-        text provider
-        text provider_id
-        timestamp created_at
     }
-    
+
     profiles {
-        uuid id "PK, FK"
+        uuid id "PK, FK → auth.users"
         text display_name
         text icon_url
         timestamp created_at
     }
-    
+
     champion_notes {
         bigint id PK
         uuid user_id FK
@@ -274,6 +193,16 @@ erDiagram
         jsonb spells
         jsonb items
         text memo
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    general_notes {
+        bigint id PK
+        uuid user_id FK
+        text title
+        text body
+        text[] tags
         timestamp created_at
         timestamp updated_at
     }
@@ -402,7 +331,78 @@ WITH CHECK (auth.uid() = id);
 }
 ```
 
-## 今後の拡張案
+## 3. 汎用ノート
+
+### general_notes テーブル
+
+チャンピオンに紐付かない自由なメモ（General Note）を保存するテーブル。
+
+| カラム名   | 型           | 制約                        | 説明                          |
+| ---------- | ------------ | --------------------------- | ----------------------------- |
+| id         | bigserial    | PK, NOT NULL                | 主キー、自動採番              |
+| user_id    | uuid         | FK, NOT NULL                | 外部キー、app_users.id        |
+| title      | text         | NOT NULL                    | タイトル（最大100文字）       |
+| body       | text         | NULL                        | 本文（マークダウン、最大10,000文字） |
+| tags       | text[]       | NOT NULL DEFAULT '{}'       | タグ配列（最大10個、各20文字以内） |
+| created_at | timestamptz  | NOT NULL DEFAULT now()      | 作成日時                      |
+| updated_at | timestamptz  | NOT NULL DEFAULT now()      | 更新日時                      |
+
+**制約**:
+- `tags_limit`: `array_length(tags, 1) <= 10`（DBレベルでタグ上限を保証）
+
+**インデックス**:
+- PRIMARY KEY: `id`
+- FOREIGN KEY: `user_id` REFERENCES `app_users(id)` ON DELETE CASCADE
+- INDEX: `(user_id, updated_at DESC)` — 一覧取得クエリを最適化
+- GIN INDEX: `tags` — タグフィルタリング用
+
+**SQL定義**:
+```sql
+CREATE TABLE general_notes (
+  id         bigserial    PRIMARY KEY,
+  user_id    uuid         NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title      text         NOT NULL,
+  body       text,
+  tags       text[]       NOT NULL DEFAULT '{}',
+  created_at timestamptz  NOT NULL DEFAULT now(),
+  updated_at timestamptz  NOT NULL DEFAULT now(),
+  CONSTRAINT tags_limit CHECK (
+    array_length(tags, 1) IS NULL OR array_length(tags, 1) <= 10
+  )
+);
+
+CREATE INDEX idx_general_notes_user_updated ON general_notes(user_id, updated_at DESC);
+CREATE INDEX idx_general_notes_tags ON general_notes USING GIN(tags);
+```
+
+**RLSポリシー**:
+```sql
+ALTER TABLE general_notes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own general notes"
+ON general_notes FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their own general notes"
+ON general_notes FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own general notes"
+ON general_notes FOR UPDATE
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own general notes"
+ON general_notes FOR DELETE
+USING (auth.uid() = user_id);
+```
+
+**アプリ層バリデーション**（DB制約と二重防御）:
+- タイトル: 必須、100文字以内
+- 本文: 任意、10,000文字以内
+- タグ: 最大10個、各20文字以内
+
+
 
 ### 短期（1-3ヶ月）
 

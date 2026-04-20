@@ -112,18 +112,22 @@ describe('NoteForm - View Mode (Task 3.2)', () => {
     expect(runeSelector).toHaveAttribute('data-disabled', 'true');
   });
 
-  it('SummonerSpellPickerにdisabled=trueが渡される', () => {
+  it('SummonerSpellPickerにdisabled=trueが渡される（閲覧モードでは選択済みのみ表示）', () => {
     renderWithAuth(<NoteForm {...mockProps} />);
-
-    const spellPicker = screen.getByTestId('spell-picker');
-    expect(spellPicker).toHaveAttribute('data-disabled', 'true');
+    // 閲覧モードではSpellItemViewが表示され、SummonerSpellPickerは非表示
+    const spellPicker = screen.queryByTestId('spell-picker');
+    expect(spellPicker).toBeNull();
+    // 代わりに「サモナースペル」ラベルが表示される
+    expect(screen.getByText('サモナースペル')).toBeInTheDocument();
   });
 
-  it('ItemBuildSelectorにdisabled=trueが渡される', () => {
+  it('ItemBuildSelectorにdisabled=trueが渡される（閲覧モードでは選択済みのみ表示）', () => {
     renderWithAuth(<NoteForm {...mockProps} />);
-
-    const itemSelector = screen.getByTestId('item-selector');
-    expect(itemSelector).toHaveAttribute('data-disabled', 'true');
+    // 閲覧モードではSpellItemViewが表示され、ItemBuildSelectorは非表示
+    const itemSelector = screen.queryByTestId('item-selector');
+    expect(itemSelector).toBeNull();
+    // 代わりに「初期アイテム」ラベルが表示される
+    expect(screen.getByText('初期アイテム')).toBeInTheDocument();
   });
 
   it('リセットボタンが表示されない', () => {

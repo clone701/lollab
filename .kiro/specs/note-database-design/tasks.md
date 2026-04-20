@@ -54,6 +54,21 @@
 - [x] 8. チェックポイント - 全てのテストが成功することを確認
   - 全てのテストが成功することを確認し、質問があればユーザーに尋ねる
 
+- [ ] 9. general_notes テーブルの作成
+  - [x] 9.1 `general_notes` テーブルのDDLを作成する
+    - id（bigserial PK）、user_id（FK）、title（NOT NULL）、body、tags（text[]）、created_at、updated_at
+    - `tags_limit` CHECK制約（array_length(tags, 1) <= 10）
+    - _要件: 2.1, 2.2, 2.3, 2.4, 2.5, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7_
+  - [x] 9.2 インデックスを作成する
+    - `(user_id, updated_at DESC)` 複合インデックス
+    - `tags` GINインデックス
+    - _要件: 6.1, 6.2, 6.3_
+  - [x] 9.3 RLSポリシーを設定する
+    - RLS有効化
+    - SELECT / INSERT / UPDATE / DELETE ポリシー（auth.uid() = user_id）
+    - _要件: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6_
+  - [x] 9.4 SQLをSupabase SQL Editorで実行し、テーブル・インデックス・RLSの作成を確認する
+
 ## 注意事項
 
 - このSpecはデータベーススキーマの作成に焦点を当てています

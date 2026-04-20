@@ -9,60 +9,52 @@ interface ItemBuildSelectorProps {
   disabled?: boolean;
 }
 
-/**
- * ItemBuildSelector - 初期アイテム選択UIコンポーネント
- *
- * 機能:
- * - 500g制限: 合計金額が500gを超える場合は追加選択不可
- * - 数量表示: 同じアイテムを複数選択した場合、右上に「x2」などの数量バッジを表示
- * - 選択不可UI: 500g超過により選択できないアイテムは半透明で表示
- */
 function ItemBuildSelector({
   value,
   onChange,
   disabled = false,
 }: ItemBuildSelectorProps) {
-  // 選択中のアイテムの合計金額を計算
-  const totalGold = useMemo(() => {
-    return value.reduce((sum, itemId) => {
-      const item = STARTER_ITEMS.find((i) => i.id === itemId);
-      return sum + (item?.gold || 0);
-    }, 0);
-  }, [value]);
+  const totalGold = useMemo(
+    () =>
+      value.reduce(
+        (sum, id) => sum + (STARTER_ITEMS.find((i) => i.id === id)?.gold ?? 0),
+        0
+      ),
+    [value]
+  );
 
-  // 各アイテムの選択数をカウント
   const itemCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    value.forEach((itemId) => {
-      counts[itemId] = (counts[itemId] || 0) + 1;
+    value.forEach((id) => {
+      counts[id] = (counts[id] || 0) + 1;
     });
     return counts;
   }, [value]);
 
-  const handleItemClick = (itemId: string, event: React.MouseEvent) => {
+  const handleClick = (itemId: string) => {
     const item = STARTER_ITEMS.find((i) => i.id === itemId);
     if (!item) return;
-
-    const currentCount = itemCounts[itemId] || 0;
-
-    // 右クリックまたはShift+クリックで削除
-    if (event.shiftKey || event.button === 2) {
-      if (currentCount > 0) {
-        const index = value.lastIndexOf(itemId);
-        onChange([...value.slice(0, index), ...value.slice(index + 1)]);
-      }
-      return;
-    }
-
-    // 通常のクリック: 500g以内なら追加
-    if (totalGold + item.gold <= 500) {
+    const count = itemCounts[itemId] || 0;
+    if (count > 0) {
+      // 選択済み → 1個削除
+      const index = value.lastIndexOf(itemId);
+      onChange([...value.slice(0, index), ...value.slice(index + 1)]);
+    } else if (totalGold + item.gold <= 500) {
+      // 未選択 → 追加
       onChange([...value, itemId]);
     }
   };
 
+  const handleBadgeClick = (itemId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const item = STARTER_ITEMS.find((i) => i.id === itemId);
+    if (!item || totalGold + item.gold > 500) return;
+    // バッジクリック → 1個追加（複数個対応）
+    onChange([...value, itemId]);
+  };
+
   return (
     <div>
-      {/* 合計金額表示 */}
       <div className="mb-3 text-sm">
         <span
           className={`font-semibold ${totalGold > 500 ? 'text-red-600' : 'text-gray-700'}`}
@@ -70,54 +62,63 @@ function ItemBuildSelector({
           合計: {totalGold}g / 500g
         </span>
       </div>
-
       <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
         {STARTER_ITEMS.map((item) => {
           const count = itemCounts[item.id] || 0;
           const isSelected = count > 0;
-          const wouldExceedLimit = totalGold + item.gold > 500;
-
+          const wouldExceed = !isSelected && totalGold + item.gold > 500;
           return (
             <button
               key={item.id}
-              onClick={(e) => handleItemClick(item.id, e)}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                handleItemClick(item.id, e);
-              }}
-              disabled={disabled || wouldExceedLimit}
-              className={`relative flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] ${
+              type="button"
+              onClick={() => !disabled && handleClick(item.id)}
+              disabled={disabled || wouldExceed}
+              className={`relative flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 min-h-[100px] ${
                 isSelected
                   ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50'
-                  : wouldExceedLimit || disabled
-                    ? 'border border-gray-200 opacity-50 cursor-not-allowed bg-gray-50'
-                    : 'border border-gray-200 hover:ring-2 hover:ring-gray-300 bg-white'
+                  : wouldExceed || disabled
+                    ? 'opacity-50 cursor-not-allowed bg-gray-50'
+                    : 'hover:ring-2 hover:ring-gray-300 bg-white'
               }`}
-              aria-label={`初期アイテム: ${item.name} ${item.gold}g${count > 0 ? ` (x${count})` : ''}`}
+              aria-label={`${item.name} ${item.gold}g${count > 0 ? ` (x${count} 選択中、クリックで1個削除)` : ''}`}
               aria-pressed={isSelected}
-              aria-disabled={disabled || wouldExceedLimit}
             >
-              {/* 数量バッジ（2個以上選択時） */}
-              {count > 1 && (
-                <div className="absolute top-1 right-1 bg-black text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {/* 数量バッジ: 1個以上の時に表示、クリックで1個追加 */}
+              {count >= 1 && (
+                <span
+                  role="button"
+                  tabIndex={disabled || totalGold + item.gold > 500 ? -1 : 0}
+                  onClick={(e) => !disabled && handleBadgeClick(item.id, e)}
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' &&
+                    !disabled &&
+                    handleBadgeClick(item.id, e as unknown as React.MouseEvent)
+                  }
+                  className={`absolute top-1 right-1 bg-gray-800 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center transition-colors ${
+                    disabled || totalGold + item.gold > 500
+                      ? 'opacity-50 cursor-not-allowed'
+                      : 'hover:bg-amber-500 cursor-pointer'
+                  }`}
+                  aria-label={`${item.name}をもう1個追加`}
+                  title="クリックでもう1個追加"
+                >
                   x{count}
-                </div>
+                </span>
               )}
-
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.icon}
                 alt={item.name}
-                className="w-10 h-10"
                 width={40}
                 height={40}
+                className="w-10 h-10"
                 loading="lazy"
               />
               <span className="text-xs text-gray-700 text-center leading-tight mt-1">
                 {item.name}
               </span>
               <span
-                className={`text-xs ${wouldExceedLimit || disabled ? 'text-gray-400' : 'text-gray-500'}`}
+                className={`text-xs ${wouldExceed || disabled ? 'text-gray-400' : 'text-gray-500'}`}
               >
                 {item.gold}g
               </span>
