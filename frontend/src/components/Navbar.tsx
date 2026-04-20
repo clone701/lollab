@@ -81,17 +81,17 @@ export default function Navbar() {
   }, [isMenuOpen]);
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+    <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         {/* Left: ロゴとベータバッジ */}
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="text-2xl font-bold text-gray-900 tracking-tight hover:text-gray-700 transition-all"
+            className="text-2xl font-bold text-white tracking-tight hover:text-gray-200 transition-all"
           >
             LoL Lab
           </Link>
-          <span className="bg-gray-100 text-gray-600 text-xs font-semibold rounded-full px-2.5 py-1">
+          <span className="bg-gray-700 text-gray-300 text-xs font-semibold rounded-full px-2.5 py-1">
             ベータ
           </span>
         </div>
@@ -100,19 +100,19 @@ export default function Navbar() {
         <nav className="hidden gap-8 md:flex">
           <Link
             href="/"
-            className="text-sm text-gray-600 hover:text-gray-900 transition"
+            className="text-sm text-gray-300 hover:text-white transition"
           >
             ホーム
           </Link>
           <Link
             href="/champion"
-            className="text-sm text-gray-600 hover:text-gray-900 transition"
+            className="text-sm text-gray-300 hover:text-white transition"
           >
             チャンピオン
           </Link>
           <Link
             href="/notes"
-            className="text-sm text-gray-600 hover:text-gray-900 transition"
+            className="text-sm text-gray-300 hover:text-white transition"
           >
             ノート
           </Link>
@@ -182,7 +182,7 @@ export default function Navbar() {
           {/* モバイルハンバーガーボタン */}
           <button
             onClick={() => setIsMobileMenuOpen((p) => !p)}
-            className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition"
+            className="md:hidden p-2 rounded-lg text-gray-300 hover:bg-gray-700 transition"
             aria-label="メニューを開く"
           >
             <svg
@@ -209,25 +209,25 @@ export default function Navbar() {
 
       {/* モバイルメニュー */}
       {isMobileMenuOpen && (
-        <nav className="md:hidden border-t border-gray-200 bg-white px-4 py-2 flex flex-col gap-1">
+        <nav className="md:hidden border-t border-gray-700 bg-gray-800 px-4 py-2 flex flex-col gap-1">
           <Link
             href="/"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="py-2 text-sm text-gray-700 hover:text-gray-900 border-b border-gray-100"
+            className="py-2 text-sm text-gray-300 hover:text-white border-b border-gray-700"
           >
             ホーム
           </Link>
           <Link
             href="/champion"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="py-2 text-sm text-gray-700 hover:text-gray-900 border-b border-gray-100"
+            className="py-2 text-sm text-gray-300 hover:text-white border-b border-gray-700"
           >
             チャンピオン
           </Link>
           <Link
             href="/notes"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="py-2 text-sm text-gray-700 hover:text-gray-900"
+            className="py-2 text-sm text-gray-300 hover:text-white"
           >
             ノート
           </Link>
