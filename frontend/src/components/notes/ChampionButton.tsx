@@ -33,7 +33,7 @@ const ChampionButton: React.FC<ChampionButtonProps> = React.memo(
         className={`
         flex items-center gap-2 p-1.5 rounded w-full
         transition-colors duration-150
-        ${selected ? 'bg-gray-100 border-2 border-black' : 'hover:bg-gray-50'}
+        ${selected ? 'bg-blue-50 ring-2 ring-blue-500' : 'hover:bg-blue-50 hover:ring-2 hover:ring-blue-400'}
       `}
         aria-label={`${champion.name}を選択`}
         aria-pressed={selected}

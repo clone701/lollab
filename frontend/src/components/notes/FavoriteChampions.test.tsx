@@ -60,7 +60,7 @@ describe('FavoriteChampions', () => {
     );
 
     const ahriImage = screen.getByAltText('アーリ');
-    expect(ahriImage).toHaveClass('ring-2', 'ring-black');
+    expect(ahriImage).toHaveClass('ring-2', 'ring-blue-500');
   });
 
   it('最大10チャンピオンまで表示する', () => {

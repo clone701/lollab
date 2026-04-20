@@ -20,6 +20,7 @@ export default function Navbar() {
   const { user, session, loading, signInWithGoogle, signOut } = useAuth();
   const { setLoading } = useContext(LoadingContext);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   /**
@@ -117,7 +118,7 @@ export default function Navbar() {
           </Link>
         </nav>
 
-        {/* Right: 認証状態に応じたUI表示 */}
+        {/* Right: 認証状態 + モバイルハンバーガー */}
         <div className="flex items-center gap-2">
           {loading ? (
             // ローディング時: アニメーションするプレースホルダー（円形、36px）
@@ -178,8 +179,60 @@ export default function Navbar() {
               ログイン
             </button>
           )}
+          {/* モバイルハンバーガーボタン */}
+          <button
+            onClick={() => setIsMobileMenuOpen((p) => !p)}
+            className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition"
+            aria-label="メニューを開く"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d={
+                  isMobileMenuOpen
+                    ? 'M6 18L18 6M6 6l12 12'
+                    : 'M4 6h16M4 12h16M4 18h16'
+                }
+              />
+            </svg>
+          </button>
         </div>
       </div>
+
+      {/* モバイルメニュー */}
+      {isMobileMenuOpen && (
+        <nav className="md:hidden border-t border-gray-200 bg-white px-4 py-2 flex flex-col gap-1">
+          <Link
+            href="/"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="py-2 text-sm text-gray-700 hover:text-gray-900 border-b border-gray-100"
+          >
+            ホーム
+          </Link>
+          <Link
+            href="/champion"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="py-2 text-sm text-gray-700 hover:text-gray-900 border-b border-gray-100"
+          >
+            チャンピオン
+          </Link>
+          <Link
+            href="/notes"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="py-2 text-sm text-gray-700 hover:text-gray-900"
+          >
+            ノート
+          </Link>
+        </nav>
+      )}
 
       <style jsx>{`
         @keyframes fadeIn {
