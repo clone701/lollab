@@ -1,8 +1,10 @@
 // Next.jsの型定義をインポート
 import type { NextConfig } from 'next';
+import path from 'path';
 
 // Next.jsの設定オブジェクト
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: path.join(__dirname, '../'),
   images: {
     // 外部画像の許可パターンを定義
     remotePatterns: [

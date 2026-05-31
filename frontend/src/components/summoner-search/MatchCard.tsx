@@ -68,22 +68,26 @@ export default function MatchCard({ match }: MatchCardProps) {
           {kills}/{deaths}/{assists} — {kda}
         </p>
         <p className="text-xs text-gray-500">
-          CS {cs} · {formatDuration(gameDurationSeconds)}
+          CS {cs} ({(cs / (gameDurationSeconds / 60)).toFixed(1)}) ·{' '}
+          {formatDuration(gameDurationSeconds)}
         </p>
       </div>
 
       {/* アイテムアイコン */}
       <div className="flex gap-0.5 flex-wrap max-w-[80px]">
-        {itemIds.slice(0, 6).map((id, i) => (
-          <Image
-            key={i}
-            src={`/images/item/${id}.png`}
-            alt={`item-${id}`}
-            width={20}
-            height={20}
-            className="rounded"
-          />
-        ))}
+        {itemIds
+          .slice(0, 6)
+          .filter((id) => id !== 0)
+          .map((id, i) => (
+            <Image
+              key={i}
+              src={`/images/item/${id}.png`}
+              alt={`item-${id}`}
+              width={20}
+              height={20}
+              className="rounded"
+            />
+          ))}
       </div>
 
       {/* 右側 */}

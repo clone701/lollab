@@ -18,7 +18,6 @@ export const MOCK_SUMMONER: SummonerData = {
     wins: 312,
     losses: 298,
   },
-  previousSeasonRank: 'GRANDMASTER I',
 };
 
 export const MOCK_MATCHES: MatchData[] = [

@@ -17,6 +17,13 @@ app.add_middleware(
 # ルーター登録（機能追加時にここに追加）
 # from api.{feature} import router as {feature}_router
 # app.include_router({feature}_router)
+from api.summoner.router import router as summoner_router
+
+app.include_router(summoner_router)
+
+from api.favorites.router import router as favorites_router
+
+app.include_router(favorites_router)
 
 
 @app.get("/")
