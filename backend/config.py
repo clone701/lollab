@@ -1,7 +1,5 @@
 from functools import lru_cache
-from typing import Any
 
-from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -16,26 +14,16 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_key: str = ""
 
-    # Riot API設定（オプショナル - 今後使用）
+    # Riot API設定
     riot_api_key: str = ""
 
-    # CORS設定
-    cors_origins: list[str] = ["http://localhost:3000"]
+    # CORS設定（カンマ区切り文字列で受け取る）
+    cors_origins: str = "http://localhost:3000"
 
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v: Any) -> list[str]:
-        if isinstance(v, list):
-            return v
-        if isinstance(v, str):
-            # JSON配列形式またはカンマ区切りに対応
-            v = v.strip()
-            if v.startswith("["):
-                import json
-
-                return json.loads(v)  # type: ignore[no-any-return]
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return ["http://localhost:3000"]
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """CORS originsをリストとして返す"""
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     class Config:
         env_file = ".env"
