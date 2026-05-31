@@ -168,14 +168,6 @@ async def get_rank_position_for_summoner(
     puuid: str = account["puuid"]
 
     try:
-        summoner = await riot_api.get(
-            platform_host,
-            f"/lol/summoner/v4/summoners/by-puuid/{puuid}",
-        )
-    except httpx.HTTPStatusError as e:
-        handle_riot_error(e)
-
-    try:
         league_entries: list[dict] = await riot_api.get(  # type: ignore[assignment]
             platform_host,
             f"/lol/league/v4/entries/by-puuid/{puuid}",

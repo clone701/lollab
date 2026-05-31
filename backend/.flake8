@@ -9,3 +9,6 @@ exclude =
     env,
     .next,
     node_modules
+
+per-file-ignores =
+    tests/*:E402

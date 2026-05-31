@@ -67,7 +67,9 @@ async def get_matches(
     return results
 
 
-def _build_match_data(match_detail: dict, puuid: str) -> MatchData | None:  # type: ignore[type-arg]
+def _build_match_data(
+    match_detail: dict, puuid: str  # type: ignore[type-arg]
+) -> MatchData | None:
     """試合詳細レスポンスとPUUIDからMatchDataを組み立てる。
 
     Args:
