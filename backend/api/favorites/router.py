@@ -58,7 +58,7 @@ async def add_favorite(
     # 上限チェック
     count_result = (
         supabase.table("favorites")
-        .select("id", count="exact")
+        .select("id", count="exact")  # type: ignore[arg-type]
         .eq("user_id", user_id)
         .execute()
     )

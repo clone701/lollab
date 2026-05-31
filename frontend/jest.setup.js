@@ -5,8 +5,8 @@ import '@testing-library/jest-dom';
 jest.mock('@/lib/supabase/client', () => ({
   createClient: jest.fn(() => ({
     auth: {
-      getSession: jest.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      getUser: jest.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      getSession: jest.fn().mockReturnValue(new Promise(() => {})),
+      getUser: jest.fn().mockReturnValue(new Promise(() => {})),
       onAuthStateChange: jest.fn(() => ({
         data: { subscription: { unsubscribe: jest.fn() } },
       })),

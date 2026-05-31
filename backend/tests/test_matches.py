@@ -34,7 +34,9 @@ from services.summoner.matches import get_matches  # noqa: E402
 # ---------------------------------------------------------------------------
 
 
-def _make_match_detail(puuid: str, game_end_timestamp_ms: int) -> dict:  # type: ignore[type-arg]
+def _make_match_detail(
+    puuid: str, game_end_timestamp_ms: int
+) -> dict:  # type: ignore[type-arg]
     """有効な試合詳細レスポンスを生成する。"""
     return {
         "metadata": {"matchId": "JP1_123"},

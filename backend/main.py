@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from api.favorites.router import router as favorites_router
+from api.summoner.router import router as summoner_router
 from config import settings
 
 app = FastAPI(title=settings.app_name)
@@ -14,15 +16,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ルーター登録（機能追加時にここに追加）
-# from api.{feature} import router as {feature}_router
-# app.include_router({feature}_router)
-from api.summoner.router import router as summoner_router
-
+# ルーター登録
 app.include_router(summoner_router)
-
-from api.favorites.router import router as favorites_router
-
 app.include_router(favorites_router)
 
 
