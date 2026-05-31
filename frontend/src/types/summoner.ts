@@ -24,13 +24,18 @@ export interface RankData {
   losses: number;
 }
 
+export interface RankPositionData {
+  position: number;
+  totalPlayers: number;
+  topPercent: number;
+}
+
 export interface SummonerData {
   name: string;
   tagLine: string;
   level: number;
   profileIconId: number;
   rank: RankData;
-  previousSeasonRank: string;
 }
 
 export interface MatchData {

@@ -117,6 +117,12 @@ ON notes FOR ALL USING (auth.uid() = user_id);
 
 **Python**: `exec()`, 機密情報ログ出力, 文字列結合クエリ
 
+## localStorage / sessionStorage
+
+**禁止**: 認証トークン、セッションID、APIキー、個人情報の保存
+
+**許可**: UIテーマ、検索履歴（サモナー名程度）、キャッシュ的データなど機密性のないもの
+
 ## 参考
 
 OWASP Top 10, NextAuth.js Security, FastAPI Security, Supabase Security
