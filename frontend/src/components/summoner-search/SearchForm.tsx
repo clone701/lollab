@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Region, SuggestCandidate } from '@/types/summoner';
 import { REGION_DEFAULT_TAGS } from '@/types/summoner';
 import {
@@ -8,19 +8,44 @@ import {
   filterSuggestions,
   MOCK_SUGGEST_CANDIDATES,
 } from '@/lib/summoner-search';
+import {
+  getRecentSearches,
+  addRecentSearch,
+  removeRecentSearch,
+} from '@/lib/recentSearches';
+import {
+  fetchFavorites,
+  removeFavorite as removeFavApi,
+} from '@/adapters/supabase/favorites';
+import type { FavoriteEntry } from '@/adapters/supabase/favorites';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import type { RecentSearch } from '@/lib/recentSearches';
 import RegionSelector from './RegionSelector';
 import SuggestDropdown from './SuggestDropdown';
+import SearchHistoryDropdown from './SearchHistoryDropdown';
 
 interface SearchFormProps {
   onSearch: (query: string, region: Region) => void;
 }
 
 export default function SearchForm({ onSearch }: SearchFormProps) {
+  const { user } = useAuth();
   const [region, setRegion] = useState<Region>('JP');
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteEntry[]>([]);
+
+  useEffect(() => {
+    setRecentSearches(getRecentSearches());
+    if (user) {
+      fetchFavorites()
+        .then(setFavorites)
+        .catch(() => {});
+    }
+  }, [user]);
 
   const candidates = useCallback(
     () => filterSuggestions(MOCK_SUGGEST_CANDIDATES, value, region),
@@ -38,7 +63,14 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
     }
     setError(null);
     setIsFocused(false);
-    onSearch(query.trim(), region);
+    const trimmed = query.trim();
+    // 検索履歴に追加
+    const [gn, tl] = trimmed.includes('#')
+      ? trimmed.split('#')
+      : [trimmed, REGION_DEFAULT_TAGS[region]];
+    addRecentSearch({ name: gn, tagLine: tl, region });
+    setRecentSearches(getRecentSearches());
+    onSearch(trimmed, region);
   }
 
   function handleSelect(candidate: SuggestCandidate) {
@@ -106,7 +138,6 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
           className="flex-1 px-3 py-3 text-sm outline-none bg-transparent"
           aria-label="サモナー名"
           aria-autocomplete="list"
-          aria-expanded={isDropdownOpen}
         />
 
         {/* 検索ボタン */}
@@ -140,6 +171,29 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
             focusedIndex={focusedIndex}
             onSelect={handleSelect}
             region={region}
+          />
+        )}
+
+        {/* 検索履歴ドロップダウン（入力が空でフォーカス時） */}
+        {isFocused && !isDropdownOpen && value.trim() === '' && (
+          <SearchHistoryDropdown
+            recentSearches={recentSearches}
+            favorites={favorites}
+            isLoggedIn={!!user}
+            onSelect={(name, tagLine, r) => {
+              const query = `${name}#${tagLine}`;
+              setValue(query);
+              setRegion(r);
+              handleSubmit(query);
+            }}
+            onRemoveRecent={(name, tagLine, r) => {
+              removeRecentSearch(name, tagLine, r);
+              setRecentSearches(getRecentSearches());
+            }}
+            onRemoveFavorite={async (id) => {
+              await removeFavApi(id);
+              setFavorites((prev) => prev.filter((f) => f.id !== id));
+            }}
           />
         )}
       </div>

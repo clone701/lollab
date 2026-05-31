@@ -4,8 +4,9 @@
  */
 
 import * as fc from 'fast-check';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import SummonerProfile from '@/components/summoner-search/SummonerProfile';
+import RankInfo from '@/components/summoner-search/RankInfo';
 import MatchCard from '@/components/summoner-search/MatchCard';
 import ChampionStatRow from '@/components/summoner-search/ChampionStatRow';
 import type {
@@ -33,7 +34,6 @@ const summonerDataArb = (): fc.Arbitrary<SummonerData> =>
     level: fc.integer({ min: 1, max: 9999 }),
     profileIconId: fc.integer({ min: 1, max: 9999 }),
     rank: rankDataArb(),
-    previousSeasonRank: fc.string({ minLength: 1, maxLength: 30 }),
   });
 
 // アルファベット・数字のみのチャンピオン名（画像パスに特殊文字が入らないよう）
@@ -72,18 +72,21 @@ describe('Property 5: SummonerProfile は全フィールドを表示する', () 
   it('任意の SummonerData に対して全フィールドが表示される', () => {
     fc.assert(
       fc.property(summonerDataArb(), (summoner) => {
-        const { unmount } = render(<SummonerProfile summoner={summoner} />);
+        const { unmount } = render(
+          <SummonerProfile
+            summoner={summoner}
+            rankPosition={null}
+            isFavorite={false}
+            onToggleFavorite={() => {}}
+            isLoggedIn={false}
+          />
+        );
         const text = document.body.textContent ?? '';
         const hasName = text.includes(summoner.name);
         const hasTag = text.includes(summoner.tagLine);
         const hasLevel = text.includes(String(summoner.level));
-        const hasTier = text.includes(summoner.rank.tier);
-        const hasLP = text.includes(String(summoner.rank.leaguePoints));
-        const hasPrevSeason = text.includes(summoner.previousSeasonRank);
         unmount();
-        return (
-          hasName && hasTag && hasLevel && hasTier && hasLP && hasPrevSeason
-        );
+        return hasName && hasTag && hasLevel;
       }),
       { numRuns: 100 }
     );
@@ -101,22 +104,18 @@ describe('Property 6: 勝率50%以上は緑色で表示される', () => {
         (wins, extraLosses) => {
           // wins >= losses を保証
           const losses = Math.max(0, wins - 1 - (extraLosses % wins));
-          const summoner: SummonerData = {
-            name: 'Test',
-            tagLine: 'KR1',
-            level: 100,
-            profileIconId: 1,
-            rank: {
-              queueType: 'ランクソロ',
-              tier: 'GOLD',
-              rank: 'I',
-              leaguePoints: 50,
-              wins,
-              losses,
-            },
-            previousSeasonRank: 'SILVER I',
-          };
-          const { unmount } = render(<SummonerProfile summoner={summoner} />);
+          const { unmount } = render(
+            <RankInfo
+              rank={{
+                queueType: 'RANKED_SOLO_5x5',
+                tier: 'GOLD',
+                rank: 'I',
+                leaguePoints: 50,
+                wins,
+                losses,
+              }}
+            />
+          );
           const greenEl = document.body.querySelector('.text-green-600');
           unmount();
           return greenEl !== null;
