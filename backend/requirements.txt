@@ -3,7 +3,7 @@ uvicorn[standard]
 requests
 pydantic-settings
 httpx==0.28.1
-supabase==2.15.0
+supabase==2.31.0
 hypothesis==6.155.1
 
 # コード品質ツール
