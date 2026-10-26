@@ -195,7 +195,7 @@ export const champions: Champion[] = [
     name: 'コグ＝マウ',
     imagePath: '/images/champion/KogMaw.png',
   },
-  { id: 'KSante', name: 'クサンテ', imagePath: '/images/champion/KSante.png' },
+  { id: 'KSante', name: 'カサンテ', imagePath: '/images/champion/KSante.png' },
   {
     id: 'Leblanc',
     name: 'ルブラン',
