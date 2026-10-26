@@ -39,6 +39,23 @@ export function useNotesPage() {
     setActiveTab(tab);
     setShowForm(false);
   };
+
+  const handleMyChampionChange = (id: string | null) => {
+    setMyChampionId(id);
+    setShowForm(false);
+    setViewMode('list');
+    setSelectedNote(null);
+    setSelectedNoteId(null);
+  };
+
+  const handleEnemyChampionChange = (id: string | null) => {
+    setEnemyChampionId(id);
+    setShowForm(false);
+    setViewMode('list');
+    setSelectedNote(null);
+    setSelectedNoteId(null);
+  };
+
   const handleReset = () => {
     setMyChampionId(null);
     setEnemyChampionId(null);
@@ -47,6 +64,7 @@ export function useNotesPage() {
     setSelectedNote(null);
     setSelectedNoteId(null);
   };
+
   const handleSave = () => {
     showToast('ノートを作成しました', 'success');
     setShowForm(false);
@@ -78,8 +96,8 @@ export function useNotesPage() {
     noteLoading,
     showDeleteDialog,
     handleTabChange,
-    handleMyChampionChange: (id: string | null) => setMyChampionId(id),
-    handleEnemyChampionChange: (id: string | null) => setEnemyChampionId(id),
+    handleMyChampionChange,
+    handleEnemyChampionChange,
     handleReset,
     handleCreateNew: () => setShowForm(true),
     handleSave,
