@@ -1,7 +1,7 @@
 /**
  * チャンピオンデータ定義
  *
- * 全171チャンピオンの静的データを管理
+ * 全173チャンピオンの静的データを管理
  * 要件: 11.1, 11.2, 11.3, 11.4
  */
 
@@ -195,7 +195,7 @@ export const champions: Champion[] = [
     name: 'コグ＝マウ',
     imagePath: '/images/champion/KogMaw.png',
   },
-  { id: 'KSante', name: 'クサンテ', imagePath: '/images/champion/KSante.png' },
+  { id: 'KSante', name: 'カサンテ', imagePath: '/images/champion/KSante.png' },
   {
     id: 'Leblanc',
     name: 'ルブラン',
@@ -213,6 +213,7 @@ export const champions: Champion[] = [
     name: 'リサンドラ',
     imagePath: '/images/champion/Lissandra.png',
   },
+  { id: 'Locke', name: 'ロック', imagePath: '/images/champion/Locke.png' },
   { id: 'Lucian', name: 'ルシアン', imagePath: '/images/champion/Lucian.png' },
   { id: 'Lulu', name: 'ルル', imagePath: '/images/champion/Lulu.png' },
   { id: 'Lux', name: 'ラックス', imagePath: '/images/champion/Lux.png' },
@@ -442,6 +443,7 @@ export const champions: Champion[] = [
   { id: 'Zilean', name: 'ジリアン', imagePath: '/images/champion/Zilean.png' },
   { id: 'Zoe', name: 'ゾーイ', imagePath: '/images/champion/Zoe.png' },
   { id: 'Zyra', name: 'ザイラ', imagePath: '/images/champion/Zyra.png' },
+  { id: 'Zaahen', name: 'ザーヘン', imagePath: '/images/champion/Zaahen.png' },
 ];
 
 /**
