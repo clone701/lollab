@@ -24,6 +24,18 @@ export const STARTER_ITEMS: Item[] = [
     icon: '/images/item/1056.png',
     gold: 400,
   },
+  {
+    id: '1086',
+    name: "Doran's Bow",
+    icon: '/images/item/1086.png',
+    gold: 400,
+  },
+  {
+    id: '1120',
+    name: "Doran's Helm",
+    icon: '/images/item/1120.png',
+    gold: 450,
+  },
   { id: '1083', name: 'Cull', icon: '/images/item/1083.png', gold: 450 },
   { id: '1036', name: 'Long Sword', icon: '/images/item/1036.png', gold: 350 },
   { id: '1082', name: 'Dark Seal', icon: '/images/item/1082.png', gold: 350 },
