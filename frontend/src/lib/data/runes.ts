@@ -376,7 +376,7 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
       {
         id: 8321,
         name: 'Cash Back',
-        icon: '/images/runes/Styles/Inspiration/CashBack/CashBack.png',
+        icon: '/images/runes/Styles/Inspiration/CashBack/CashBack2.png',
       },
     ],
     1: [
@@ -388,7 +388,7 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
       {
         id: 8352,
         name: 'Jack of All Trades',
-        icon: '/images/runes/Styles/Inspiration/JackOfAllTrades/JackOfAllTrades.png',
+        icon: '/images/runes/Styles/Inspiration/JackOfAllTrades/JackofAllTrades2.png',
       },
       {
         id: 8345,
