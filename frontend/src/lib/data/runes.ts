@@ -11,6 +11,7 @@ export interface Rune {
   id: number;
   name: string;
   icon: string;
+  deprecated?: boolean; // ゲームから削除されたルーン（既存ノート表示用に保持）
 }
 
 // ルーンパス（5つ）
@@ -99,7 +100,7 @@ export const KEYSTONES: Record<number, Rune[]> = {
     },
     {
       id: 8230,
-      name: 'Phase Rush',
+      name: '嵐乗りの勇躍',
       icon: '/images/runes/Styles/Sorcery/PhaseRush/PhaseRush.png',
     },
   ],
@@ -193,7 +194,7 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
       {
         id: 8299,
         name: 'Last Stand',
-        icon: '/images/runes/Styles/Precision/LastStand/LastStand.png',
+        icon: '/images/runes/Styles/Sorcery/LastStand/LastStand.png',
       },
     ],
   },
@@ -257,7 +258,7 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
       {
         id: 8224,
         name: 'Nullifying Orb',
-        icon: '/images/runes/Styles/Sorcery/NullifyingOrb/Pokeshield.png',
+        icon: '/images/runes/Styles/Sorcery/NullifyingOrb/Axiom_Arcanist.png',
       },
       {
         id: 8226,
@@ -353,9 +354,9 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
         icon: '/images/runes/Styles/Resolve/Revitalize/Revitalize.png',
       },
       {
-        id: 8242,
+        id: 8358,
         name: 'Unflinching',
-        icon: '/images/runes/Styles/Resolve/Unflinching/Unflinching.png',
+        icon: '/images/runes/Styles/Sorcery/Unflinching/Unflinching.png',
       },
     ],
   },
@@ -392,14 +393,14 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
       {
         id: 8345,
         name: 'Triple Tonic',
-        icon: '/images/runes/Styles/Inspiration/PerfectTiming/PerfectTiming.png',
+        icon: '/images/runes/Styles/Inspiration/TimeWarpTonic/TimeWarpTonic.png',
       },
     ],
     2: [
       {
         id: 8410,
         name: 'Approach Velocity',
-        icon: '/images/runes/Styles/Inspiration/ApproachVelocity/ApproachVelocity.png',
+        icon: '/images/runes/Styles/Resolve/ApproachVelocity/ApproachVelocity.png',
       },
       {
         id: 8316,
@@ -412,12 +413,14 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
 
 // ヘルパー関数: ルーンパスIDからキーストーンを取得
 export const getKeystones = (pathId: number): Rune[] => {
-  return KEYSTONES[pathId] || [];
+  return (KEYSTONES[pathId] || []).filter((rune) => !rune.deprecated);
 };
 
 // ヘルパー関数: ルーンパスIDとスロットからメインルーンを取得
 export const getPrimaryRunes = (pathId: number, slot: number): Rune[] => {
-  return PRIMARY_RUNES[pathId]?.[slot] || [];
+  return (PRIMARY_RUNES[pathId]?.[slot] || []).filter(
+    (rune) => !rune.deprecated
+  );
 };
 
 // ヘルパー関数: ルーンパスIDから全てのメインルーンを取得（サブルーン選択用）
@@ -425,9 +428,9 @@ export const getSecondaryRunes = (pathId: number): Rune[] => {
   const pathRunes = PRIMARY_RUNES[pathId];
   if (!pathRunes) return [];
 
-  // 全てのスロットのルーンを結合
+  // 全てのスロットのルーンを結合し、deprecated を除外
   const allRunes = Object.values(pathRunes).flat();
-  return allRunes;
+  return allRunes.filter((rune) => !rune.deprecated);
 };
 
 // ヘルパー関数: ルーンIDからそのルーンが属する行(slot)を取得
