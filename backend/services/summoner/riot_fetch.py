@@ -4,6 +4,8 @@
 - fetch_account_* / fetch_league / fetch_profile: 404・429・5xx を HTTPException に
   変換する（既存サービスと同じく handle_riot_error を使う）。接続エラー・タイムアウト
   （httpx.RequestError）は 502、送信前のレート制限（RateLimitExceeded）は 429 に変換する
+- fetch_match_details は試合1件を「詳細 + タイムライン」で取得する（match_bundle.py）。
+  タイムラインだけ失敗した試合は、詳細を残して FetchedMatch.timeline_error に記録する
 - fetch_ranked_match_ids / fetch_match_details: httpx.HTTPStatusError を伝える。
   httpx.RequestError もそのまま伝える（sync_recent_matches が 502 に変換し、
   Backfill はログを出して終了する）。
@@ -38,14 +40,11 @@ from services.summoner._error import (
     handle_riot_error,
 )
 from services.summoner.league import parse_league
-from services.summoner.match_convert import convert_match
+from services.summoner.match_bundle import fetch_match
 from services.summoner.rank_position import get_rank_position
 from services.summoner.region import get_platform, get_regional
-from services.summoner.riot_errors import (
-    RiotRateLimitError,
-    describe_fetch_error,
-    from_rate_limit_exceeded,
-)
+from services.summoner.riot_errors import RiotRateLimitError, describe_fetch_error
+from services.summoner.riot_request import get_riot
 
 logger = logging.getLogger(__name__)
 
@@ -55,23 +54,6 @@ _MAX_CONCURRENT_REQUESTS = 10
 # match-v5 の試合ID一覧で指定できる count の範囲
 _MIN_MATCH_IDS_COUNT = 1
 _MAX_MATCH_IDS_COUNT = 100
-
-
-async def _get_riot(
-    host: str,
-    path: str,
-    params: dict[str, str | int] | None = None,
-    priority: Priority = "interactive",
-) -> Any:
-    """Riot API を呼ぶ。429 は RiotRateLimitError、他の HTTP エラーはそのまま伝える。"""
-    try:
-        return await riot_api.get(host, path, params=params, priority=priority)
-    except RateLimitExceeded as e:
-        raise from_rate_limit_exceeded(e) from e
-    except httpx.HTTPStatusError as e:
-        if e.response.status_code == 429:
-            raise RiotRateLimitError(e) from e
-        raise
 
 
 async def _get_or_http_exception(host: str, path: str) -> Any:
@@ -196,21 +178,27 @@ async def fetch_ranked_match_ids(
         params["endTime"] = int(end_time.timestamp())
 
     path = f"/lol/match/v5/matches/by-puuid/{quote(puuid, safe='')}/ids"
-    ids = await _get_riot(get_regional(region), path, params, priority)
+    ids = await get_riot(get_regional(region), path, params, priority)
     return list(ids)
 
 
 async def fetch_match_details(
-    region: str, match_ids: list[str], priority: Priority = "interactive"
+    region: str,
+    match_ids: list[str],
+    priority: Priority = "interactive",
+    timeline_only_ids: frozenset[str] = frozenset(),
 ) -> MatchDetailsResult:
-    """試合詳細を並列取得し、保存用レコードに変換する。
+    """試合（詳細 + タイムライン）を並列取得し、保存用レコードに変換する。
 
-    同時リクエスト数は 10 に制限する。個別の取得・変換に失敗した試合
+    同時に取得する試合数は 10 に制限する。試合詳細の取得・変換に失敗した試合
     （429 以外）はログに記録し、failures に match ID と短いエラー内容を入れる。
+    タイムラインだけの失敗は fetched に残り、FetchedMatch.timeline_error に入る。
     fetched は match_ids の順。
+    timeline_only_ids の試合は、試合詳細を保管済みの生データから読む（補完用）。
 
     Raises:
-        RiotRateLimitError: 429 または送信前のレート制限。取得済みの試合は fetched、
+        RiotRateLimitError: 429 または送信前のレート制限。取得済みの試合は fetched
+            （タイムライン取得中の 429 なら、その試合の詳細も含む）、
             個別に失敗した試合は failures に入っている。
             以降は、未開始のリクエストを送らない。
     """
@@ -218,18 +206,24 @@ async def fetch_match_details(
     semaphore = asyncio.Semaphore(_MAX_CONCURRENT_REQUESTS)
     rate_limited = asyncio.Event()
     failures: list[FailedFetch] = []
+    limit_errors: list[RiotRateLimitError] = []
 
     async def _fetch_one(match_id: str) -> FetchedMatch | None:
         async with semaphore:
             if rate_limited.is_set():
                 return None
+            fetched: FetchedMatch | None
+            limit: RiotRateLimitError | None
             try:
-                path = f"/lol/match/v5/matches/{match_id}"
-                detail = await _get_riot(host, path, priority=priority)
-                return convert_match(detail)
-            except RiotRateLimitError:
-                rate_limited.set()
-                raise
+                fetched, limit = await fetch_match(
+                    host,
+                    match_id,
+                    priority,
+                    reuse_raw_detail=match_id in timeline_only_ids,
+                )
+            except RiotRateLimitError as e:
+                limit = e
+                fetched = None
             except Exception as e:
                 logger.warning(
                     "試合詳細の取得に失敗しました: %s", match_id, exc_info=True
@@ -238,15 +232,17 @@ async def fetch_match_details(
                     FailedFetch(match_id=match_id, error=describe_fetch_error(e))
                 )
                 return None
+            if limit is not None:
+                rate_limited.set()
+                limit_errors.append(limit)
+            return fetched
 
-    results = await asyncio.gather(
-        *(_fetch_one(match_id) for match_id in match_ids), return_exceptions=True
-    )
+    results = await asyncio.gather(*(_fetch_one(m) for m in match_ids))
 
-    fetched = [r for r in results if isinstance(r, FetchedMatch)]
-    for result in results:
-        if isinstance(result, RiotRateLimitError):
-            result.fetched = fetched
-            result.failures = failures
-            raise result
-    return MatchDetailsResult(fetched=fetched, failures=failures)
+    fetched_matches = [r for r in results if r is not None]
+    if limit_errors:
+        error = limit_errors[0]
+        error.fetched = fetched_matches
+        error.failures = failures
+        raise error
+    return MatchDetailsResult(fetched=fetched_matches, failures=failures)

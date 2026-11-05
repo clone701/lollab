@@ -18,11 +18,13 @@ from fastapi import HTTPException
 from schemas.riot_fetch import FailedFetch
 from schemas.summoner_store import (
     BackfillState,
+    BanRecord,
     MatchRecord,
     ParticipantRecord,
     SeasonRecord,
     SummonerRecord,
 )
+from tests.enrich_fakes import EnrichFakes
 from tests.fake_riot import PUUID, FakeRiot
 
 STORE_FUNCTIONS = (
@@ -44,6 +46,8 @@ FAILED_STORE_FUNCTIONS = (
     "record_failed_matches",
     "delete_failed_matches",
 )
+ENRICH_STORE_FUNCTIONS = ("get_enrichment_targets",)
+RANK_STORE_FUNCTIONS = ("get_latest_snapshot", "insert_snapshot")
 
 
 def install_store_stub() -> ModuleType:
@@ -53,6 +57,8 @@ def install_store_stub() -> ModuleType:
     """
     module = _install_stub("adapters.summoner_store", STORE_FUNCTIONS)
     _install_stub("adapters.failed_match_store", FAILED_STORE_FUNCTIONS)
+    _install_stub("adapters.enrich_store", ENRICH_STORE_FUNCTIONS)
+    _install_stub("adapters.rank_snapshot_store", RANK_STORE_FUNCTIONS)
     return module
 
 
@@ -87,7 +93,7 @@ def summoner_record(**overrides: Any) -> SummonerRecord:
     return SummonerRecord.model_validate(fields)
 
 
-class FakeStore:
+class FakeStore(EnrichFakes):
     """Summoner_Store の代役。保存内容をメモリに持ち、呼び出しを記録する。"""
 
     def __init__(
@@ -96,6 +102,7 @@ class FakeStore:
         saved: dict[str, datetime] | None = None,
         can_start_backfill: bool = True,
     ) -> None:
+        super().__init__()
         self.records = {record.puuid: record} if record else {}
         self.saved: dict[str, datetime] = dict(saved or {})
         self.can_start_backfill = can_start_backfill
@@ -103,6 +110,8 @@ class FakeStore:
         self.touches: list[datetime] = []
         self.state_updates: list[BackfillState] = []
         self.save_calls: list[list[str]] = []
+        self.saved_matches: list[MatchRecord] = []
+        self.saved_bans: list[BanRecord] = []
         # failed_matches: match_id -> (attempts, last_error, gave_up)
         self.failed: dict[str, tuple[int, str, bool]] = {}
 
@@ -173,9 +182,15 @@ class FakeStore:
         return {m: self.saved[m] for m in match_ids if m in self.saved}
 
     async def save_matches(
-        self, matches: list[MatchRecord], participants: list[ParticipantRecord]
+        self,
+        matches: list[MatchRecord],
+        participants: list[ParticipantRecord],
+        bans: list[BanRecord] | None = None,
     ) -> None:
         self.save_calls.append([m.match_id for m in matches])
+        self.saved_matches.extend(matches)
+        self.saved_bans.extend(bans or [])
+        self.apply_saved(matches)
         for m in matches:
             self.saved[m.match_id] = m.game_end_at
 
@@ -194,7 +209,7 @@ class FakeStore:
 @contextmanager
 def installed(store: FakeStore, riot: FakeRiot) -> Iterator[None]:
     """services が使う Summoner_Store と riot_fetch の関数を代役に差し替える。"""
-    from services.summoner import backfill_page, riot_fetch, sync
+    from services.summoner import backfill_page, enrich, rank_record, riot_fetch, sync
 
     with pytest.MonkeyPatch.context() as mp:
         for name in STORE_FUNCTIONS:
@@ -202,6 +217,15 @@ def installed(store: FakeStore, riot: FakeRiot) -> Iterator[None]:
         for name in FAILED_STORE_FUNCTIONS:
             mp.setattr(
                 backfill_page.failed_match_store,
+                name,
+                getattr(store, name),
+                raising=False,
+            )
+        for name in ENRICH_STORE_FUNCTIONS:
+            mp.setattr(enrich.enrich_store, name, getattr(store, name), raising=False)
+        for name in RANK_STORE_FUNCTIONS:
+            mp.setattr(
+                rank_record.rank_snapshot_store,
                 name,
                 getattr(store, name),
                 raising=False,

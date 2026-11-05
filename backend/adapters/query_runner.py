@@ -12,3 +12,9 @@ async def execute(build: Callable[[], Any]) -> list[dict[str, Any]]:
     """
     response = await asyncio.to_thread(lambda: build().execute())
     return list(response.data or [])
+
+
+async def execute_count(build: Callable[[], Any]) -> int:
+    """build が返すクエリ（count 付き）をスレッドで実行し、条件に合う行数を返す。"""
+    response = await asyncio.to_thread(lambda: build().execute())
+    return int(response.count or 0)

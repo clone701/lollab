@@ -7,6 +7,7 @@ from schemas.summoner import SummonerDetail
 from schemas.summoner_store import BackfillState, SummonerRecord
 from services.summoner import riot_fetch
 from services.summoner.detail import build_detail
+from services.summoner.rank_record import record_rank_snapshots
 from services.summoner.sync import (
     SYNC_MATCH_COUNT,
     build_summoner_record,
@@ -48,7 +49,9 @@ async def _register(region: str, game_name: str, tag_line: str) -> SummonerRecor
     """
     account = await riot_fetch.fetch_account_by_riot_id(region, game_name, tag_line)
     existing = await summoner_store.find_summoner_by_puuid(account.puuid, region)
-    profile = await riot_fetch.fetch_profile(region, account.puuid)
+    league = await riot_fetch.fetch_league(region, account.puuid)
+    await record_rank_snapshots(region, account.puuid, league)
+    profile = await riot_fetch.fetch_profile(region, account.puuid, league=league)
     match_ids = await sync_recent_matches(region, account.puuid)
 
     record = build_summoner_record(region, account, profile)

@@ -21,6 +21,7 @@ async def save_fetched(fetched: list[FetchedMatch]) -> None:
     await summoner_store.save_matches(
         [f.match for f in fetched],
         [p for f in fetched for p in f.participants],
+        [b for f in fetched for b in f.bans],
     )
 
 
