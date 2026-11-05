@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { RuneConfig, ChampionNote } from '@/types/note';
 import { createNote, updateNote, NoteUpdateData } from '@/adapters/supabase';
 import useToast from '@/lib/hooks/useToast';
 import { getChampionById } from '@/lib/utils/championHelpers';
+import { getInitialFormValues } from './initialFormValues';
 import { validateNoteForm } from './validateNoteForm';
 import { UseNoteFormReturn, UseNoteFormProps } from './types';
 
@@ -16,27 +17,33 @@ export function useNoteForm({
   initialData,
   onSave,
 }: UseNoteFormProps): UseNoteFormReturn {
-  const [presetName, setPresetName] = useState('');
-  const [runes, setRunes] = useState<RuneConfig | null>(null);
+  const initial = getInitialFormValues(initialData);
+  const [presetName, setPresetName] = useState(initial.presetName);
+  const [runes, setRunes] = useState<RuneConfig | null>(initial.runes);
   const [runeKey, setRuneKey] = useState(0);
-  const [spells, setSpells] = useState<string[]>([]);
-  const [items, setItems] = useState<string[]>([]);
-  const [memo, setMemo] = useState('');
+  const [spells, setSpells] = useState<string[]>(initial.spells);
+  const [items, setItems] = useState<string[]>(initial.items);
+  const [memo, setMemo] = useState(initial.memo);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const { toast, showToast, hideToast } = useToast();
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (initialData) {
-      setPresetName(initialData.preset_name || '');
-      setRunes(initialData.runes);
-      setSpells(initialData.spells || []);
-      setItems(initialData.items || []);
-      setMemo(initialData.memo || '');
-      setRuneKey((prev) => prev + 1);
-    }
-  }, [initialData]);
+  const resetToNote = (note: ChampionNote) => {
+    const values = getInitialFormValues(note);
+    setPresetName(values.presetName);
+    setRunes(values.runes);
+    setSpells(values.spells);
+    setItems(values.items);
+    setMemo(values.memo);
+    setRuneKey((prev) => prev + 1); // RuneSelectorを再マウントして値を反映
+  };
+  // initialData が差し替わったらフォームを初期値に戻す（レンダー中に前回値と比較）
+  const [prevInitialData, setPrevInitialData] = useState(initialData);
+  if (prevInitialData !== initialData) {
+    setPrevInitialData(initialData);
+    if (initialData) resetToNote(initialData);
+  }
 
   const handleSave = async () => {
     const newErrors = validateNoteForm({
@@ -133,14 +140,7 @@ export function useNoteForm({
 
   const handleCancel = () => {
     // キャンセル時は initialData の値に戻す
-    if (initialData) {
-      setPresetName(initialData.preset_name || '');
-      setRunes(initialData.runes);
-      setSpells(initialData.spells || []);
-      setItems(initialData.items || []);
-      setMemo(initialData.memo || '');
-      setRuneKey((prev) => prev + 1); // RuneSelectorを再マウントして初期値に戻す
-    }
+    if (initialData) resetToNote(initialData);
     setErrors({});
   };
 
