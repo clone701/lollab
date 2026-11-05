@@ -35,16 +35,16 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
-  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
+  // 検索履歴は入力欄フォーカス時にしか描画されないため、SSR との不一致は起きない
+  const [recentSearches, setRecentSearches] =
+    useState<RecentSearch[]>(getRecentSearches);
   const [favorites, setFavorites] = useState<FavoriteEntry[]>([]);
 
   useEffect(() => {
-    setRecentSearches(getRecentSearches());
-    if (user) {
-      fetchFavorites()
-        .then(setFavorites)
-        .catch(() => {});
-    }
+    if (!user) return;
+    fetchFavorites()
+      .then(setFavorites)
+      .catch(() => {});
   }, [user]);
 
   const candidates = useCallback(

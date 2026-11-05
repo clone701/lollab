@@ -11,10 +11,9 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { ChampionNote } from '@/types/note';
-import { getNotes } from '@/adapters/supabase';
+import { useCallback } from 'react';
 import NoteCard from './NoteCard';
+import { useChampionNotes } from './useChampionNotes';
 
 interface NoteListProps {
   myChampionId: string | null;
@@ -29,35 +28,10 @@ export default function NoteList({
   onCreateNew,
   onNoteClick,
 }: NoteListProps) {
-  const [notes, setNotes] = useState<ChampionNote[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // fetchNotesをuseCallbackでメモ化
-  const fetchNotes = useCallback(async () => {
-    if (!myChampionId || !enemyChampionId) {
-      setNotes([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const data = await getNotes(myChampionId, enemyChampionId);
-      setNotes(data);
-    } catch (err) {
-      setError('ノートの取得に失敗しました');
-      console.error('Failed to fetch notes:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [myChampionId, enemyChampionId]);
-
-  useEffect(() => {
-    fetchNotes();
-  }, [fetchNotes]);
+  const { notes, loading, error } = useChampionNotes(
+    myChampionId,
+    enemyChampionId
+  );
 
   // リロードハンドラーをuseCallbackでメモ化
   const handleReload = useCallback(() => {
