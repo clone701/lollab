@@ -1,3 +1,4 @@
+import json
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings
@@ -23,23 +24,17 @@ class Settings(BaseSettings):
     # Backfill が検索・更新用に残す、2分あたりの回数
     riot_backfill_reserve: int = 30
 
-    # CORS設定
-    cors_origins: list[str] = ["http://localhost:3000"]
+    # CORS設定（文字列で受け取る。list[str] にすると pydantic-settings が
+    # 環境変数を JSON として解釈しようとし、カンマ区切りで起動に失敗するため）
+    cors_origins: str = "http://localhost:3000"
 
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v: Any) -> list[str]:
-        if isinstance(v, list):
-            return v
-        if isinstance(v, str):
-            # JSON配列形式またはカンマ区切りに対応
-            v = v.strip()
-            if v.startswith("["):
-                import json
-
-                return json.loads(v)  # type: ignore[no-any-return]
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return ["http://localhost:3000"]
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """CORS origins をリストで返す。JSON配列形式とカンマ区切りの両方に対応する。"""
+        value = self.cors_origins.strip()
+        if value.startswith("["):
+            return [str(origin).strip() for origin in json.loads(value)]
+        return [origin.strip() for origin in value.split(",") if origin.strip()]
 
     class Config:
         env_file = ".env"
