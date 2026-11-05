@@ -34,6 +34,13 @@ const summonerDataArb = (): fc.Arbitrary<SummonerData> =>
     level: fc.integer({ min: 1, max: 9999 }),
     profileIconId: fc.integer({ min: 1, max: 9999 }),
     rank: rankDataArb(),
+    lastUpdatedAt: fc
+      .date({
+        min: new Date('2020-01-01'),
+        max: new Date('2030-01-01'),
+        noInvalidDate: true,
+      })
+      .map((d) => d.toISOString()),
   });
 
 // アルファベット・数字のみのチャンピオン名（画像パスに特殊文字が入らないよう）
@@ -79,6 +86,9 @@ describe('Property 5: SummonerProfile は全フィールドを表示する', () 
             isFavorite={false}
             onToggleFavorite={() => {}}
             isLoggedIn={false}
+            isUpdating={false}
+            onUpdate={() => {}}
+            updateError={null}
           />
         );
         const text = document.body.textContent ?? '';

@@ -1,4 +1,5 @@
 import type { SummonerData, RankPositionData } from '@/types/summoner';
+import UpdateButton from './UpdateButton';
 
 interface SummonerProfileProps {
   summoner: SummonerData;
@@ -6,6 +7,9 @@ interface SummonerProfileProps {
   isFavorite: boolean;
   onToggleFavorite: () => void;
   isLoggedIn: boolean;
+  isUpdating: boolean;
+  onUpdate: () => void;
+  updateError: string | null;
 }
 
 const DDRAGON_VERSION = '15.10.1';
@@ -17,6 +21,9 @@ export default function SummonerProfile({
   isFavorite,
   onToggleFavorite,
   isLoggedIn,
+  isUpdating,
+  onUpdate,
+  updateError,
 }: SummonerProfileProps) {
   const { name, tagLine, level, profileIconId, rank } = summoner;
   const profileIconUrl = `https://ddragon.leagueoflegends.com/cdn/${DDRAGON_VERSION}/img/profileicon/${profileIconId}.png`;
@@ -65,6 +72,20 @@ export default function SummonerProfile({
         {rank.tier !== 'UNRANKED' && rankPosition?.position === 0 && (
           <p className="text-xs text-gray-500">
             ソロランク (上位 {rankPosition.topPercent}%)
+          </p>
+        )}
+      </div>
+
+      {/* 更新ボタン・最終更新・更新エラー */}
+      <div className="ml-auto flex flex-col items-end gap-1">
+        <UpdateButton
+          lastUpdatedAt={summoner.lastUpdatedAt}
+          isUpdating={isUpdating}
+          onUpdate={onUpdate}
+        />
+        {updateError && (
+          <p role="alert" className="text-xs text-red-500">
+            {updateError}
           </p>
         )}
       </div>
