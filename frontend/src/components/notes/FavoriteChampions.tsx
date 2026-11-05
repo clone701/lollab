@@ -55,15 +55,15 @@ const FavoriteChampions: React.FC<FavoriteChampionsProps> = React.memo(
                                 transition-all duration-150
                                 ${
                                   selectedId === champion.id
-                                    ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20'
-                                    : 'hover:ring-2 hover:ring-blue-400'
+                                    ? 'ring-2 ring-accent'
+                                    : 'hover:ring-2 hover:ring-accent/60'
                                 }
                             `}
                 loading="lazy"
                 width={40}
                 height={40}
               />
-              <span className="text-[10px] text-center text-gray-700 leading-tight">
+              <span className="text-[10px] text-center text-fg-muted leading-tight">
                 {champion.name}
               </span>
             </button>

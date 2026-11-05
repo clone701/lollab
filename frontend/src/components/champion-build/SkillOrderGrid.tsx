@@ -19,7 +19,7 @@ export function SkillOrderGrid({ skillKey }: SkillOrderGridProps) {
           <tr>
             <th />
             {levels.map((lv) => (
-              <th key={lv} className="w-6 font-medium text-gray-500">
+              <th key={lv} className="w-6 font-medium text-fg-muted">
                 {lv}
               </th>
             ))}
@@ -28,14 +28,14 @@ export function SkillOrderGrid({ skillKey }: SkillOrderGridProps) {
         <tbody>
           {SKILL_LABELS.map((label, row) => (
             <tr key={label}>
-              <th className="pr-1 font-semibold text-gray-800">{label}</th>
+              <th className="pr-1 font-semibold text-fg">{label}</th>
               {grid[row].map((isActive, col) => (
                 <td
                   key={col}
                   aria-label={
                     isActive ? `レベル${col + 1}: ${label}` : undefined
                   }
-                  className={`h-6 w-6 rounded text-center ${isActive ? 'bg-gray-800 font-bold text-white' : 'bg-gray-100'}`}
+                  className={`h-6 w-6 rounded text-center ${isActive ? 'bg-action font-bold text-white' : 'bg-surface-2'}`}
                 >
                   {isActive ? label : ''}
                 </td>

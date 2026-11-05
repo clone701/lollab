@@ -26,12 +26,12 @@ export function RuneButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`p-1 rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+      className={`p-1 rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
         selected
-          ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50'
+          ? 'ring-2 ring-accent bg-accent/15'
           : disabled
-            ? 'opacity-50 cursor-not-allowed bg-white'
-            : 'hover:ring-2 hover:ring-gray-300 bg-white'
+            ? 'opacity-50 cursor-not-allowed bg-surface-2'
+            : 'hover:ring-2 hover:ring-accent/60 bg-surface-2'
       }`}
       aria-label={ariaLabel}
       aria-pressed={selected}

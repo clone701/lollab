@@ -6,8 +6,8 @@ interface ModeToggleProps {
   onChange: (mode: BuildMode) => void;
 }
 
-const SELECTED = 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50';
-const NORMAL = 'bg-gray-50 hover:ring-2 hover:ring-blue-400';
+const SELECTED = 'ring-2 ring-accent bg-accent/15';
+const NORMAL = 'bg-surface-2 hover:ring-2 hover:ring-accent/60';
 
 export function ModeToggle({ mode, onChange }: ModeToggleProps) {
   return (
@@ -18,7 +18,7 @@ export function ModeToggle({ mode, onChange }: ModeToggleProps) {
           type="button"
           aria-pressed={mode === o.value}
           onClick={() => onChange(o.value)}
-          className={`rounded-lg px-3 py-1 text-sm text-gray-800 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${mode === o.value ? SELECTED : NORMAL}`}
+          className={`rounded-lg px-3 py-1 text-sm text-fg transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${mode === o.value ? SELECTED : NORMAL}`}
         >
           {o.label}
         </button>

@@ -9,7 +9,7 @@ interface RuneGroupProps {
 export function RuneGroup({ label, ids }: RuneGroupProps) {
   return (
     <div className="flex items-center gap-3">
-      <h3 className="w-16 shrink-0 text-sm text-gray-600">{label}</h3>
+      <h3 className="w-16 shrink-0 text-sm text-fg-muted">{label}</h3>
       <div className="flex gap-1">
         {ids.map((id, index) => {
           const icon = getRuneIcon(id);

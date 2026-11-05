@@ -1,1 +1,72 @@
 @import 'tailwindcss';
+
+/* 色は役割の名前で定義する（.kiro/steering/design-system.md 参照） */
+@theme {
+  --color-canvas: #0b1220;
+  --color-surface: #121a2b;
+  --color-surface-2: #1a2438;
+  --color-line: #26324a;
+  --color-line-strong: #34425f;
+  --color-fg: #e5e7eb;
+  --color-fg-muted: #9ca3af;
+  --color-fg-subtle: #8591a3;
+  --color-accent: #60a5fa;
+  --color-action: #2563eb;
+  --color-action-hover: #1d4ed8;
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
+  /* 暗い背景上のエラー文字用（bg-danger は白文字用の濃い赤のため別値） */
+  --color-danger-fg: #f87171;
+  --color-win: #34d399;
+  --color-loss: #f87171;
+  --color-highlight: #fbbf24;
+}
+
+html {
+  color-scheme: dark;
+  scrollbar-color: var(--color-line-strong) var(--color-canvas);
+}
+
+body {
+  @apply bg-canvas text-fg;
+}
+
+@layer base {
+  /* フォームの既定色（個別のクラスがあればそちらが優先される） */
+  input,
+  textarea,
+  select {
+    background-color: var(--color-surface-2);
+    color: var(--color-fg);
+  }
+
+  option {
+    background-color: var(--color-surface-2);
+    color: var(--color-fg);
+  }
+
+  ::placeholder {
+    color: var(--color-fg-muted);
+    opacity: 1;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  }
+
+  /* WebKit 系ブラウザのスクロールバー */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-canvas);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-strong);
+    border-radius: 9999px;
+    border: 2px solid var(--color-canvas);
+  }
+}

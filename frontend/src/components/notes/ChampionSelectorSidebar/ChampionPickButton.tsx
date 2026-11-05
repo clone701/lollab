@@ -23,12 +23,12 @@ export function ChampionPickButton({
 }: ChampionPickButtonProps) {
   const active =
     activeColor === 'blue'
-      ? 'bg-blue-100 border-2 border-blue-400'
-      : 'bg-red-100 border-2 border-red-400';
+      ? 'bg-accent/15 border-2 border-accent'
+      : 'bg-danger/15 border-2 border-danger';
   const inactive =
     activeColor === 'blue'
-      ? 'bg-blue-50 border border-blue-200 hover:bg-blue-100'
-      : 'bg-red-50 border border-red-200 hover:bg-red-100';
+      ? 'bg-accent/5 border border-accent/30 hover:bg-accent/15'
+      : 'bg-danger/5 border border-danger/30 hover:bg-danger/15';
   return (
     <button
       onClick={onClick}
@@ -45,14 +45,14 @@ export function ChampionPickButton({
             height={48}
           />
           <div className="flex flex-col items-start">
-            <span className="text-xs text-gray-500">{label}</span>
-            <span className="text-base font-semibold text-gray-800">
+            <span className="text-xs text-fg-muted">{label}</span>
+            <span className="text-base font-semibold text-fg">
               {champion.name}
             </span>
           </div>
         </div>
       ) : (
-        <p className="text-sm text-gray-400">{label}のチャンピオンを選択</p>
+        <p className="text-sm text-fg-subtle">{label}のチャンピオンを選択</p>
       )}
     </button>
   );

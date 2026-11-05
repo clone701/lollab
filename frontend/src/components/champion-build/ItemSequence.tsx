@@ -21,7 +21,7 @@ export function ItemSequence({
   const option = selectOption(element, mode);
   return (
     <div className="flex flex-col gap-1">
-      <h3 className="text-sm text-gray-600">{label}</h3>
+      <h3 className="text-sm text-fg-muted">{label}</h3>
       {option ? (
         <div className="flex flex-wrap items-center gap-3">
           <ItemIcons ids={option.key} separator={separator} />

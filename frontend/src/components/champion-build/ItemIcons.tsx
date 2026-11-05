@@ -16,7 +16,7 @@ export function ItemIcons({ ids, separator }: ItemIconsProps) {
         return (
           <Fragment key={`${id}-${index}`}>
             {separator && index > 0 && (
-              <span className="text-gray-400" aria-hidden="true">
+              <span className="text-fg-subtle" aria-hidden="true">
                 {separator}
               </span>
             )}

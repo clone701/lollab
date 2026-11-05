@@ -8,20 +8,30 @@ fileMatchPattern: 'frontend/**/*.{tsx,ts,jsx,js,css}'
 ## フォント
 **Noto Sans JP**
 
-## カラー
+## カラー（ダークテーマのみ）
 
-### プライマリ（アクションボタン）
-- ボタン背景: `bg-gray-800` / ホバー: `hover:bg-gray-700`
-- テキスト: `text-gray-600`（標準）、`text-gray-800`（強調）
-- 背景: `bg-gray-50`（薄）、`bg-gray-100`（中）
-- ボーダー: `border-gray-200`（標準）、`border-gray-300`（強調）
+色は `frontend/src/app/globals.css` の `@theme` で定義した**役割の名前**だけを使う。`bg-white`、`bg-gray-*`、`text-gray-*`、`border-gray-*` などの直接の色指定は禁止。
 
-### インタラクティブ要素（選択・トグル可能なカード・アイコン）
-- ホバー: `hover:ring-2 hover:ring-blue-400`
-- 選択中: `ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50`
+| 役割 | クラス例 | 値 |
+|---|---|---|
+| ページ背景 | `bg-canvas` | `#0b1220` |
+| カード・パネル | `bg-surface` | `#121a2b` |
+| 入力欄・ホバー・入れ子の面 | `bg-surface-2` | `#1a2438` |
+| 枠線（標準 / 強調） | `border-line` / `border-line-strong` | `#26324a` / `#34425f` |
+| 文字（本文 / 補足 / 控えめ） | `text-fg` / `text-fg-muted` / `text-fg-subtle` | `#e5e7eb` / `#9ca3af` / `#8591a3` |
+| アクセント（リンク・選択・フォーカス） | `text-accent` / `ring-accent` / `bg-accent` | `#60a5fa` |
+| アクションボタン | `bg-action` / `hover:bg-action-hover` | `#2563eb` / `#1d4ed8` |
+| 削除ボタン / エラー文字 | `bg-danger` / `hover:bg-danger-hover` / `text-danger-fg` | `#dc2626` / `#b91c1c` / `#f87171` |
+| 勝利・高い勝率 / 敗北・低い勝率 | `text-win` / `text-loss`（背景は `bg-win/15`・`bg-loss/15`） | `#34d399` / `#f87171` |
+| 強調（お気に入り・注目） | `text-highlight` / `ring-highlight` | `#fbbf24` |
 
-### 削除ボタン
-- `bg-red-500` / ホバー: `hover:bg-red-600`
+- コントラストは WCAG AA（本文 4.5:1）を満たす組み合わせだけを使う。白文字は `bg-action`・`bg-danger` とそのホバー色の上でのみ使う（ホバーは暗くする）
+
+## 状態
+- ホバー（カード・アイコン）: `hover:ring-2 hover:ring-accent/60`
+- 選択中: `ring-2 ring-accent bg-accent/15`
+- 無効: `opacity-50 cursor-not-allowed`
+- オーバーレイ: `bg-black/60`
 
 ## タイポグラフィ
 - サイズ: `text-xs`(12px) / `text-sm`(14px) / `text-base`(16px) / `text-xl`(20px)
@@ -33,7 +43,6 @@ fileMatchPattern: 'frontend/**/*.{tsx,ts,jsx,js,css}'
 
 ## その他
 - ボーダー: `rounded`(4px) / `rounded-lg`(8px) / `rounded-full`
-- シャドウ: `shadow-sm` / `shadow-md`
+- シャドウ: `shadow-sm` / `shadow-md`（暗い背景では弱く見えるため、面の区別は背景色と枠線で行う）
 - トランジション: `transition-colors duration-150`
-- フォーカス（キーボード操作時のみ）: `focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500`
-- オーバーレイ: `bg-black/20`
+- フォーカス（キーボード操作時のみ）: `focus:outline-none focus-visible:ring-2 focus-visible:ring-accent`

@@ -22,7 +22,7 @@ export function ChampionBuildHeader({
 }: ChampionBuildHeaderProps) {
   return (
     <div className="flex flex-col gap-3">
-      <Link href="/champion" className="text-sm text-gray-600 hover:underline">
+      <Link href="/champion" className="text-sm text-fg-muted hover:underline">
         ← チャンピオン検索に戻る
       </Link>
       <div className="flex items-center gap-4">
@@ -32,7 +32,7 @@ export function ChampionBuildHeader({
           size={64}
           className="rounded-full"
         />
-        <h1 className="text-xl font-bold text-gray-800">{champion.name}</h1>
+        <h1 className="text-xl font-bold text-fg">{champion.name}</h1>
       </div>
       <RoleTabs
         championId={champion.id}

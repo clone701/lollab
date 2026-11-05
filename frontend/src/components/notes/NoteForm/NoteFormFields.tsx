@@ -31,10 +31,10 @@ function SpellItemView({
   return (
     <div className="flex flex-wrap items-center gap-4 mb-6">
       <div>
-        <p className="text-xs text-gray-500 mb-1">サモナースペル</p>
+        <p className="text-xs text-fg-muted mb-1">サモナースペル</p>
         <div className="flex gap-2">
           {selectedSpells.length === 0 ? (
-            <span className="text-xs text-gray-400">未設定</span>
+            <span className="text-xs text-fg-subtle">未設定</span>
           ) : (
             selectedSpells.map((s) => (
               // eslint-disable-next-line @next/next/no-img-element
@@ -51,12 +51,12 @@ function SpellItemView({
           )}
         </div>
       </div>
-      <div className="w-px h-10 bg-gray-200" />
+      <div className="w-px h-10 bg-surface-2" />
       <div>
-        <p className="text-xs text-gray-500 mb-1">初期アイテム</p>
+        <p className="text-xs text-fg-muted mb-1">初期アイテム</p>
         <div className="flex gap-2 flex-wrap">
           {selectedItems.length === 0 ? (
-            <span className="text-xs text-gray-400">未設定</span>
+            <span className="text-xs text-fg-subtle">未設定</span>
           ) : (
             selectedItems.map(
               ({ item, count }) =>
@@ -72,7 +72,7 @@ function SpellItemView({
                       className="w-10 h-10 rounded"
                     />
                     {count > 1 && (
-                      <span className="absolute -top-1 -right-1 bg-gray-800 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 bg-action text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                         {count}
                       </span>
                     )}
@@ -108,7 +108,7 @@ export function NoteFormFields({
       <div className="mb-6" id="section-preset">
         <label
           htmlFor="preset-name"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-fg-muted mb-2"
         >
           プリセット名（空欄の場合は「VS相手チャンピオン名」が自動設定されます）
         </label>
@@ -118,11 +118,11 @@ export function NoteFormFields({
           value={presetName}
           onChange={(e) => setPresetName(e.target.value)}
           disabled={isView}
-          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800 ${errors.presetName ? 'border-red-500' : 'border-gray-300'} ${isView ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent ${errors.presetName ? 'border-danger' : 'border-line-strong'} ${isView ? 'bg-surface-2 cursor-not-allowed' : ''}`}
           placeholder="例: 序盤安定型"
         />
         {errors.presetName && (
-          <p className="text-sm text-red-600 mt-1" role="alert">
+          <p className="text-sm text-danger-fg mt-1" role="alert">
             {errors.presetName}
           </p>
         )}
@@ -133,12 +133,10 @@ export function NoteFormFields({
         <div className="space-y-6 mb-6">
           <div id="section-spells">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-gray-900">
-                サモナースペル
-              </h3>
+              <h3 className="text-lg font-semibold text-fg">サモナースペル</h3>
               <button
                 onClick={() => setSpells([])}
-                className="px-2 py-1 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-100 transition-colors duration-150"
+                className="px-2 py-1 text-xs text-fg-muted border border-line-strong rounded hover:bg-surface-2 transition-colors duration-150"
               >
                 リセット
               </button>
@@ -149,19 +147,17 @@ export function NoteFormFields({
               disabled={false}
             />
             {errors.spells && (
-              <p className="text-sm text-red-600 mt-1" role="alert">
+              <p className="text-sm text-danger-fg mt-1" role="alert">
                 {errors.spells}
               </p>
             )}
           </div>
           <div id="section-items">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-gray-900">
-                初期アイテム
-              </h3>
+              <h3 className="text-lg font-semibold text-fg">初期アイテム</h3>
               <button
                 onClick={() => setItems([])}
-                className="px-2 py-1 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-100 transition-colors duration-150"
+                className="px-2 py-1 text-xs text-fg-muted border border-line-strong rounded hover:bg-surface-2 transition-colors duration-150"
               >
                 リセット
               </button>
@@ -172,7 +168,7 @@ export function NoteFormFields({
               disabled={false}
             />
             {errors.items && (
-              <p className="text-sm text-red-600 mt-1" role="alert">
+              <p className="text-sm text-danger-fg mt-1" role="alert">
                 {errors.items}
               </p>
             )}

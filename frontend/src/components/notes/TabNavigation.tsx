@@ -39,7 +39,7 @@ const tabs: Tab[] = [
 const TabNavigation: React.FC<TabNavigationProps> = React.memo(
   ({ activeTab, onTabChange }) => {
     return (
-      <div className="border-b border-gray-200 bg-white sticky top-14 z-30">
+      <div className="border-b border-line bg-surface sticky top-14 z-30">
         <div className="flex gap-1 px-4 overflow-x-auto">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -54,8 +54,8 @@ const TabNavigation: React.FC<TabNavigationProps> = React.memo(
                 border-b-2
                 ${
                   isActive
-                    ? 'border-black text-black'
-                    : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
+                    ? 'border-accent text-accent'
+                    : 'border-transparent text-fg-muted hover:text-fg hover:border-line-strong'
                 }
               `}
                 aria-label={`${tab.label}タブ`}

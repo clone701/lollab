@@ -12,12 +12,12 @@ export function FilterSelect<T extends string>({
   onChange,
 }: FilterSelectProps<T>) {
   return (
-    <label className="flex items-center gap-2 text-sm text-gray-600">
+    <label className="flex items-center gap-2 text-sm text-fg-muted">
       {label}
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as T)}
-        className="rounded border border-gray-300 bg-white px-2 py-1 text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        className="rounded border border-line-strong bg-surface px-2 py-1 text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

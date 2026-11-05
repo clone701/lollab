@@ -28,18 +28,18 @@ export default function SearchHistoryDropdown({
 
   return (
     <div
-      className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-md z-50"
+      className="absolute top-full left-0 right-0 mt-1 bg-surface border border-line rounded-lg shadow-md z-50"
       onMouseDown={(e) => e.preventDefault()}
     >
       {/* タブ */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-line">
         <button
           type="button"
           onClick={() => setActiveTab('recent')}
           className={`flex-1 py-2 text-sm font-medium ${
             activeTab === 'recent'
-              ? 'text-blue-600 border-b-2 border-blue-500'
-              : 'text-gray-500'
+              ? 'text-accent border-b-2 border-accent'
+              : 'text-fg-muted'
           }`}
         >
           最近の検索
@@ -49,8 +49,8 @@ export default function SearchHistoryDropdown({
           onClick={() => setActiveTab('favorites')}
           className={`flex-1 py-2 text-sm font-medium ${
             activeTab === 'favorites'
-              ? 'text-blue-600 border-b-2 border-blue-500'
-              : 'text-gray-500'
+              ? 'text-accent border-b-2 border-accent'
+              : 'text-fg-muted'
           }`}
         >
           お気に入り
@@ -63,22 +63,22 @@ export default function SearchHistoryDropdown({
           recentSearches.map((s) => (
             <li
               key={`${s.name}-${s.tagLine}-${s.region}`}
-              className="flex items-center px-3 py-2 hover:bg-gray-50"
+              className="flex items-center px-3 py-2 hover:bg-surface-2"
             >
-              <span className="text-xs font-bold text-gray-500 bg-gray-100 rounded px-1 mr-2">
+              <span className="text-xs font-bold text-fg-muted bg-surface-2 rounded px-1 mr-2">
                 {s.region}
               </span>
               <button
                 type="button"
                 onClick={() => onSelect(s.name, s.tagLine, s.region)}
-                className="flex-1 text-left text-sm text-gray-800"
+                className="flex-1 text-left text-sm text-fg"
               >
-                {s.name} <span className="text-gray-400">#{s.tagLine}</span>
+                {s.name} <span className="text-fg-subtle">#{s.tagLine}</span>
               </button>
               <button
                 type="button"
                 onClick={() => onRemoveRecent(s.name, s.tagLine, s.region)}
-                className="ml-2 text-gray-400 hover:text-red-500 text-sm"
+                className="ml-2 text-fg-subtle hover:text-danger-fg text-sm"
                 aria-label="削除"
               >
                 ×
@@ -86,13 +86,13 @@ export default function SearchHistoryDropdown({
             </li>
           ))}
         {activeTab === 'recent' && recentSearches.length === 0 && (
-          <li className="px-3 py-4 text-center text-sm text-gray-400">
+          <li className="px-3 py-4 text-center text-sm text-fg-subtle">
             検索履歴がありません
           </li>
         )}
 
         {activeTab === 'favorites' && !isLoggedIn && (
-          <li className="px-3 py-4 text-center text-sm text-gray-400">
+          <li className="px-3 py-4 text-center text-sm text-fg-subtle">
             ログインするとお気に入りを利用できます
           </li>
         )}
@@ -101,9 +101,9 @@ export default function SearchHistoryDropdown({
           favorites.map((f) => (
             <li
               key={f.id}
-              className="flex items-center px-3 py-2 hover:bg-gray-50"
+              className="flex items-center px-3 py-2 hover:bg-surface-2"
             >
-              <span className="text-xs font-bold text-gray-500 bg-gray-100 rounded px-1 mr-2">
+              <span className="text-xs font-bold text-fg-muted bg-surface-2 rounded px-1 mr-2">
                 {f.region}
               </span>
               <button
@@ -111,15 +111,15 @@ export default function SearchHistoryDropdown({
                 onClick={() =>
                   onSelect(f.summoner_name, f.tag_line, f.region as Region)
                 }
-                className="flex-1 text-left text-sm text-gray-800"
+                className="flex-1 text-left text-sm text-fg"
               >
                 {f.summoner_name}{' '}
-                <span className="text-gray-400">#{f.tag_line}</span>
+                <span className="text-fg-subtle">#{f.tag_line}</span>
               </button>
               <button
                 type="button"
                 onClick={() => onRemoveFavorite(f.id)}
-                className="ml-2 text-yellow-500 hover:text-yellow-600 text-sm"
+                className="ml-2 text-highlight hover:text-highlight/80 text-sm"
                 aria-label="お気に入り解除"
               >
                 ★
@@ -127,7 +127,7 @@ export default function SearchHistoryDropdown({
               <button
                 type="button"
                 onClick={() => onRemoveFavorite(f.id)}
-                className="ml-1 text-gray-400 hover:text-red-500 text-sm"
+                className="ml-1 text-fg-subtle hover:text-danger-fg text-sm"
                 aria-label="削除"
               >
                 ×
@@ -135,7 +135,7 @@ export default function SearchHistoryDropdown({
             </li>
           ))}
         {activeTab === 'favorites' && isLoggedIn && favorites.length === 0 && (
-          <li className="px-3 py-4 text-center text-sm text-gray-400">
+          <li className="px-3 py-4 text-center text-sm text-fg-subtle">
             お気に入りがありません
           </li>
         )}

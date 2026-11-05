@@ -28,9 +28,9 @@ export function SummaryStats({ summary }: SummaryStatsProps) {
   return (
     <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5">
       {items.map(([term, value]) => (
-        <div key={term} className="rounded-lg bg-gray-50 p-3">
-          <dt className="text-xs text-gray-600">{term}</dt>
-          <dd className="text-xl font-bold text-gray-800">{value}</dd>
+        <div key={term} className="rounded-lg bg-surface-2 p-3">
+          <dt className="text-xs text-fg-muted">{term}</dt>
+          <dd className="text-xl font-bold text-fg">{value}</dd>
         </div>
       ))}
     </dl>

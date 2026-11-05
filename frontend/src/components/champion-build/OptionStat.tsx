@@ -9,8 +9,8 @@ interface OptionStatProps {
 export function OptionStat({ option }: OptionStatProps) {
   const winRate = formatPercent(calcWinRate(option.wins, option.games));
   return (
-    <span className="inline-flex items-baseline gap-2 whitespace-nowrap text-xs text-gray-600">
-      <span className="font-semibold text-gray-800">勝率 {winRate}</span>
+    <span className="inline-flex items-baseline gap-2 whitespace-nowrap text-xs text-fg-muted">
+      <span className="font-semibold text-fg">勝率 {winRate}</span>
       <span>{option.games.toLocaleString('ja-JP')}試合</span>
     </span>
   );

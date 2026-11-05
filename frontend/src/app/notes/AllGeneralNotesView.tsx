@@ -21,13 +21,13 @@ export function AllGeneralNotesView({
   if (isLoading)
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-800" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
       </div>
     );
 
   if (notes.length === 0)
     return (
-      <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
+      <div className="flex items-center justify-center h-64 text-fg-subtle text-sm">
         ノートがありません
       </div>
     );
@@ -37,21 +37,21 @@ export function AllGeneralNotesView({
 
   return (
     <div className="p-4">
-      <h2 className="text-lg font-bold text-gray-900 mb-3">汎用ノート一覧</h2>
+      <h2 className="text-lg font-bold text-fg mb-3">汎用ノート一覧</h2>
       <div className="space-y-2">
         {paged.map((note) => (
           <button
             key={note.id}
             type="button"
             onClick={() => onNoteClick(note.id)}
-            className="w-full text-left flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:ring-2 hover:ring-blue-400 transition-colors duration-150"
+            className="w-full text-left flex items-center gap-3 p-3 bg-surface rounded-lg border border-line hover:ring-2 hover:ring-accent/60 transition-colors duration-150"
           >
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm text-gray-800 truncate">
+              <p className="font-semibold text-sm text-fg truncate">
                 {note.title}
               </p>
               {note.body && (
-                <p className="text-xs text-gray-500 truncate">
+                <p className="text-xs text-fg-muted truncate">
                   {note.body.slice(0, 60)}
                 </p>
               )}
@@ -61,14 +61,14 @@ export function AllGeneralNotesView({
                 {note.tags.slice(0, 2).map((tag) => (
                   <span
                     key={tag}
-                    className="px-1.5 py-0.5 text-xs bg-gray-100 text-gray-600 rounded border border-gray-200"
+                    className="px-1.5 py-0.5 text-xs bg-surface-2 text-fg-muted rounded border border-line"
                   >
                     {tag}
                   </span>
                 ))}
               </div>
             )}
-            <span className="text-xs text-gray-400 shrink-0">
+            <span className="text-xs text-fg-subtle shrink-0">
               {formatDate(note.updated_at)}
             </span>
           </button>
@@ -80,18 +80,18 @@ export function AllGeneralNotesView({
             type="button"
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded hover:bg-gray-700 disabled:opacity-40 transition-colors duration-150"
+            className="px-3 py-1.5 text-sm bg-action text-white rounded hover:bg-action-hover disabled:opacity-40 transition-colors duration-150"
           >
             前へ
           </button>
-          <span className="px-3 py-1 text-sm text-gray-600">
+          <span className="px-3 py-1 text-sm text-fg-muted">
             {page + 1} / {totalPages}
           </span>
           <button
             type="button"
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={page === totalPages - 1}
-            className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded hover:bg-gray-700 disabled:opacity-40 transition-colors duration-150"
+            className="px-3 py-1.5 text-sm bg-action text-white rounded hover:bg-action-hover disabled:opacity-40 transition-colors duration-150"
           >
             次へ
           </button>

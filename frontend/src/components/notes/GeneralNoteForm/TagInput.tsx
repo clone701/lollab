@@ -44,13 +44,13 @@ export function TagInput({
         {tags.map((tag, i) => (
           <span
             key={i}
-            className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-sm"
+            className="flex items-center gap-1 px-2 py-1 bg-surface-2 rounded text-sm"
           >
             {tag}
             <button
               type="button"
               onClick={() => handleRemove(i)}
-              className="text-gray-600 hover:text-gray-800"
+              className="text-fg-muted hover:text-fg"
               aria-label={`タグ「${tag}」を削除`}
             >
               ×
@@ -70,10 +70,10 @@ export function TagInput({
         placeholder={
           tags.length >= maxTags ? `最大${maxTags}タグ` : 'Enterでタグを追加'
         }
-        className="border border-gray-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className="border border-line rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:bg-surface-2 disabled:cursor-not-allowed"
         maxLength={maxTagLength + 1}
       />
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className="text-danger-fg text-xs mt-1">{error}</p>}
     </div>
   );
 }

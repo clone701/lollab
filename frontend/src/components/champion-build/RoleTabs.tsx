@@ -10,8 +10,8 @@ interface RoleTabsProps {
   query: BuildQuery;
 }
 
-const SELECTED = 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50';
-const NORMAL = 'bg-gray-50 hover:ring-2 hover:ring-blue-400';
+const SELECTED = 'ring-2 ring-accent bg-accent/15';
+const NORMAL = 'bg-surface-2 hover:ring-2 hover:ring-accent/60';
 
 export function RoleTabs({
   championId,
@@ -34,10 +34,10 @@ export function RoleTabs({
             key={role}
             href={href}
             aria-current={isCurrent ? 'page' : undefined}
-            className={`rounded-lg px-3 py-1 text-sm text-gray-800 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isCurrent ? SELECTED : NORMAL}`}
+            className={`rounded-lg px-3 py-1 text-sm text-fg transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${isCurrent ? SELECTED : NORMAL}`}
           >
             {ROLE_LABELS[role as Role] ?? role}
-            <span className="ml-1 text-xs text-gray-500">
+            <span className="ml-1 text-xs text-fg-muted">
               {games.toLocaleString('ja-JP')}試合
             </span>
           </Link>

@@ -94,7 +94,7 @@ describe('NoteForm - View Mode (Task 3.2)', () => {
 
     const input = screen.getByLabelText(/プリセット名/);
     expect(input).toBeDisabled();
-    expect(input).toHaveClass('bg-gray-50', 'cursor-not-allowed');
+    expect(input).toHaveClass('bg-surface-2', 'cursor-not-allowed');
   });
 
   it('対策メモ入力欄がdisabledになる', () => {
@@ -102,7 +102,7 @@ describe('NoteForm - View Mode (Task 3.2)', () => {
 
     const textarea = screen.getByLabelText('対策メモ');
     expect(textarea).toBeDisabled();
-    expect(textarea).toHaveClass('bg-gray-50', 'cursor-not-allowed');
+    expect(textarea).toHaveClass('bg-surface-2', 'cursor-not-allowed');
   });
 
   it('RuneSelectorにdisabled=trueが渡される', () => {
@@ -152,7 +152,7 @@ describe('NoteForm - Edit Mode (Task 3.2)', () => {
 
     const input = screen.getByLabelText(/プリセット名/);
     expect(input).not.toBeDisabled();
-    expect(input).not.toHaveClass('bg-gray-50', 'cursor-not-allowed');
+    expect(input).not.toHaveClass('bg-surface-2', 'cursor-not-allowed');
   });
 
   it('対策メモ入力欄がdisabledにならない', () => {
@@ -160,7 +160,7 @@ describe('NoteForm - Edit Mode (Task 3.2)', () => {
 
     const textarea = screen.getByLabelText('対策メモ');
     expect(textarea).not.toBeDisabled();
-    expect(textarea).not.toHaveClass('bg-gray-50', 'cursor-not-allowed');
+    expect(textarea).not.toHaveClass('bg-surface-2', 'cursor-not-allowed');
   });
 
   it('RuneSelectorにdisabled=falseが渡される', () => {

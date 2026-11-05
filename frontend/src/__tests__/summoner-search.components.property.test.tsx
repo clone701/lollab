@@ -126,7 +126,7 @@ describe('Property 6: 勝率50%以上は緑色で表示される', () => {
               }}
             />
           );
-          const greenEl = document.body.querySelector('.text-green-600');
+          const greenEl = document.body.querySelector('.text-win');
           unmount();
           return greenEl !== null;
         }

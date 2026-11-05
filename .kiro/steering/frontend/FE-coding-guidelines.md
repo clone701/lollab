@@ -55,7 +55,7 @@ app/ → components/ → adapters/
 
 ## スタイル
 - Tailwind CSSをインラインで使用
-- 選択状態: `ring-2 ring-amber-400 shadow-md shadow-amber-400/30 bg-amber-50/50`
+- 色は design-system.md の役割の名前（`bg-surface`、`text-fg` など）だけを使う
 
 ## パス解決
 - `@/*` → `./src/*`（tsconfig.jsonで設定済み）

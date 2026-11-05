@@ -31,7 +31,7 @@ export function BuildIcon({
         aria-label={label}
         title={label}
         style={{ width: size, height: size }}
-        className={`inline-flex items-center justify-center bg-gray-100 text-xs text-gray-400 ${className}`}
+        className={`inline-flex items-center justify-center bg-surface-2 text-xs text-fg-subtle ${className}`}
       >
         ?
       </span>

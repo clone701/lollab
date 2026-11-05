@@ -22,10 +22,10 @@ export function SkillPanel({
   return (
     <PanelSection title="スキル">
       <div className="flex flex-col gap-1">
-        <h3 className="text-sm text-gray-600">優先順</h3>
+        <h3 className="text-sm text-fg-muted">優先順</h3>
         {priority ? (
           <div className="flex items-baseline gap-3">
-            <span className="text-xl font-bold text-gray-800">
+            <span className="text-xl font-bold text-fg">
               {formatSkillPriority(priority.key)}
             </span>
             <OptionStat option={priority} />
@@ -35,7 +35,7 @@ export function SkillPanel({
         )}
       </div>
       <div className="flex flex-col gap-1">
-        <h3 className="text-sm text-gray-600">スキル順（レベル1〜15）</h3>
+        <h3 className="text-sm text-fg-muted">スキル順（レベル1〜15）</h3>
         {order ? (
           <>
             <SkillOrderGrid skillKey={order.key} />

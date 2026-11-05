@@ -14,7 +14,7 @@ export function ChampionGridItem({
     <button
       type="button"
       onClick={() => onSelect(champion.id)}
-      className="flex w-full flex-col items-center gap-1 rounded-lg p-2 transition-colors duration-150 hover:ring-2 hover:ring-blue-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      className="flex w-full flex-col items-center gap-1 rounded-lg p-2 transition-colors duration-150 hover:ring-2 hover:ring-accent/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
     >
       <BuildIcon
         src={champion.imagePath}
@@ -22,7 +22,7 @@ export function ChampionGridItem({
         size={56}
         className="rounded-full"
       />
-      <span className="w-full truncate text-center text-xs text-gray-600">
+      <span className="w-full truncate text-center text-xs text-fg-muted">
         {champion.name}
       </span>
     </button>

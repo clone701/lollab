@@ -32,7 +32,7 @@ export function ChampionBuildContent({
       {error ? (
         <ChampionBuildMessage text={error} />
       ) : isLoading || !data ? (
-        <p className="py-8 text-center text-gray-500">読み込み中...</p>
+        <p className="py-8 text-center text-fg-muted">読み込み中...</p>
       ) : (
         <ChampionBuildBody
           champion={champion}

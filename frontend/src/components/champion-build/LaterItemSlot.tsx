@@ -14,7 +14,7 @@ export function LaterItemSlot({ label, element }: LaterItemSlotProps) {
   const options = selectTopOptions(element);
   return (
     <div className="flex flex-col gap-1">
-      <h3 className="text-sm text-gray-600">{label}</h3>
+      <h3 className="text-sm text-fg-muted">{label}</h3>
       {options.length === 0 ? (
         <NoData />
       ) : (
@@ -22,7 +22,7 @@ export function LaterItemSlot({ label, element }: LaterItemSlotProps) {
           {options.map((option, index) => (
             <li key={option.key.join('-')} className="flex items-center gap-3">
               {index > 0 && (
-                <span className="text-xs font-semibold text-gray-400">OR</span>
+                <span className="text-xs font-semibold text-fg-subtle">OR</span>
               )}
               <div className="flex flex-col gap-0.5">
                 <ItemIcons ids={option.key} />

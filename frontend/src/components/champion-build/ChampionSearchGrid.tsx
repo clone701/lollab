@@ -34,10 +34,10 @@ export function ChampionSearchGrid() {
         onChange={(e) => setQuery(e.target.value)}
         aria-label="チャンピオンを検索"
         placeholder="チャンピオン名（日本語・読み・英語）"
-        className="w-full rounded border border-gray-200 px-3 py-2 text-sm hover:border-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        className="w-full rounded border border-line px-3 py-2 text-sm hover:border-line-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       />
       {filtered.length === 0 ? (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-fg-muted">
           該当するチャンピオンがありません
         </p>
       ) : (

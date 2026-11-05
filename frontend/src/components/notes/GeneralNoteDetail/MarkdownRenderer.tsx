@@ -17,7 +17,7 @@ interface MarkdownRendererProps {
 
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   return (
-    <div className="prose prose-sm max-w-none text-gray-800">
+    <div className="prose prose-sm max-w-none text-fg">
       <ReactMarkdown
         remarkPlugins={[remarkBreaks]}
         rehypePlugins={[rehypeChampionMention]}

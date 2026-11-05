@@ -57,7 +57,7 @@ function ItemBuildSelector({
     <div>
       <div className="mb-3 text-sm">
         <span
-          className={`font-semibold ${totalGold > 500 ? 'text-red-600' : 'text-gray-700'}`}
+          className={`font-semibold ${totalGold > 500 ? 'text-danger-fg' : 'text-fg-muted'}`}
         >
           合計: {totalGold}g / 500g
         </span>
@@ -73,12 +73,12 @@ function ItemBuildSelector({
               type="button"
               onClick={() => !disabled && handleClick(item.id)}
               disabled={disabled || wouldExceed}
-              className={`relative flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 min-h-[100px] ${
+              className={`relative flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent min-h-[100px] ${
                 isSelected
-                  ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50'
+                  ? 'ring-2 ring-accent bg-accent/15'
                   : wouldExceed || disabled
-                    ? 'opacity-50 cursor-not-allowed bg-gray-50'
-                    : 'hover:ring-2 hover:ring-gray-300 bg-white'
+                    ? 'opacity-50 cursor-not-allowed bg-surface-2'
+                    : 'hover:ring-2 hover:ring-accent/60 bg-surface-2'
               }`}
               aria-label={`${item.name} ${item.gold}g${count > 0 ? ` (x${count} 選択中、クリックで1個削除)` : ''}`}
               aria-pressed={isSelected}
@@ -94,10 +94,10 @@ function ItemBuildSelector({
                     !disabled &&
                     handleBadgeClick(item.id, e as unknown as React.MouseEvent)
                   }
-                  className={`absolute top-1 right-1 bg-gray-800 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center transition-colors ${
+                  className={`absolute top-1 right-1 bg-action text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center transition-colors ${
                     disabled || totalGold + item.gold > 500
                       ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:bg-amber-500 cursor-pointer'
+                      : 'hover:bg-highlight hover:text-canvas cursor-pointer'
                   }`}
                   aria-label={`${item.name}をもう1個追加`}
                   title="クリックでもう1個追加"
@@ -114,11 +114,11 @@ function ItemBuildSelector({
                 className="w-10 h-10"
                 loading="lazy"
               />
-              <span className="text-xs text-gray-700 text-center leading-tight mt-1">
+              <span className="text-xs text-fg-muted text-center leading-tight mt-1">
                 {item.name}
               </span>
               <span
-                className={`text-xs ${wouldExceed || disabled ? 'text-gray-400' : 'text-gray-500'}`}
+                className={`text-xs ${wouldExceed || disabled ? 'text-fg-subtle' : 'text-fg-muted'}`}
               >
                 {item.gold}g
               </span>

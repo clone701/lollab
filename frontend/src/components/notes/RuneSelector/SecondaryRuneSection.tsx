@@ -22,7 +22,7 @@ export function SecondaryRuneSection({
 }: SecondaryRuneSectionProps) {
   return (
     <div>
-      <h4 className="text-sm font-semibold text-gray-700 mb-3">Secondary</h4>
+      <h4 className="text-sm font-semibold text-fg-muted mb-3">Secondary</h4>
       {primaryPath && (
         <>
           <div className="mb-4 flex gap-2 flex-wrap">

@@ -31,7 +31,7 @@ export function ChampionSuggestDropdown({
 
   return (
     <div
-      className="absolute z-50 bg-white border border-gray-200 rounded shadow-md w-52 max-h-60 overflow-y-auto"
+      className="absolute z-50 bg-surface border border-line rounded shadow-md w-52 max-h-60 overflow-y-auto"
       onMouseDown={(e) => e.preventDefault()} // textareaのblurを防ぐ
     >
       {candidates.map((champion, index) => (
@@ -42,9 +42,9 @@ export function ChampionSuggestDropdown({
           }}
           type="button"
           onClick={() => onSelect(champion)}
-          className={`flex items-center gap-2 w-full px-3 py-1.5 text-sm text-left hover:bg-gray-100 transition-colors duration-150 ${
+          className={`flex items-center gap-2 w-full px-3 py-1.5 text-sm text-left hover:bg-surface-2 transition-colors duration-150 ${
             index === focusedIndex
-              ? 'bg-blue-50 ring-2 ring-blue-500 ring-inset'
+              ? 'bg-accent/15 ring-2 ring-accent ring-inset'
               : ''
           }`}
         >
@@ -55,14 +55,14 @@ export function ChampionSuggestDropdown({
             height={24}
             className="rounded-full shrink-0"
           />
-          <span className="text-gray-800">{champion.name}</span>
-          <span className="text-gray-400 text-xs ml-auto">{champion.id}</span>
+          <span className="text-fg">{champion.name}</span>
+          <span className="text-fg-subtle text-xs ml-auto">{champion.id}</span>
         </button>
       ))}
       <button
         type="button"
         onClick={onClose}
-        className="w-full px-3 py-1 text-xs text-gray-400 hover:bg-gray-50 border-t border-gray-100"
+        className="w-full px-3 py-1 text-xs text-fg-subtle hover:bg-surface-2 border-t border-line"
       >
         閉じる (Esc)
       </button>

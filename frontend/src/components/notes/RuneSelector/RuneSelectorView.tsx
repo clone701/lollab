@@ -36,7 +36,7 @@ export function RuneSelectorView({
   onShardChange,
 }: RuneSelectorViewProps) {
   return (
-    <div className="border border-gray-200 rounded-lg p-4 bg-white">
+    <div className="border border-line rounded-lg p-4 bg-surface">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <PrimaryRuneSection
           primaryPath={primaryPath}
