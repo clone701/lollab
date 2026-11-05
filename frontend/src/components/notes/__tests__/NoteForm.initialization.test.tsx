@@ -35,7 +35,7 @@ const mockInitialData: ChampionNote = {
     keystone: 8214,
     primaryRunes: [8226, 8210, 8234],
     secondaryRunes: [8009, 8014],
-    shards: [5008, 5008, 5002],
+    shards: [5008, 5008, 5013],
   },
   spells: ['SummonerFlash', 'SummonerIgnite'],
   items: ['1001', '2003'],
