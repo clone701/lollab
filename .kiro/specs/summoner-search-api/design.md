@@ -174,21 +174,24 @@ Backfill のフェーズ2の後に「補完フェーズ」を追加する。対�
 
 `adapters/riot_rate_limiter.py` で、Riot API へのリクエストをホスト単位（`jp1`、`asia` など。Riot の制限はリージョン単位）で数える。
 
-| 設定（config.py） | 既定値 | 説明 |
-|---|---|---|
-| `riot_rate_limit_per_second` | 18 | 1秒あたりの上限（キーの上限20に余裕を持たせる） |
-| `riot_rate_limit_per_2min` | 95 | 2分あたりの上限（キーの上限100に余裕を持たせる） |
-| `riot_backfill_reserve` | 30 | Backfill が残す2分あたりの回数 |
+キーを切り替えたときに環境変数だけで追従できるよう、上限は「回数:秒」の組の並びで設定する（Riot の `X-App-Rate-Limit` ヘッダーと同じ形式）。
 
-- 直近1秒・直近120秒の送信時刻をスライディングウィンドウで記録する
-- 1秒の上限に達したら、空くまで待ってから送る（検索・更新・Backfill 共通）
-- 2分の上限に達したら、検索・更新では待たずに `RiotRateLimitError` を送出する（ルーターで 429「レート制限に達しました。しばらく待ってから再試行してください」）
-- Backfill は送信前に2分の残り回数を確認し、`riot_backfill_reserve` 未満なら `RiotRateLimitError` で終了する（429 と同じ扱い。カーソルは保存済みページまで）
+| 設定（環境変数） | 既定値（Personal キー） | Production キーの値 | 説明 |
+|---|---|---|---|
+| `RIOT_RATE_LIMITS` | `18:1,95:120` | `450:10,27000:600` | 上限の組。キーの上限（Personal 20:1,100:120 / Production 500:10,30000:600）の約9割 |
+| `RIOT_RATE_LIMIT_MAX_WAIT_SECONDS` | `10` | `10` | この秒数以下の窓は空くまで待つ。より長い窓は待たずに例外にする |
+| `RIOT_BACKFILL_RESERVE_RATIO` | `0.3` | `0.3` | Backfill が検索・更新用に残す割合（最も長い窓の上限に対する割合） |
+
+- 組ごとに、直近の送信時刻をスライディングウィンドウで記録する
+- 窓が `RIOT_RATE_LIMIT_MAX_WAIT_SECONDS` 以下の上限に達したら、空くまで待ってから送る（検索・更新・Backfill 共通）
+- それより長い窓の上限に達したら、検索・更新では待たずに `RiotRateLimitError` を送出する（ルーターで 429「レート制限に達しました。しばらく待ってから再試行してください」）
+- Backfill は送信前に最も長い窓の残り回数を確認し、`上限 × RIOT_BACKFILL_RESERVE_RATIO` 未満なら `RiotRateLimitError` で終了する（429 と同じ扱い。カーソルは保存済みページまで）
+- 設定値の形式が不正な場合は起動時にエラーにする
+- **Production キーへの切り替え手順**: Render の環境変数 `RIOT_API_KEY` を Production キーに、`RIOT_RATE_LIMITS` を `450:10,27000:600` にして再デプロイする（コード変更なし）
 - Riot の数え方（固定ウィンドウ）と自前の数え方（スライディングウィンドウ）のずれで 429 が返ることがあるため、上限は余裕を持たせた値にする
 - `interactive` のリクエストが Riot から 429 を受け、`Retry-After` ヘッダーが2秒以内の場合は、その秒数待って1回だけ再送する。それ以外（ヘッダーなし・2秒超・再送後も429・`backfill`）は再送しない
 - `riot_api.get()` に `priority: Literal["interactive", "backfill"]` を渡し、既定は `interactive`。Backfill から呼ぶ riot_fetch の関数は `backfill` を渡す
 - カウントはプロセス内のメモリで持つ。Render で複数インスタンス・複数ワーカーにする場合は共有ストアが必要（現状は1プロセス）
-- Production キーに切り替えたら設定値を変更する
 
 ## API
 
