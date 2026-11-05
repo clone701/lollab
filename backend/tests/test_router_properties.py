@@ -13,6 +13,10 @@ _mock_settings = MagicMock()
 _mock_config = MagicMock(settings=_mock_settings)
 sys.modules["config"] = _mock_config
 
+# adapters を差し替えると submodule を import できなくなるため、
+# services が import する実モジュールを先に登録しておく
+import adapters.riot_rate_limiter  # noqa: E402,F401
+
 _mock_riot_api = MagicMock()
 sys.modules["adapters"] = MagicMock(riot_api=_mock_riot_api)
 sys.modules["adapters.riot_api"] = _mock_riot_api
@@ -39,8 +43,8 @@ _url_safe_alphabet = characters(whitelist_categories=("Lu", "Ll", "Nd"))
 def test_long_game_name_returns_422(game_name: str) -> None:
     """17文字以上の gameName に対してルーターが HTTP 422 を返す。"""
     with patch(
-        "api.summoner.router.get_summoner_data",
-        AsyncMock(return_value=None),
+        "api.summoner.router.search_summoner",
+        AsyncMock(return_value=(None, None)),
     ):
         response = client.get(f"/api/summoner/JP/{game_name}/JP1")
     assert response.status_code == 422
@@ -51,8 +55,8 @@ def test_long_game_name_returns_422(game_name: str) -> None:
 def test_long_tag_line_returns_422(tag_line: str) -> None:
     """6文字以上の tagLine に対してルーターが HTTP 422 を返す。"""
     with patch(
-        "api.summoner.router.get_summoner_data",
-        AsyncMock(return_value=None),
+        "api.summoner.router.search_summoner",
+        AsyncMock(return_value=(None, None)),
     ):
         response = client.get(f"/api/summoner/JP/ValidName/{tag_line}")
     assert response.status_code == 422
@@ -67,8 +71,8 @@ def test_long_tag_line_returns_422(tag_line: str) -> None:
 def test_invalid_region_returns_422(region: str) -> None:
     """許可されていない region 値に対してルーターが HTTP 422 を返す。"""
     with patch(
-        "api.summoner.router.get_summoner_data",
-        AsyncMock(return_value=None),
+        "api.summoner.router.search_summoner",
+        AsyncMock(return_value=(None, None)),
     ):
         response = client.get(f"/api/summoner/{region}/ValidName/JP1")
     assert response.status_code == 422
@@ -95,7 +99,7 @@ def test_error_response_format_consistency(status_code: int) -> None:
     スタックトレースや内部実装詳細が含まれないことも確認する。
     """
     with patch(
-        "api.summoner.router.get_summoner_data",
+        "api.summoner.router.search_summoner",
         new_callable=AsyncMock,
         side_effect=HTTPException(status_code=status_code, detail="test error"),
     ):
@@ -114,6 +118,33 @@ def test_error_response_format_consistency(status_code: int) -> None:
 
     # 内部実装詳細が含まれないことを確認
     assert "internal" not in str(body).lower()
+
+
+@settings(max_examples=100)
+@given(sampled_from(ERROR_STATUS_CODES))
+def test_update_error_response_format_consistency(status_code: int) -> None:
+    """更新エンドポイントでもエラーが {"detail": "<message>"} 形式で返る。"""
+    with patch(
+        "api.summoner.router.update_summoner",
+        new_callable=AsyncMock,
+        side_effect=HTTPException(status_code=status_code, detail="test error"),
+    ):
+        response = client.post("/api/summoner/JP/TestUser/JP1/update")
+
+    assert response.status_code == status_code
+    assert response.json() == {"detail": "test error"}
+
+
+@settings(max_examples=100)
+@given(text(min_size=17, max_size=50, alphabet=_url_safe_alphabet))
+def test_update_long_game_name_returns_422(game_name: str) -> None:
+    """更新エンドポイントでも 17文字以上の gameName は 422。"""
+    with patch(
+        "api.summoner.router.update_summoner",
+        AsyncMock(return_value=(None, "puuid")),
+    ):
+        response = client.post(f"/api/summoner/JP/{game_name}/JP1/update")
+    assert response.status_code == 422
 
 
 def test_422_validation_error_format() -> None:
