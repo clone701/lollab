@@ -6,7 +6,7 @@
 -- 1. general_notes テーブル
 -- ============================================================================
 
-CREATE TABLE general_notes (
+CREATE TABLE IF NOT EXISTS general_notes (
   id         bigserial    PRIMARY KEY,
   user_id    uuid         NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title      text         NOT NULL,
@@ -33,10 +33,10 @@ COMMENT ON COLUMN general_notes.updated_at IS '更新日時';
 -- ============================================================================
 
 -- 一覧取得クエリ最適化（ユーザーごとの更新日時降順）
-CREATE INDEX idx_general_notes_user_updated ON general_notes(user_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_general_notes_user_updated ON general_notes(user_id, updated_at DESC);
 
 -- タグフィルタリング用GINインデックス
-CREATE INDEX idx_general_notes_tags ON general_notes USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_general_notes_tags ON general_notes USING GIN(tags);
 
 COMMENT ON INDEX idx_general_notes_user_updated IS 'ユーザーごとのノート一覧取得を最適化';
 COMMENT ON INDEX idx_general_notes_tags IS 'タグによるフィルタリングを最適化';
@@ -48,18 +48,21 @@ COMMENT ON INDEX idx_general_notes_tags IS 'タグによるフィルタリング
 ALTER TABLE general_notes ENABLE ROW LEVEL SECURITY;
 
 -- SELECT ポリシー: ユーザーは自分のノートのみ読み取り可能
+DROP POLICY IF EXISTS "Users can view their own general notes" ON general_notes;
 CREATE POLICY "Users can view their own general notes"
 ON general_notes
 FOR SELECT
 USING (auth.uid() = user_id);
 
 -- INSERT ポリシー: ユーザーは自分のノートのみ作成可能
+DROP POLICY IF EXISTS "Users can create their own general notes" ON general_notes;
 CREATE POLICY "Users can create their own general notes"
 ON general_notes
 FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
 -- UPDATE ポリシー: ユーザーは自分のノートのみ更新可能
+DROP POLICY IF EXISTS "Users can update their own general notes" ON general_notes;
 CREATE POLICY "Users can update their own general notes"
 ON general_notes
 FOR UPDATE
@@ -67,6 +70,7 @@ USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
 
 -- DELETE ポリシー: ユーザーは自分のノートのみ削除可能
+DROP POLICY IF EXISTS "Users can delete their own general notes" ON general_notes;
 CREATE POLICY "Users can delete their own general notes"
 ON general_notes
 FOR DELETE
@@ -85,6 +89,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_general_notes_updated_at ON general_notes;
 CREATE TRIGGER update_general_notes_updated_at
 BEFORE UPDATE ON general_notes
 FOR EACH ROW
