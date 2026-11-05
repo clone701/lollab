@@ -1,174 +1,175 @@
 # 設計書: サモナー検索API
 
-## Overview
+## 概要
 
-Riot Games APIに接続し、サモナーのプロフィール・ランク情報・試合履歴・チャンピオン統計を取得するFastAPIバックエンドを実装する。
+Riot API から取得したサモナー情報と試合データを Supabase に保存し、検索時は DB から返す。最新化は「更新」ボタンで行い、更新時は直近20件だけを同期で取得し、残りの過去試合はバックグラウンド（Backfill）で取得する。
 
-既存の `adapters/riot_api.py` を拡張し、`api/summoner/ → services/summoner/ → adapters/riot_api.py` のレイヤー構造に従って実装する。
+設計の主眼は **Riot API のリクエスト数を最小にすること**。
 
-## Architecture
+- 登録済みサモナーの検索は Riot API を呼ばない
+- 試合は match ID 単位で1回だけ取得し、参加者10人で共有する
+- 試合ID一覧の取得範囲をカーソルで記録し、取得済みの範囲は再取得しない
+
+## システム構成
 
 ```mermaid
-graph TD
-    Client["フロントエンド (Next.js)"]
-    Router["api/summoner/router.py<br/>HTTPルーター・バリデーション"]
-    ProfileSvc["services/summoner/profile.py<br/>プロフィール取得"]
-    MatchSvc["services/summoner/matches.py<br/>試合履歴取得"]
-    ChampSvc["services/summoner/champion_stats.py<br/>チャンピオン統計"]
-    RegionSvc["services/summoner/region.py<br/>地域マッピング"]
-    Adapter["adapters/riot_api.py<br/>httpx非同期クライアント"]
+graph TB
+    FE["フロントエンド<br/>SearchResultPage / useSummonerDetail"]
+    Router["api/summoner/router.py"]
+    Search["services/summoner/search.py<br/>検索・初回登録"]
+    Update["services/summoner/update.py<br/>手動更新（同期部分）"]
+    Backfill["services/summoner/backfill.py<br/>過去試合の取得"]
+    Fetch["services/summoner/riot_fetch.py<br/>Riot API 取得と変換"]
+    Detail["services/summoner/detail.py<br/>DBデータから応答を組み立て"]
+    Store["adapters/summoner_store.py<br/>DB アクセス"]
+    Riot["adapters/riot_api.py<br/>httpx クライアント"]
+    DB[("Supabase")]
     RiotAPI["Riot Games API"]
 
-    Client -->|GET /api/summoner/...| Router
-    Router --> ProfileSvc
-    Router --> MatchSvc
-    Router --> ChampSvc
-    ProfileSvc --> RegionSvc
-    MatchSvc --> RegionSvc
-    ChampSvc --> MatchSvc
-    ProfileSvc --> Adapter
-    MatchSvc --> Adapter
-    Adapter -->|HTTPS| RiotAPI
+    FE -->|GET| Router
+    FE -->|POST update| Router
+    Router --> Search
+    Router --> Update
+    Router -.BackgroundTasks.-> Backfill
+    Search --> Fetch
+    Update --> Fetch
+    Backfill --> Fetch
+    Search --> Detail
+    Update --> Detail
+    Search --> Store
+    Update --> Store
+    Backfill --> Store
+    Detail --> Store
+    Fetch --> Riot
+    Store --> DB
+    Riot --> RiotAPI
 ```
 
-### Riot API エンドポイント構成
+services 層は `adapters/summoner_store.py` の関数だけを使い、Supabase を直接参照しない。将来 AWS へ移行する場合は `summoner_store.py` の中身だけを差し替える。
 
-Riot APIは2種類のホストを使い分ける：
+## 処理フロー
 
-| ホスト種別 | 用途 | 例 |
+### 検索（GET）
+
+```mermaid
+stateDiagram-v2
+    [*] --> DB照合: region + RiotId（小文字）
+    DB照合 --> 応答組み立て: 登録済み（Riot API 0回）
+    DB照合 --> 初回登録: 未登録
+    初回登録 --> 応答組み立て
+    初回登録 --> 404: アカウント未発見
+    応答組み立て --> [*]
+```
+
+初回登録の Riot API 呼び出し:
+
+| 呼び出し | 回数 |
+|---|---|
+| account by-riot-id | 1 |
+| summoner by-puuid | 1 |
+| league entries by-puuid | 1 |
+| ランク順位（同ティアのリーグ一覧） | 0〜1（UNRANKED は 0） |
+| match ids（`type=ranked&count=20`） | 1 |
+| match 詳細 | DB に未保存の件数（最大20） |
+
+取得した PUUID が別の RiotId で登録済みなら、既存レコードの RiotId を更新する。初回登録の応答後は、手動更新と同じく BackgroundTasks で Backfill を開始する。
+
+### 手動更新（POST、同期部分）
+
+1. DB から PUUID を取得する（未登録なら 404）
+2. league entries by-puuid を取得する（1回）
+3. ソロとフレックスの `wins + losses` の合計を DB の値（`solo_wins + solo_losses + flex_wins + flex_losses`）と比べる
+   - **同じ**: 新しいランク戦はない。`last_updated_at` だけ更新して応答する（合計1回）
+   - **異なる**: 4 に進む
+4. account by-puuid（RiotId 変更の反映）、summoner by-puuid、ランク順位を取得する（2〜3回）。league entries は 2 の結果を使う
+5. match ids（`type=ranked&count=20`）を取得し、DB に未保存の試合詳細だけを取得する（1回 + 最大20回）
+6. サモナー情報・試合を保存し、`last_updated_at` を記録する
+7. 応答を返した後、BackgroundTasks で Backfill を開始する（3 で「同じ」の場合も、Backfill が未完了なら開始する）
+
+同期部分でエラーが起きた場合は、保存できた試合を残し、`last_updated_at` を変えずにエラーを返す。
+
+`fetch_profile` は league entries の取得を分離し、取得済みのエントリを受け取れるようにする。
+
+### Backfill（バックグラウンド）
+
+`summoners` テーブルの2つのカーソルで取得済み範囲を管理し、再取得を防ぐ。
+
+| カーソル | 意味 |
+|---|---|
+| `synced_until` | この日時以降の対象試合は欠けなく保存済み（新しい側の境界） |
+| `backfill_cursor` | この日時より新しい対象試合は欠けなく保存済み（古い側の境界） |
+| `backfill_completed` | 古い側を Riot API の履歴の最後まで取得済み |
+
+処理順:
+
+1. **新しい側の隙間を埋める**: `startTime = synced_until` で match ids を100件ずつ取得し、未保存の試合詳細を取得する。完了したら `synced_until` を最新の試合時刻に更新する
+2. **古い側をさかのぼる**: `backfill_completed` が false なら、`endTime = backfill_cursor` で match ids を100件ずつ取得し、未保存の試合詳細を取得する。1ページ保存するごとに `backfill_cursor` をそのページ最古の試合時刻に更新する。返却が100件未満なら `backfill_completed = true`
+
+- ページ単位でカーソルを進めるため、途中で止まっても次回は続きから取得する
+- 429 を受けたら Backfill をその場で終了する（カーソルは保存済みページまで進んでいる）
+
+**取得失敗した試合の扱い（取りこぼし防止）**
+
+- 個別の試合詳細の取得に失敗（429 以外）したら `failed_matches` に記録し、`attempts` を加算する。3回目の失敗で `gave_up = true`
+- 「通過済み」の試合 = 保存済み、または `gave_up = true` の試合
+- フェーズ1: ページ内に通過済みでない試合が1件でも残ったら、`synced_until` を進めずに終了する（次回、同じ範囲を取り直す。保存済みは DB 判定で除外されるため、再取得は失敗分だけ）
+- フェーズ2: 試合ID一覧は新しい順なので、先頭から見て「最初の通過済みでない試合」の直前までの最古の時刻に `backfill_cursor` を進める。通過済みでない試合が残ったページでは `backfill_completed` を true にせず、Backfill を終了する
+- 取得に成功した試合は `failed_matches` から削除する
+- 同期部分（検索・更新）での個別失敗はスキップするだけで記録しない（Backfill のフェーズ1が同じ範囲を取り直すため）
+- フェーズ1で未通過の試合が残った場合は、フェーズ2も実行せずに Backfill 全体を終了する（一時障害時に他の試合の失敗回数を消費しないため）
+- gave_up の試合は終了時刻が分からないため、カーソルは前後の保存済み試合の時刻までしか進めない（次ページは `endTime` が境界を含むため前進する）
+- Backfill は10分以上あけて起動するため、gave_up に達するには最低3回の検索・更新が必要
+- 同じサモナーの Backfill が二重に走らないよう、`backfill_started_at` が10分以内なら新しい Backfill を開始しない
+- 初回登録時は `synced_until` を取得した最新試合、`backfill_cursor` を最古試合の時刻にする。20件未満なら `backfill_completed = true`。試合が0件なら `synced_until` を登録時刻にする（登録後の試合をフェーズ1で取得するため）
+- 試合の終了日時は `matches` から引く（`match_participants` は他のサモナーの試合も含むため使わない）
+- 取得不能（3回失敗）の試合は `failed_matches` に `gave_up = true` で残り、欠けている試合を後から確認できる
+
+### 試合詳細の取得
+
+- `riot_fetch.fetch_match_details(match_ids)` は DB に未保存の ID だけを受け取り、`asyncio.Semaphore(10)` で同時実行数を制限して並列取得する。実際の送信間隔はレート制限（下記）で調整される
+- 戻り値は取得できた試合と、失敗した match ID（429 以外）の両方を返す
+- 取得した試合は、`matches` に1行、`match_participants` に10行を upsert する（同時実行で重複しても冪等）
+- Supabase クライアントはトランザクションを使えないため、`matches` だけ書き込まれて参加者が欠けることがある。そのため「保存済み」は `match_participants` に行があるかで判定する（参加者の upsert は1文なので、全員分あるか全くないかのどちらか）
+- パッチ11.20より前の試合は `gameEndTimestamp` がなく `gameDuration` がミリ秒のため、終了日時は `gameStartTimestamp + gameDuration`、試合時間は `gameDuration / 1000` で求める
+
+### レート制限
+
+`adapters/riot_rate_limiter.py` で、Riot API へのリクエストをホスト単位（`jp1`、`asia` など。Riot の制限はリージョン単位）で数える。
+
+| 設定（config.py） | 既定値 | 説明 |
 |---|---|---|
-| Platform | サモナー情報・ランク情報 | `jp1.api.riotgames.com` |
-| Regional | アカウント情報・試合履歴 | `asia.api.riotgames.com` |
+| `riot_rate_limit_per_second` | 18 | 1秒あたりの上限（キーの上限20に余裕を持たせる） |
+| `riot_rate_limit_per_2min` | 95 | 2分あたりの上限（キーの上限100に余裕を持たせる） |
+| `riot_backfill_reserve` | 30 | Backfill が残す2分あたりの回数 |
 
-## Components and Interfaces
+- 直近1秒・直近120秒の送信時刻をスライディングウィンドウで記録する
+- 1秒の上限に達したら、空くまで待ってから送る（検索・更新・Backfill 共通）
+- 2分の上限に達したら、検索・更新では待たずに `RiotRateLimitError` を送出する（ルーターで 429「レート制限に達しました。しばらく待ってから再試行してください」）
+- Backfill は送信前に2分の残り回数を確認し、`riot_backfill_reserve` 未満なら `RiotRateLimitError` で終了する（429 と同じ扱い。カーソルは保存済みページまで）
+- Riot の数え方（固定ウィンドウ）と自前の数え方（スライディングウィンドウ）のずれで 429 が返ることがあるため、上限は余裕を持たせた値にする
+- `interactive` のリクエストが Riot から 429 を受け、`Retry-After` ヘッダーが2秒以内の場合は、その秒数待って1回だけ再送する。それ以外（ヘッダーなし・2秒超・再送後も429・`backfill`）は再送しない
+- `riot_api.get()` に `priority: Literal["interactive", "backfill"]` を渡し、既定は `interactive`。Backfill から呼ぶ riot_fetch の関数は `backfill` を渡す
+- カウントはプロセス内のメモリで持つ。Render で複数インスタンス・複数ワーカーにする場合は共有ストアが必要（現状は1プロセス）
+- Production キーに切り替えたら設定値を変更する
 
-### ファイル構成
+## API
 
-```
-backend/
-├── adapters/
-│   └── riot_api.py          # 既存（変更なし）
-├── api/
-│   └── summoner/
-│       ├── __init__.py
-│       └── router.py        # HTTPルーター・バリデーション
-├── services/
-│   └── summoner/
-│       ├── __init__.py
-│       ├── region.py        # 地域マッピング
-│       ├── profile.py       # プロフィール取得
-│       ├── matches.py       # 試合履歴取得
-│       └── champion_stats.py # チャンピオン統計
-├── schemas/
-│   └── summoner.py          # Pydanticスキーマ
-├── main.py                  # ルーター登録追加
-└── requirements.txt         # httpx追加
+| メソッド | パス | 応答 |
+|---|---|---|
+| GET | `/api/summoner/{region}/{gameName}/{tagLine}` | `SummonerDetail` |
+| POST | `/api/summoner/{region}/{gameName}/{tagLine}/update` | `SummonerDetail` |
 
-frontend/
-├── src/
-│   ├── lib/
-│   │   ├── api/
-│   │   │   └── summoner.ts  # BEへのAPI呼び出し関数
-│   │   └── summoner-search/
-│   │       └── ...          # バリデーション・フィルタリング等
-│   └── components/
-│       └── summoner-search/
-│           ├── SearchResultPage.tsx  # 実APIデータ表示（ローディング・エラー対応）
-│           └── SummonerProfile.tsx   # プロフィールアイコン・ランクエンブレム表示
-└── public/
-    └── images/
-        ├── rank/            # ランクエンブレム画像（ローカル静的配置）
-        │   ├── iron.png
-        │   ├── bronze.png
-        │   ├── silver.png
-        │   ├── gold.png
-        │   ├── platinum.png
-        │   ├── emerald.png
-        │   ├── diamond.png
-        │   ├── master.png
-        │   ├── grandmaster.png
-        │   └── challenger.png
-        └── loading/
-            └── nunu.gif     # ローディングアニメーション
-```
+既存の `/matches`、`/champion-stats`、`/rank-position` は廃止し、`SummonerDetail` に統合する。入力検証は現行と同じ（region は Literal、gameName 1〜16文字、tagLine 1〜5文字）。
 
-### api/summoner/router.py
+## データモデル
+
+### Pydantic スキーマ（schemas/summoner.py）
 
 ```python
-# エンドポイント定義
-GET /api/summoner/{region}/{gameName}/{tagLine}
-    → SummonerData
-
-GET /api/summoner/{region}/{gameName}/{tagLine}/matches
-    → list[MatchData]
-    クエリパラメータ: count: int = Query(default=10, ge=1, le=20)
-
-GET /api/summoner/{region}/{gameName}/{tagLine}/champion-stats
-    → list[ChampionStatData]
-```
-
-バリデーション責務：
-- `region`: `Literal["JP", "KR", "NA", "EUW", "EUNE", "OCE"]`
-- `gameName`: `str = Path(..., min_length=1, max_length=16)`
-- `tagLine`: `str = Path(..., min_length=1, max_length=5)`
-- `count > 20` → HTTP 400（`Query(le=20)` で自動的に422）
-
-### services/summoner/region.py
-
-```python
-PLATFORM_MAP: dict[str, str] = {
-    "JP": "jp1", "KR": "kr", "NA": "na1",
-    "EUW": "euw1", "EUNE": "eun1", "OCE": "oc1",
-}
-
-REGIONAL_MAP: dict[str, str] = {
-    "JP": "asia", "KR": "asia", "NA": "americas",
-    "EUW": "europe", "EUNE": "europe", "OCE": "sea",
-}
-
-def get_platform(region: str) -> str: ...  # 無効値は HTTP 400
-def get_regional(region: str) -> str: ...  # 無効値は HTTP 400
-```
-
-### services/summoner/profile.py
-
-処理フロー：
-1. `get_regional(region)` でRegionalホスト取得
-2. `/riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}` → PUUID・gameName取得
-3. `get_platform(region)` でPlatformホスト取得
-4. `/lol/summoner/v4/summoners/by-puuid/{puuid}` → サモナー情報取得
-5. `/lol/league/v4/entries/by-puuid/{puuid}` → ランク情報取得（※`by-summoner`は廃止）
-6. `SummonerData` を組み立てて返す（`name`は`account["gameName"]`を使用）
-
-> **注意**: Riot APIの仕様変更により、`/lol/summoner/v4/summoners/by-puuid/` のレスポンスから `id` と `name` フィールドが削除された。ランク取得は `/lol/league/v4/entries/by-puuid/{puuid}` を使用し、サモナー名は `/riot/account/v1/accounts/` の `gameName` を使用する。
-
-### services/summoner/matches.py
-
-処理フロー：
-1. PUUID取得（profile.pyと共通）
-2. `/lol/match/v5/matches/by-puuid/{puuid}/ids?count={count}` → 試合IDリスト取得
-3. 各試合IDに対して `/lol/match/v5/matches/{matchId}` → 試合詳細取得
-4. PUUIDで参加者データを特定
-5. `MatchData` を組み立てて返す（取得失敗した試合はスキップ）
-
-### services/summoner/champion_stats.py
-
-処理フロー：
-1. 直近20試合の `MatchData` リストを取得（matches.pyを利用）
-2. チャンピオン名でグループ化
-3. wins/losses/cs/kda を集計
-4. total games降順でソート
-5. `ChampionStatData` リストを返す
-
-## Data Models
-
-### schemas/summoner.py
-
-```python
-class RankData(BaseModel):
+class RankData(BaseModel):          # 現行どおり
     queueType: str
-    tier: str        # "UNRANKED" | "IRON" | ... | "CHALLENGER"
-    rank: str        # "I" | "II" | "III" | "IV" | ""
+    tier: str
+    rank: str
     leaguePoints: int
     wins: int
     losses: int
@@ -179,9 +180,14 @@ class SummonerData(BaseModel):
     level: int
     profileIconId: int
     rank: RankData
-    previousSeasonRank: str  # 現在は常に "UNRANKED"
+    lastUpdatedAt: datetime
 
-class MatchData(BaseModel):
+class RankPositionData(BaseModel):  # 現行どおり
+    position: int
+    totalPlayers: int
+    topPercent: float
+
+class MatchData(BaseModel):         # 現行どおり（timeAgoSeconds は応答時に計算）
     matchId: str
     isWin: bool
     gameMode: str
@@ -194,201 +200,181 @@ class MatchData(BaseModel):
     itemIds: list[int]
     timeAgoSeconds: int
 
-class ChampionStatData(BaseModel):
+class ChampionStatData(BaseModel):  # 現行どおり
     championName: str
     wins: int
     losses: int
     cs: float
     kda: float
+
+class SummonerDetail(BaseModel):
+    summoner: SummonerData
+    rankPosition: RankPositionData | None
+    matches: list[MatchData]               # 新しい順に最大20件
+    championStats: list[ChampionStatData]  # 現行シーズンの保存済み対象試合から集計
 ```
 
-### Riot API レスポンスの主要フィールド
+### DB テーブル
 
-**アカウント情報** (`/riot/account/v1/accounts/by-riot-id/...`):
-```json
-{ "puuid": "...", "gameName": "...", "tagLine": "..." }
+`summoners`、`matches`、`match_participants`、`seasons` を使う。定義は [database Spec](../database/design.md) を参照。
+
+- 試合詳細から `match_participants` の全カラムを10人分保存する（表示に使わない項目も将来の分析のため保存する）
+
+## コンポーネントとインターフェース
+
+### バックエンド
+
+```
+backend/
+├── adapters/
+│   ├── riot_api.py         # AsyncClient を使い回す。app 終了時に close
+│   ├── riot_rate_limiter.py  # 新規: Riot API のレート制限
+│   ├── query_runner.py     # 新規: Supabase クエリ実行の共通処理
+│   ├── summoner_store.py   # 新規: DB アクセス（summoners / matches / match_participants / seasons）
+│   └── failed_match_store.py  # 新規: DB アクセス（failed_matches）
+├── api/summoner/router.py  # GET 検索・POST 更新の2エンドポイントに変更
+├── services/summoner/
+│   ├── search.py           # 新規: 検索・初回登録
+│   ├── update.py           # 新規: 手動更新の同期部分
+│   ├── backfill.py         # 新規: Backfill
+│   ├── sync.py             # 新規: search / update / backfill 共通の試合取得・保存
+│   ├── backfill_page.py    # 新規: Backfill の1ページ分の取得・保存・失敗記録
+│   ├── league.py           # 新規: league entries の解析（ソロ・フレックス）
+│   ├── riot_errors.py      # 新規: RiotRateLimitError
+│   ├── match_convert.py    # 新規: 試合詳細を保存用レコードに変換
+│   ├── riot_fetch.py       # 新規: Riot API 取得と保存用データへの変換
+│   ├── detail.py           # 新規: SummonerDetail の組み立て
+│   ├── rank_position.py    # 既存: 順位算出ロジックを利用（API 公開用のファサードは削除）
+│   ├── champion_stats.py   # 既存: aggregate_champion_stats を利用
+│   ├── region.py, _error.py  # 既存
+│   ├── profile.py, matches.py  # 削除（riot_fetch.py に統合）
+├── schemas/summoner.py
+└── config.py               # 変更なし
 ```
 
-**サモナー情報** (`/lol/summoner/v4/summoners/by-puuid/...`):
-```json
-{ "puuid": "...", "profileIconId": 123, "summonerLevel": 100, "revisionDate": 1700000000000 }
-```
-> **注意**: `id` と `name` フィールドはRiot APIの仕様変更により廃止。
+**adapters/summoner_store.py**（Supabase クライアントは同期 API のため `asyncio.to_thread` で呼ぶ）
 
-**ランク情報** (`/lol/league/v4/entries/by-puuid/...`):
-```json
-[{ "queueType": "RANKED_SOLO_5x5", "tier": "GOLD", "rank": "II", "leaguePoints": 50, "wins": 100, "losses": 80 }]
+```python
+async def find_summoner(region: str, riot_id_lower: str) -> SummonerRecord | None
+async def find_summoner_by_puuid(puuid: str, region: str) -> SummonerRecord | None
+async def upsert_summoner(record: SummonerRecord) -> None
+async def update_backfill_state(puuid: str, region: str, state: BackfillState) -> None
+async def try_start_backfill(puuid: str, region: str) -> bool  # 10分以内に開始済みなら False
+async def filter_unsaved_match_ids(match_ids: list[str]) -> list[str]  # match_participants に行がない ID
+async def get_match_end_times(match_ids: list[str]) -> dict[str, datetime]  # Backfill のカーソル算出用
+async def save_matches(matches: list[MatchRecord], participants: list[ParticipantRecord]) -> None
+async def get_recent_participations(puuid: str, limit: int) -> list[ParticipationRecord]
+async def get_participations_between(puuid: str, start: datetime | None, end: datetime | None) -> list[ParticipationRecord]  # 両方 None で全期間
+async def get_current_season() -> SeasonRecord | None  # end_at が NULL のシーズン
 ```
-> **注意**: `/lol/league/v4/entries/by-summoner/{summonerId}` は廃止。`by-puuid/{puuid}` を使用する。
 
-**試合詳細** (`/lol/match/v5/matches/...`):
-```json
-{
-  "metadata": { "matchId": "JP1_..." },
-  "info": {
-    "gameMode": "CLASSIC",
-    "gameDuration": 1800,
-    "gameEndTimestamp": 1700000000000,
-    "participants": [
-      {
-        "puuid": "...",
-        "championName": "Ahri",
-        "kills": 5, "deaths": 2, "assists": 8,
-        "totalMinionsKilled": 150, "neutralMinionsKilled": 10,
-        "win": true,
-        "item0": 3157, "item1": 3089, ...
-      }
-    ]
-  }
+`SummonerRecord`、`BackfillState`、`MatchRecord`、`ParticipantRecord`、`ParticipationRecord`、`SeasonRecord` は adapters 層の入出力用 Pydantic モデルとして `schemas/summoner_store.py` に定義する。
+
+**services/summoner/riot_fetch.py**
+
+```python
+async def fetch_account_by_riot_id(region: str, game_name: str, tag_line: str) -> AccountInfo
+async def fetch_account_by_puuid(region: str, puuid: str) -> AccountInfo
+async def fetch_profile(region: str, puuid: str) -> ProfileInfo  # summoner + league + 順位
+async def fetch_ranked_match_ids(region: str, puuid: str, *, start: int, count: int,
+                                 start_time: datetime | None = None,
+                                 end_time: datetime | None = None) -> list[str]
+async def fetch_match_details(region: str, match_ids: list[str]) -> list[FetchedMatch]
+```
+
+**services 公開関数**
+
+```python
+# search.py
+async def search_summoner(region: str, game_name: str, tag_line: str) -> tuple[SummonerDetail, str | None]  # 2つ目は Backfill 用 puuid（登録済みで Riot API を呼ばなかった場合は None）
+# update.py
+async def update_summoner(region: str, game_name: str, tag_line: str) -> tuple[SummonerDetail, str]  # 2つ目は Backfill 用 puuid
+# backfill.py
+async def run_backfill(region: str, puuid: str) -> None  # 例外を外に出さずログに記録
+# detail.py
+async def build_detail(record: SummonerRecord) -> SummonerDetail
+```
+
+- チャンピオン統計は `get_current_season()` の期間で `get_participations_between()` を呼び、`aggregate_champion_stats` で集計する。現行シーズンが未登録なら全期間で集計する
+- 期間を引数で受け取るため、将来のシーズン別・全期間の統計も同じ関数で取得できる
+
+### フロントエンド
+
+```
+frontend/src/
+├── types/summoner.ts                     # SummonerData に lastUpdatedAt、SummonerDetail を追加
+├── lib/api/summoner.ts                   # fetchSummonerDetail / updateSummoner の2関数に置き換え
+├── lib/summoner-search/formatTimeAgo.ts  # MatchCard から切り出して共通化
+├── lib/hooks/useSummonerDetail.tsx       # 新規: 取得・更新の状態管理
+└── components/summoner-search/
+    ├── SearchResultPage.tsx              # useSummonerDetail を使い1回の取得で表示
+    ├── SummonerProfile.tsx               # UpdateButton を配置
+    ├── UpdateButton.tsx                  # 新規
+    └── MatchCard.tsx                     # formatTimeAgo を lib から import
+```
+
+```typescript
+interface SummonerDetail {
+  summoner: SummonerData;          // lastUpdatedAt: string（ISO 8601）を追加
+  rankPosition: RankPositionData | null;
+  matches: MatchData[];
+  championStats: ChampionStatData[];
+}
+
+function fetchSummonerDetail(region: Region, gameName: string, tagLine: string): Promise<SummonerDetail>
+function updateSummoner(region: Region, gameName: string, tagLine: string): Promise<SummonerDetail>
+function formatTimeAgo(seconds: number): string
+
+function useSummonerDetail(region: Region, gameName: string, tagLine: string): {
+  detail: SummonerDetail | null;
+  isLoading: boolean;
+  error: string | null;
+  isUpdating: boolean;
+  updateError: string | null;
+  update: () => Promise<void>;
+}
+
+interface UpdateButtonProps {
+  lastUpdatedAt: string;
+  isUpdating: boolean;
+  onUpdate: () => void;
 }
 ```
 
-## Correctness Properties
+**UI 方針**
 
-*プロパティとは、システムの全ての有効な実行において成立すべき特性や振る舞いのことです。プロパティは人間が読める仕様と機械で検証可能な正確性保証の橋渡しをします。*
+- `UpdateButton` はプロフィールバーの右側に配置する。プライマリボタン（濃いグレー）に「更新」、下に「最終更新: 3日前」を表示する
+- 更新中はボタンを無効化し「更新中...」と表示する
+- 更新が成功したら `detail` を差し替える。失敗したらボタン付近に `updateError` を表示し、表示中のデータはそのまま残す
+- 検索結果は1回の取得で全セクションが揃うため、セクション個別のローディング表示は削除する
 
-### Property 1: 地域マッピングの完全性
+## エラー処理
 
-*全ての* 有効なRegion値（JP, KR, NA, EUW, EUNE, OCE）に対して、`get_platform()` と `get_regional()` は空でない文字列を返す。
-
-**Validates: Requirements 2.1, 2.2, 2.4**
-
-### Property 2: 無効地域のエラー
-
-*全ての* 許可されていないRegion文字列に対して、`get_platform()` および `get_regional()` はHTTP 400エラーを発生させる。
-
-**Validates: Requirements 2.3**
-
-### Property 3: 5xxエラーの502変換
-
-*任意の* 5xxステータスコード（500〜599）をRiot APIが返した場合、サービス層はHTTP 502エラーを発生させる。
-
-**Validates: Requirements 3.4**
-
-### Property 4: KDA計算のゼロ除算回避
-
-*任意の* kills, deaths（0以上の整数）, assists の組み合わせに対して、KDA計算 `(kills + assists) / max(deaths, 1)` は常に有限の非負数を返す。
-
-**Validates: Requirements 6.4**
-
-### Property 5: チャンピオン統計のソート順
-
-*任意の* 試合リストから生成されたチャンピオン統計において、結果リストは総試合数（wins + losses）の降順で並んでいる。
-
-**Validates: Requirements 6.5**
-
-### Property 6: 入力バリデーションの一貫性
-
-*任意の* 17文字以上のgameName、または6文字以上のtagLine、または許可されていないregion値に対して、ルーターはHTTP 422エラーを返す。
-
-**Validates: Requirements 7.1, 7.2, 7.3**
-
-### Property 7: エラーレスポンス形式の一貫性
-
-*任意の* エラー条件（400, 404, 422, 429, 502）において、レスポンスボディは `{"detail": "<message>"}` 形式であり、スタックトレースや内部実装の詳細を含まない。
-
-**Validates: Requirements 8.1, 8.4**
-
-## フロントエンド UI仕様
-
-### SearchResultPage
-
-- 検索実行後、BEの3エンドポイント（profile / matches / champion-stats）を並列取得
-- ローディング中: `nunu.gif` をセンター表示
-- エラー時: エラーメッセージをセンター表示
-- クエリ形式: `名前#タグ`（`#`なしの場合はリージョンのデフォルトタグを補完）
-
-### SummonerProfile
-
-- **プロフィールアイコン**: Data Dragon CDNから動的取得
-  - URL: `https://ddragon.leagueoflegends.com/cdn/{version}/img/profileicon/{profileIconId}.png`
-  - レベルをアイコン下部にバッジで重ねて表示
-- **ランクエンブレム**: ローカル静的画像 `/images/rank/{tier小文字}.png`
-  - ランクバナー右側に表示（64×64px）
-  - `UNRANKED` の場合は画像なし
-
-### lib/api/summoner.ts
-
-```typescript
-fetchSummoner(region, gameName, tagLine): Promise<SummonerData>
-fetchMatches(region, gameName, tagLine, count?): Promise<MatchData[]>
-fetchChampionStats(region, gameName, tagLine): Promise<ChampionStatData[]>
-```
-
-- `NEXT_PUBLIC_BACKEND_URL` 環境変数でBEのURLを設定
-- エラー時は `response.detail` をエラーメッセージとして使用
-
-## Error Handling
-
-### Riot APIエラーコードのマッピング
-
-| Riot APIステータス | HTTPException | メッセージ |
+| 発生箇所 | 状況 | 応答 |
 |---|---|---|
-| 404 | 404 | "サモナーが見つかりません" |
-| 429 | 429 | "レート制限に達しました。しばらく待ってから再試行してください" |
-| 5xx | 502 | "Riot APIが一時的に利用できません" |
-| その他 | 502 | "Riot APIが一時的に利用できません" |
+| Riot API | 404 | 404「サモナーが見つかりません」 |
+| Riot API | 429 | 429「レート制限に達しました。しばらく待ってから再試行してください」 |
+| Riot API | 5xx・その他 | 502「Riot APIが一時的に利用できません」（ログ記録） |
+| 更新 | 未登録サモナー | 404「サモナーが見つかりません」 |
+| DB | 例外 | 500「サーバーエラーが発生しました」（ログ記録） |
+| Backfill | 429 | 終了してログ記録（応答なし） |
+| Backfill | その他の例外 | 終了してログ記録（応答なし） |
 
-### エラーハンドリング実装方針
+既存の `_error.handle_riot_error` を引き続き使う。応答にはスタックトレースや内部情報を含めない。
 
-`adapters/riot_api.py` の `get()` 関数は `httpx.HTTPStatusError` を発生させる。各サービス関数でこれをキャッチし、適切な `HTTPException` に変換する。
+## テスト方針
 
-```python
-# services/summoner/_error.py（共通ヘルパー）
-def handle_riot_error(e: httpx.HTTPStatusError) -> None:
-    status = e.response.status_code
-    if status == 404:
-        raise HTTPException(status_code=404, detail="サモナーが見つかりません")
-    elif status == 429:
-        raise HTTPException(status_code=429, detail="レート制限に達しました。しばらく待ってから再試行してください")
-    else:
-        logger.error(f"Riot API error: {status}", exc_info=True)
-        raise HTTPException(status_code=502, detail="Riot APIが一時的に利用できません")
-```
+pytest + hypothesis（最低100イテレーション）。Riot API と DB はモックする。
 
-5xxエラーは `logging.error()` でログに記録する。スタックトレースはログにのみ記録し、レスポンスには含めない。
-
-### 試合取得の部分失敗
-
-試合詳細の取得は並列ではなく逐次処理し、個別の失敗は `logger.warning()` でログに記録してスキップする（要件5.6）。
-
-## Testing Strategy
-
-### ユニットテスト（例示ベース）
-
-- `region.py`: 各Region値のマッピング結果を確認
-- `profile.py`: ランクデータなし時のUNRANKEDデフォルト値
-- `matches.py`: 試合取得失敗時のスキップ動作
-- `champion_stats.py`: 試合履歴なし時の空リスト返却
-- エラーマッピング: 404/429/5xx → 対応するHTTPException
-
-### プロパティベーステスト（pytest + hypothesis）
-
-プロパティベーステストには `hypothesis` ライブラリを使用する。各プロパティテストは最低100回のイテレーションで実行する。
-
-| プロパティ | テスト対象 | 生成戦略 |
-|---|---|---|
-| プロパティ1 | `get_platform()`, `get_regional()` | `sampled_from(["JP","KR","NA","EUW","EUNE","OCE"])` |
-| プロパティ2 | `get_platform()`, `get_regional()` | `text()` でフィルタリング（有効値を除外） |
-| プロパティ3 | サービス層エラーハンドリング | `integers(min_value=500, max_value=599)` |
-| プロパティ4 | KDA計算関数 | `integers(min_value=0)` × 3 |
-| プロパティ5 | `aggregate_champion_stats()` | `lists(builds(MatchData, ...))` |
-| プロパティ6 | FastAPIルーター | `text(min_size=17)` / `text(min_size=6)` / `text()` |
-| プロパティ7 | FastAPIルーター | 各エラー条件のモック |
-
-タグ形式: `# Feature: summoner-search-api, Property {N}: {property_text}`
-
-### インテグレーションテスト
-
-- `adapters/riot_api.py`: `httpx` を使った実際のHTTPリクエスト（`respx` でモック）
-- エンドポイント全体: `TestClient` を使ったE2Eフロー確認（Riot APIはモック）
-
-### テスト実行
-
-```bash
-# ユニット・プロパティテスト
-pytest backend/tests/ -v
-
-# カバレッジ付き
-pytest backend/tests/ --cov=backend --cov-report=term-missing
-```
+| 対象 | 内容 |
+|---|---|
+| region.py | 有効な Region が空でないホストを返す / 無効値で 400（既存） |
+| _error.py | 任意の 5xx が 502 になる（既存） |
+| champion_stats.py | KDA が有限の非負数 / 総試合数の降順（既存） |
+| router | 入力検証で 422 / エラー形式が `{"detail": ...}`（既存を2エンドポイントに合わせて更新） |
+| search.py | 登録済みなら Riot API を呼ばない / 未登録なら登録して返す / PUUID 重複時に RiotId を更新 |
+| update.py | 保存済み試合の詳細を取得しない / エラー時に `last_updated_at` を変えない |
+| backfill.py | 任意の試合ID列と保存済み集合に対し、取得する ID は未保存分だけ（プロパティ） |
+| backfill.py | 429 で終了し、カーソルは保存済みページまでしか進まない / 中断後の再実行で続きから取得 |
+| backfill.py | `backfill_started_at` が10分以内なら開始しない |
+| フロントエンド | formatTimeAgo の境界値 / UpdateButton の更新中表示 |

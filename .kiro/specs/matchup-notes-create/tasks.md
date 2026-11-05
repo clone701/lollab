@@ -228,7 +228,7 @@ Spec 2-1で実装した基本レイアウトとチャンピオン選択UIを活�
 
 本Specは以下のSpecに依存します：
 - **Spec 2-1**: TabNavigation、ChampionSelectorSidebar
-- **Spec 3-1**: champion_notesテーブル、RLSポリシー
+- **database Spec**: champion_notesテーブル、RLSポリシー
 - **Spec 1-1**: 認証システム
 - **Spec 1-2**: Panel、GlobalLoading
 
