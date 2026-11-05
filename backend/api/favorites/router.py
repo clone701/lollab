@@ -1,5 +1,7 @@
 """お気に入りCRUD APIルーター"""
 
+from typing import Any, cast
+
 from fastapi import APIRouter, Header, HTTPException
 
 from adapters.supabase import supabase
@@ -43,7 +45,7 @@ async def list_favorites(
             region=row["region"],
             created_at=row["created_at"],
         )
-        for row in result.data
+        for row in cast(list[dict[str, Any]], result.data)
     ]
 
 
@@ -93,7 +95,7 @@ async def add_favorite(
         )
         .execute()
     )
-    row = result.data[0]
+    row = cast(dict[str, Any], result.data[0])
     return FavoriteResponse(
         id=row["id"],
         summoner_name=row["summoner_name"],

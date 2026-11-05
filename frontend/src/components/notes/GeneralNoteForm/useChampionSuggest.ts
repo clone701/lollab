@@ -7,6 +7,7 @@ import { Champion } from '@/types/champion';
 interface SuggestState {
   candidates: Champion[];
   triggerIndex: number; // '/' の位置
+  focusedIndex: number; // フォーカスされている候補のインデックス
 }
 
 export function useChampionSuggest(
@@ -34,11 +35,19 @@ export function useChampionSuggest(
       setSuggest(null);
       return;
     }
+    const q = query.toLowerCase();
     const candidates = champions
-      .filter((c) => c.id.toLowerCase().startsWith(query.toLowerCase()))
+      .filter(
+        (c) =>
+          c.id.toLowerCase().startsWith(q) ||
+          c.name.toLowerCase().includes(q) ||
+          (c.reading && c.reading.includes(q))
+      )
       .slice(0, 8);
     setSuggest(
-      candidates.length > 0 ? { candidates, triggerIndex: slashIdx } : null
+      candidates.length > 0
+        ? { candidates, triggerIndex: slashIdx, focusedIndex: 0 }
+        : null
     );
   }
 
@@ -60,9 +69,56 @@ export function useChampionSuggest(
     });
   }
 
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (!suggest) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSuggest((prev) =>
+        prev
+          ? {
+              ...prev,
+              focusedIndex:
+                prev.focusedIndex < prev.candidates.length - 1
+                  ? prev.focusedIndex + 1
+                  : 0,
+            }
+          : null
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSuggest((prev) =>
+        prev
+          ? {
+              ...prev,
+              focusedIndex:
+                prev.focusedIndex > 0
+                  ? prev.focusedIndex - 1
+                  : prev.candidates.length - 1,
+            }
+          : null
+      );
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const champion = suggest.candidates[suggest.focusedIndex];
+      if (champion) {
+        selectCandidate(champion);
+      }
+    } else if (e.key === 'Escape') {
+      closeSuggest();
+      e.preventDefault();
+    }
+  }
+
   function closeSuggest() {
     setSuggest(null);
   }
 
-  return { suggest, handleBodyChange, selectCandidate, closeSuggest };
+  return {
+    suggest,
+    handleBodyChange,
+    selectCandidate,
+    closeSuggest,
+    handleKeyDown,
+  };
 }

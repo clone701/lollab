@@ -36,6 +36,7 @@ export interface SummonerData {
   level: number;
   profileIconId: number;
   rank: RankData;
+  lastUpdatedAt: string; // ISO 8601
 }
 
 export interface MatchData {
@@ -58,4 +59,20 @@ export interface ChampionStatData {
   losses: number;
   cs: number;
   kda: number;
+}
+
+export interface SummonerDetail {
+  summoner: SummonerData;
+  rankPosition: RankPositionData | null;
+  matches: MatchData[];
+  championStats: ChampionStatData[];
+}
+
+export interface UseSummonerDetailResult {
+  detail: SummonerDetail | null;
+  isLoading: boolean;
+  error: string | null;
+  isUpdating: boolean;
+  updateError: string | null;
+  update: () => Promise<void>;
 }

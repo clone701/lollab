@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     # Riot API設定（オプショナル - 今後使用）
     riot_api_key: str = ""
 
+    # Riot API レート制限（Personal キーの上限。Production キーに切り替えたら変更する）
+    riot_rate_limit_per_second: int = 18
+    riot_rate_limit_per_2min: int = 95
+    # Backfill が検索・更新用に残す、2分あたりの回数
+    riot_backfill_reserve: int = 30
+
     # CORS設定
     cors_origins: list[str] = ["http://localhost:3000"]
 

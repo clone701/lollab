@@ -2,147 +2,162 @@
 
 ## はじめに
 
-Riot Games APIに接続し、サモナーのプロフィール・ランク情報・試合履歴・チャンピオン統計を取得するバックエンドAPIを実装する。
-既存フロントエンド（summoner-search）のモックデータを実際のRiot APIデータに置き換えることが最終目標。
+サモナーのプロフィール・ランク・試合履歴・チャンピオン統計を返すバックエンドAPI。
+Riot API から取得したデータを DB に保存し、検索時は DB から返す。最新化はユーザーの「更新」操作で行う（OP.GG と同じ方式）。
 
-レイヤー構造は `api/summoner/ → services/summoner/ → adapters/riot_api.py` に従う。
+**この方式を採る理由:** 検索のたびに Riot API を呼ぶと1回の検索で約40リクエストが発生し、検索に数秒〜十数秒かかる。また個人キーのレート制限（100req/2min）に数回の検索で達する。
 
 ## 用語集
 
-- **API_Server**: FastAPIバックエンドサーバー
-- **Riot_Adapter**: `backend/adapters/riot_api.py` の非同期HTTPクライアント層
-- **Summoner_Service**: `backend/services/summoner/` のビジネスロジック層
-- **Summoner_Router**: `backend/api/summoner/` のHTTPルーター層
-- **Summoner_Schema**: `backend/schemas/` のPydantic入出力型定義
+- **API_Server**: FastAPI バックエンド
+- **Summoner_Service**: サモナー関連のビジネスロジック層
+- **Summoner_Store**: サモナー情報・試合データを保存する DB
+- **Update_Action**: ユーザーが「更新」ボタンで実行する Riot API からの再取得
+- **対象試合**: ランク戦（ソロ/デュオ・フレックス）の試合。それ以外のモードは取得・保存しない
+- **Backfill**: Riot API から取得可能な過去すべての対象試合のうち未保存のものを、バックグラウンドで取得する処理
 - **Region**: サーバー地域（JP / KR / NA / EUW / EUNE / OCE）
-- **Platform**: Riot APIのプラットフォームホスト（例: jp1, kr, na1）
-- **Regional**: Riot APIのリージョナルホスト（例: asia, americas, europe, sea）
-- **PUUID**: Riot Gamesが発行するプレイヤー固有ID
-- **SummonerId**: プラットフォーム固有のサモナーID
+- **PUUID**: Riot Games が発行するプレイヤー固有ID
 - **RiotId**: `gameName#tagLine` 形式のプレイヤー識別子
 
 ---
 
 ## 要件
 
-### 要件1: httpx 非同期クライアントの導入
+### 要件1: 検索
 
-**ユーザーストーリー:** 開発者として、非同期HTTPクライアントを使用したい。そうすることで、FastAPIの非同期処理と整合性を保ちながらRiot APIを呼び出せる。
-
-#### 受け入れ基準
-
-1. THE API_Server SHALL use `httpx` as the HTTP client library for all Riot API requests.
-2. WHEN `requirements.txt` is read, THE API_Server SHALL include `httpx` as a dependency.
-3. THE Riot_Adapter SHALL expose an `async def get(region: str, path: str) -> dict` function using `httpx.AsyncClient`.
-
----
-
-### 要件2: 地域マッピング
-
-**ユーザーストーリー:** 開発者として、RegionからPlatformおよびRegionalホストへの変換ロジックを一元管理したい。そうすることで、各エンドポイントで重複した変換コードを書かずに済む。
+**ユーザーストーリー:** プレイヤーとして、検索結果をすぐに見たい。そうすることで、対戦前の短い時間でも相手の情報を確認できる。
 
 #### 受け入れ基準
 
-1. THE Summoner_Service SHALL map each Region value to its corresponding Platform host:
-   - JP → jp1, KR → kr, NA → na1, EUW → euw1, EUNE → eun1, OCE → oc1
-2. THE Summoner_Service SHALL map each Region value to its corresponding Regional host:
-   - JP → asia, KR → asia, NA → americas, EUW → europe, EUNE → europe, OCE → sea
-3. IF an unsupported Region value is provided, THEN THE Summoner_Service SHALL raise an HTTP 400 error.
-4. FOR ALL valid Region values, THE Summoner_Service SHALL return a non-empty Platform string and a non-empty Regional string (round-trip property).
+1. API_Server は Region・gameName・tagLine を指定してサモナー情報を取得するエンドポイントを提供する
+2. WHEN 対象サモナーが Summoner_Store に登録済みの場合、Summoner_Service は Riot API を呼び出さずに Summoner_Store のデータを返す
+3. API_Server は登録済みサモナーの検索結果を1秒以内に返す
+4. Summoner_Service は RiotId の照合で大文字・小文字を区別しない
 
----
+### 要件2: 初回登録
 
-### 要件3: アカウント情報取得
-
-**ユーザーストーリー:** 開発者として、RiotId（gameName + tagLine）からPUUIDを取得したい。そうすることで、後続のサモナー情報取得に使用できる。
+**ユーザーストーリー:** プレイヤーとして、初めて検索するサモナーの情報も表示したい。そうすることで、どのプレイヤーでも調べられる。
 
 #### 受け入れ基準
 
-1. WHEN a valid `gameName` and `tagLine` are provided, THE Riot_Adapter SHALL call `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}` and return the account data.
-2. IF the Riot API returns a 404 response, THEN THE Summoner_Service SHALL raise an HTTP 404 error with the message "サモナーが見つかりません".
-3. IF the Riot API returns a 429 response, THEN THE Summoner_Service SHALL raise an HTTP 429 error with the message "レート制限に達しました。しばらく待ってから再試行してください".
-4. IF the Riot API returns a 5xx response, THEN THE Summoner_Service SHALL raise an HTTP 502 error with the message "Riot APIが一時的に利用できません".
+1. WHEN 対象サモナーが Summoner_Store に未登録の場合、Summoner_Service は Riot API から情報と直近20件の対象試合を取得し、保存した後に返す
+2. WHEN 初回登録の応答後、Summoner_Service は Update_Action と同じく Backfill を開始する
+3. Summoner_Service はサモナーを PUUID で一意に識別する
+4. WHEN 取得した PUUID が登録済みの場合（RiotId 変更後の検索）、Summoner_Service は既存レコードの RiotId を更新する
+5. IF Riot API がサモナー未発見を返した場合、Summoner_Service は何も保存せず 404 エラーを返す
 
----
+### 要件3: 手動更新
 
-### 要件4: サモナープロフィール取得エンドポイント
-
-**ユーザーストーリー:** フロントエンド開発者として、サモナー名・タグライン・リージョンを指定してサモナーのプロフィール情報を取得したい。そうすることで、モックデータを実際のデータに置き換えられる。
-
-#### 受け入れ基準
-
-1. WHEN a GET request is made to `/api/summoner/{region}/{gameName}/{tagLine}`, THE Summoner_Router SHALL return a `SummonerData` response.
-2. THE Summoner_Router SHALL accept `region` as a path parameter with valid values: JP, KR, NA, EUW, EUNE, OCE.
-3. THE Summoner_Schema SHALL define `SummonerData` with fields: `name: str`, `tagLine: str`, `level: int`, `profileIconId: int`, `rank: RankData`, `previousSeasonRank: str`.
-4. THE Summoner_Schema SHALL define `RankData` with fields: `queueType: str`, `tier: str`, `rank: str`, `leaguePoints: int`, `wins: int`, `losses: int`.
-5. WHEN a summoner has no ranked data, THE Summoner_Service SHALL return `RankData` with `tier: "UNRANKED"`, `rank: ""`, `leaguePoints: 0`, `wins: 0`, `losses: 0`.
-6. THE Summoner_Service SHALL set `previousSeasonRank` to `"UNRANKED"` as a placeholder value.
-7. WHEN the `gameName` or `tagLine` contains URL-unsafe characters, THE Summoner_Router SHALL decode them correctly before passing to the service.
-
----
-
-### 要件5: 試合履歴取得エンドポイント
-
-**ユーザーストーリー:** フロントエンド開発者として、サモナーの直近の試合履歴を取得したい。そうすることで、MatchHistoryコンポーネントに実データを表示できる。
+**ユーザーストーリー:** プレイヤーとして、必要なときにサモナー情報を最新にしたい。そうすることで、直前の試合結果やランク変動を確認できる。
 
 #### 受け入れ基準
 
-1. WHEN a GET request is made to `/api/summoner/{region}/{gameName}/{tagLine}/matches`, THE Summoner_Router SHALL return a list of `MatchData`.
-2. THE Summoner_Router SHALL accept an optional query parameter `count` (default: 10, max: 20) to limit the number of matches returned.
-3. THE Summoner_Schema SHALL define `MatchData` with fields: `matchId: str`, `isWin: bool`, `gameMode: str`, `championName: str`, `kills: int`, `deaths: int`, `assists: int`, `cs: int`, `gameDurationSeconds: int`, `itemIds: list[int]`, `timeAgoSeconds: int`.
-4. THE Summoner_Service SHALL calculate `timeAgoSeconds` as the difference between the current UTC time and the match end time.
-5. THE Summoner_Service SHALL extract the target summoner's participant data from the match detail using the PUUID.
-6. IF a match detail fetch fails for a single match, THEN THE Summoner_Service SHALL skip that match and continue processing remaining matches.
-7. WHEN `count` exceeds 20, THE Summoner_Router SHALL return an HTTP 400 error.
+1. API_Server は登録済みサモナーの Update_Action を実行するエンドポイントを提供する
+2. WHEN Update_Action が実行された場合、Summoner_Service はまずランク情報を Riot API から取得する
+3. WHEN ランク戦（ソロ/デュオ・フレックス）の勝敗数の合計が前回と同じ場合、Summoner_Service は新しい対象試合がないと判断し、それ以外の Riot API を呼ばずに最終更新日時だけを記録する（リクエストは1回）。このときプロフィールアイコン・RiotId の変更は反映されない
+4. WHEN 勝敗数の合計が前回と異なる場合、Summoner_Service はプロフィール・ランク順位を再取得し、直近20件の対象試合のうち未保存の試合を取得して保存した後に最新データを返す
+5. WHEN Update_Action の応答後、Summoner_Service は Backfill を開始し、期間の制限なく未保存の対象試合をすべて取得する（統計・分析のため全データを蓄積する）
+6. IF Backfill 中にレート制限などのエラーが発生した場合、Summoner_Service はそこまでに取得した試合を保存したまま Backfill を終了し、次回の Update_Action で続きから取得する
+7. IF Backfill で個別の試合の取得に失敗した場合、Summoner_Service はその試合を取りこぼさず、次回以降の Backfill で再取得する
+8. IF 同じ試合の取得に3回失敗した場合、Summoner_Service はその試合を取得不能として記録し、それより古い試合の取得を続ける
+9. Summoner_Service は Riot API へのリクエスト数が最小になるよう、保存済みの試合や取得済みの範囲を再取得しない
+10. Summoner_Service は Update_Action の同期部分が完了した時点で最終更新日時を記録する
+11. IF Update_Action の同期部分で Riot API がエラー（レート制限を含む）を返した場合、Summoner_Service はそれまでに取得できた試合を保存し、最終更新日時は変更せずに要件11のエラーを返す
+12. 更新間隔の制限は設けない
 
----
+### 要件4: 試合データの共有
 
-### 要件6: チャンピオン統計取得エンドポイント
-
-**ユーザーストーリー:** フロントエンド開発者として、サモナーの直近試合からチャンピオン別の統計を取得したい。そうすることで、ChampionStatsコンポーネントに実データを表示できる。
-
-#### 受け入れ基準
-
-1. WHEN a GET request is made to `/api/summoner/{region}/{gameName}/{tagLine}/champion-stats`, THE Summoner_Router SHALL return a list of `ChampionStatData`.
-2. THE Summoner_Schema SHALL define `ChampionStatData` with fields: `championName: str`, `wins: int`, `losses: int`, `cs: float`, `kda: float`.
-3. THE Summoner_Service SHALL aggregate `wins`, `losses`, and average `cs` and `kda` from the most recent 20 matches per champion.
-4. THE Summoner_Service SHALL calculate `kda` as `(kills + assists) / max(deaths, 1)` to avoid division by zero.
-5. THE Summoner_Service SHALL sort the result by total games played (wins + losses) in descending order.
-6. WHEN a summoner has no match history, THE Summoner_Router SHALL return an empty list.
-
----
-
-### 要件7: 入力バリデーション
-
-**ユーザーストーリー:** 開発者として、不正な入力を早期に検出したい。そうすることで、Riot APIへの無駄なリクエストを防ぎ、適切なエラーを返せる。
+**ユーザーストーリー:** 運営者として、同じ試合を何度も Riot API から取得したくない。そうすることで、リクエスト数を減らし更新を速くできる。
 
 #### 受け入れ基準
 
-1. WHEN `gameName` is an empty string or exceeds 16 characters, THE Summoner_Router SHALL return an HTTP 422 error.
-2. WHEN `tagLine` is an empty string or exceeds 5 characters, THE Summoner_Router SHALL return an HTTP 422 error.
-3. THE Summoner_Router SHALL validate `region` against the allowed values (JP, KR, NA, EUW, EUNE, OCE) and return an HTTP 422 error for invalid values.
-4. FOR ALL valid inputs, THE Summoner_Router SHALL pass the request to THE Summoner_Service without modification.
+1. Summoner_Store は試合を match ID で一意に保存し、参加者10人全員の成績を保存する
+2. WHEN 取得対象の試合が Summoner_Store に保存済みの場合、Summoner_Service はその試合の詳細を Riot API から取得しない
+3. 各サモナーの試合履歴・チャンピオン統計は、保存済みの試合からそのサモナーの成績を抽出して作る
+4. 試合に参加していた他のサモナーのプロフィール・ランクは、そのサモナーの検索または Update_Action まで取得しない
 
----
+### 要件5: プロフィール・ランク
 
-### 要件8: エラーレスポンス形式
-
-**ユーザーストーリー:** フロントエンド開発者として、一貫したエラーレスポンス形式を受け取りたい。そうすることで、エラーハンドリングを統一的に実装できる。
+**ユーザーストーリー:** プレイヤーとして、相手のレベルとランクを確認したい。そうすることで、相手の実力を把握できる。
 
 #### 受け入れ基準
 
-1. THE API_Server SHALL return all error responses in the format `{"detail": "<message>"}`.
-2. THE API_Server SHALL use HTTP status codes: 400 (不正なリクエスト), 404 (未検出), 422 (バリデーションエラー), 429 (レート制限), 502 (上流エラー).
-3. THE API_Server SHALL log all 5xx errors with the error details using Python's `logging` module.
-4. THE API_Server SHALL NOT include stack traces or internal implementation details in error responses.
+1. 検索結果はゲーム名・タグライン・レベル・プロフィールアイコン・ソロランク（ティア・ランク・LP・勝敗数）・最終更新日時を含む
+2. WHEN ソロランクのデータがない場合、ランクは UNRANKED として返す
+3. 検索結果は同ティア内の順位と全体の上位%を含む。UNRANKED の場合は含まない
 
----
+### 要件6: 試合履歴
 
-### 要件9: CORS設定
-
-**ユーザーストーリー:** フロントエンド開発者として、ローカル開発環境（localhost:3000）からAPIを呼び出したい。そうすることで、フロントエンドとバックエンドを連携してテストできる。
+**ユーザーストーリー:** プレイヤーとして、相手の最近の試合結果を確認したい。そうすることで、直近の調子を把握できる。
 
 #### 受け入れ基準
 
-1. WHILE the API_Server is running, THE API_Server SHALL allow CORS requests from origins defined in `settings.cors_origins`.
-2. THE API_Server SHALL include the summoner router under the prefix `/api/summoner`.
+1. 検索結果は対象試合の履歴を新しい順に最大20件含む
+2. 各試合は勝敗・ゲームモード・チャンピオン・KDA・CS・試合時間・アイテム・試合終了からの経過時間を含む
+3. IF 同期部分で個別の試合の取得に失敗した場合、Summoner_Service はその試合をスキップして残りを処理する（スキップした試合は Backfill で再取得する）
+
+### 要件7: チャンピオン統計
+
+**ユーザーストーリー:** プレイヤーとして、相手がよく使うチャンピオンと成績を確認したい。そうすることで、得意チャンピオンを把握できる。
+
+#### 受け入れ基準
+
+1. 検索結果は保存済みの今シーズンの対象試合すべてから集計したチャンピオン別の勝敗数・平均CS・KDA を含む
+2. KDA は (キル + アシスト) / max(デス, 1) で計算する
+3. チャンピオン統計は総試合数の多い順に並べる
+4. WHEN 試合履歴がない場合、チャンピオン統計は空とする
+
+### 要件8: 更新 UI
+
+**ユーザーストーリー:** プレイヤーとして、表示中のデータがいつ時点のものか分かり、ワンクリックで最新にしたい。そうすることで、古い情報を最新と誤解せずに済む。
+
+#### 受け入れ基準
+
+1. 検索結果画面は「更新」ボタンと最終更新からの経過時間（例: 「最終更新: 3日前」）を表示する
+2. WHILE Update_Action の実行中、更新ボタンは無効化され実行中であることを表示する
+3. WHEN Update_Action が成功した場合、検索結果画面はページ遷移なしで表示を最新データに置き換える
+4. 更新ボタンはログイン不要で利用できる
+5. IF 検索または Update_Action がレート制限で失敗した場合、検索結果画面はレート制限に達したことが分かるメッセージを表示する
+
+### 要件9: Riot API のレート制限
+
+**ユーザーストーリー:** 運営者として、Riot API のレート制限を超えないようにしたい。そうすることで、ユーザーの検索がレート制限エラーになるのを減らせる。
+
+#### 受け入れ基準
+
+1. API_Server は Riot API へのリクエストを、キーのレート制限（Personal キー: 1秒20回・2分100回）を超えないように送る。上限値は設定で変更できる
+2. WHEN 1秒あたりの上限に達した場合、API_Server は待機してから送る
+3. IF 検索・Update_Action のリクエストで Riot API が 429 を返し、指定された待ち時間が2秒以内の場合、API_Server は待ってから1回だけ再送する
+4. IF 検索・Update_Action で2分あたりの上限に達した場合、API_Server は待機せずに 429 エラーを返す
+5. WHILE 2分あたりの残り回数が30回未満の間、Backfill は Riot API を呼ばずに終了する（検索・Update_Action 用に残り回数を確保するため）
+
+### 要件10: 入力検証
+
+**ユーザーストーリー:** 開発者として、不正な入力を早期に検出したい。そうすることで、Riot API への無駄なリクエストを防げる。
+
+#### 受け入れ基準
+
+1. IF gameName が空または17文字以上の場合、API_Server は 422 エラーを返す
+2. IF tagLine が空または6文字以上の場合、API_Server は 422 エラーを返す
+3. IF Region が許可された値以外の場合、API_Server は 422 エラーを返す
+
+### 要件11: エラー処理
+
+**ユーザーストーリー:** フロントエンド開発者として、一貫したエラーレスポンスを受け取りたい。そうすることで、エラー表示を統一できる。
+
+#### 受け入れ基準
+
+1. API_Server はすべてのエラーを `{"detail": "<メッセージ>"}` 形式で返す
+2. Riot API のエラーは次のように変換する
+   - 404 → 404「サモナーが見つかりません」
+   - 429 → 429「レート制限に達しました。しばらく待ってから再試行してください」
+   - 5xx・その他 → 502「Riot APIが一時的に利用できません」
+3. API_Server は 5xx 相当のエラーをログに記録し、レスポンスにはスタックトレースや内部情報を含めない
+
+### 要件12: データ保護
+
+#### 受け入れ基準
+
+1. Summoner_Store はフロントエンド（anon キー）からの直接の読み書きを許可しない
+2. API_Server は Summoner_Store への読み書きを adapters 層経由でのみ行い、DB を別サービス（AWS 等）へ移行する際に services 層を変更せずに済むようにする
+3. API_Server は `settings.cors_origins` に定義されたオリジンからのリクエストのみ許可する

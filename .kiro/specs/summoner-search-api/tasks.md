@@ -1,191 +1,108 @@
-# Implementation Plan: サモナー検索API
+# 実装計画: サモナー検索API
 
-## Overview
+## 概要
 
-`api/summoner/ → services/summoner/ → adapters/riot_api.py` のレイヤー構造に従い、
-サモナーのプロフィール・ランク情報・試合履歴・チャンピオン統計を取得するFastAPIバックエンドを実装する。
+検索を DB から返す方式に変更し、手動更新と Backfill を追加する。参照: `requirements.md`、`design.md`、`../database/design.md`。
 
-## Tasks
+- 前提: database Spec のタスク1〜4が完了し、テーブルが本番 DB に作成済みであること
+- 旧方式（検索ごとに Riot API を呼ぶ方式）の実装は完了済み。旧タスクは git 履歴を参照
 
-- [x] 1. 依存関係とスキーマの整備
-  - [x] 1.1 `requirements.txt` に `httpx` と `hypothesis` を追加する
-    - `httpx` を非同期HTTPクライアントとして追加
-    - `hypothesis` をプロパティベーステスト用に追加
-    - _Requirements: 1.1, 1.2_
+## タスク
 
-  - [x] 1.2 `schemas/summoner.py` に Pydantic スキーマを実装する
-    - `RankData`, `SummonerData`, `MatchData`, `ChampionStatData` を定義
-    - 全フィールドに型ヒントを付与
-    - _Requirements: 4.3, 4.4, 5.3, 6.2_
+- [x] 1. adapters 層
+  - [x] 1.1 `adapters/riot_api.py` を `httpx.AsyncClient` の使い回しに変更し、`main.py` の lifespan で close する
+    - _要件: 3.6_
+  - [x] 1.2 `schemas/summoner_store.py` に adapters 層の入出力モデルを定義する（`SummonerRecord`、`BackfillState`、`MatchRecord`、`ParticipantRecord`、`ParticipationRecord`、`SeasonRecord`）
+    - カラムは database Spec の design.md に一致させる
+    - _要件: 4.1_
+  - [x] 1.3 `adapters/summoner_store.py` を実装する（design.md のシグネチャどおり。Supabase 呼び出しは `asyncio.to_thread`）
+    - `save_matches` は upsert で冪等にする
+    - `try_start_backfill` は `backfill_started_at` が10分以内なら False
+    - _要件: 4.1, 4.2, 11.2_
 
-- [x] 2. 地域マッピングサービスの実装
-  - [x] 2.1 `services/summoner/region.py` を実装する
-    - `PLATFORM_MAP`, `REGIONAL_MAP` 定数を定義
-    - `get_platform(region: str) -> str` を実装（無効値は HTTP 400）
-    - `get_regional(region: str) -> str` を実装（無効値は HTTP 400）
-    - _Requirements: 2.1, 2.2, 2.3_
+- [x] 2. Riot API 取得
+  - [x] 2.1 `services/summoner/riot_fetch.py` を実装する
+    - `fetch_ranked_match_ids` は `type=ranked` を付け、`start` / `count`（最大100）/ `startTime` / `endTime` を渡せるようにする
+    - `fetch_match_details` は `asyncio.Semaphore(10)` で並列取得し、`match_participants` の全カラムを10人分変換する。429 は呼び出し元に伝え、それ以外の個別失敗はログに記録してスキップする
+    - 既存の `rank_position.py` の順位算出ロジックを `fetch_profile` から使う
+    - _要件: 3.2, 3.3, 4.1, 6.3_
+  - [x] 2.2 `riot_fetch.py` のユニットテストを書く（試合詳細から ParticipantRecord への変換、429 の伝播、個別失敗のスキップ）
 
-  - [x] 2.2 Property 1: 地域マッピングの完全性プロパティテストを書く
-    - **Property 1: 地域マッピングの完全性**
-    - `sampled_from(["JP","KR","NA","EUW","EUNE","OCE"])` で全有効値を検証
-    - `get_platform()` と `get_regional()` が空でない文字列を返すことを確認
-    - 最低100イテレーション実行
-    - **Validates: Requirements 2.1, 2.2, 2.4**
+- [x] 3. 応答組み立て
+  - [x] 3.1 `schemas/summoner.py` に `SummonerData.lastUpdatedAt` と `SummonerDetail` を追加する
+    - _要件: 5.1_
+  - [x] 3.2 `services/summoner/detail.py` を実装する
+    - 試合履歴: `get_recent_participations(puuid, 20)`。`timeAgoSeconds` は応答時に計算
+    - チャンピオン統計: `get_current_season()` の期間で `get_participations_between()` を呼び `aggregate_champion_stats` で集計。現行シーズン未登録なら全期間
+    - _要件: 5.1, 5.2, 5.3, 6.1, 6.2, 7.1〜7.4_
 
-  - [x] 2.3 Property 2: 無効地域のエラープロパティテストを書く
-    - **Property 2: 無効地域のエラー**
-    - `text()` で有効値を除外した文字列を生成
-    - `get_platform()` と `get_regional()` が HTTP 400 を発生させることを確認
-    - 最低100イテレーション実行
-    - **Validates: Requirements 2.3**
+- [x] 4. 検索・更新・Backfill
+  - [x] 4.1 `services/summoner/search.py` を実装する（登録済みなら DB のみ、未登録なら初回登録。PUUID 重複時は RiotId を更新）
+    - _要件: 1.2, 1.4, 2.1, 2.3, 2.4, 2.5_
+  - [x] 4.2 `services/summoner/update.py` を実装する（同期部分。エラー時は保存済み試合を残し `last_updated_at` を変えない）
+    - _要件: 3.1, 3.2, 3.3, 3.7, 3.8_
+  - [x] 4.3 `services/summoner/backfill.py` を実装する（design.md の「Backfill」の処理順・カーソル更新に従う。例外を外に出さない）
+    - _要件: 2.2, 3.4, 3.5, 3.6_
+  - [x] 4.4 search / update のユニットテストを書く（登録済みで Riot API を呼ばない、保存済み試合の詳細を取得しない、エラー時に `last_updated_at` 不変）
+  - [x] 4.5 backfill のテストを書く
+    - プロパティ: 任意の試合ID列と保存済み集合に対し、取得するのは未保存分だけ
+    - 429 で終了しカーソルが保存済みページまでしか進まない / 再実行で続きから取得 / 10分以内は開始しない
 
-- [x] 3. 共通エラーハンドラーの実装
-  - [x] 3.1 `services/summoner/_error.py` を実装する
-    - `handle_riot_error(e: httpx.HTTPStatusError) -> None` を実装
-    - 404 → HTTP 404「サモナーが見つかりません」
-    - 429 → HTTP 429「レート制限に達しました。しばらく待ってから再試行してください」
-    - 5xx → `logger.error()` でログ記録後、HTTP 502「Riot APIが一時的に利用できません」
-    - スタックトレースをレスポンスに含めない
-    - _Requirements: 3.2, 3.3, 3.4, 8.1, 8.2, 8.3, 8.4_
+- [x] 5. ルーター
+  - [x] 5.1 `api/summoner/router.py` を GET 検索・POST 更新の2エンドポイントに変更する。初回登録時と更新時は `BackgroundTasks` で `run_backfill` を登録する
+    - `/matches`、`/champion-stats`、`/rank-position` を削除
+    - _要件: 1.1, 3.1, 9.1〜9.3, 10.1〜10.3_
+  - [x] 5.2 不要になった `services/summoner/profile.py`、`matches.py` と、`rank_position.py` のファサード関数、対応する旧テストを削除する
+  - [x] 5.3 ルーターのテストを2エンドポイントに合わせて更新する（入力検証 422、エラー形式）
 
-  - [x] 3.2 Property 3: 5xxエラーの502変換プロパティテストを書く
-    - **Property 3: 5xxエラーの502変換**
-    - `integers(min_value=500, max_value=599)` で任意の5xxコードを生成
-    - `handle_riot_error()` が HTTP 502 を発生させることを確認
-    - 最低100イテレーション実行
-    - **Validates: Requirements 3.4**
+- [x] 6. チェックポイント: バックエンドの全テスト・lint（black, isort, flake8, mypy）が通ることを確認する
 
-- [x] 4. チェックポイント - 基盤コードの確認
-  - 全テストが通ることを確認し、疑問点があればユーザーに確認する。
+- [x] 7. フロントエンド
+  - [x] 7.1 `types/summoner.ts` に `lastUpdatedAt` と `SummonerDetail` を追加する
+  - [x] 7.2 `lib/api/summoner.ts` を `fetchSummonerDetail` / `updateSummoner` に置き換える
+  - [x] 7.3 `formatTimeAgo` を `lib/summoner-search/formatTimeAgo.ts` に切り出し、`MatchCard` から import する。境界値のテストを書く
+  - [x] 7.4 `lib/hooks/useSummonerDetail.tsx` を実装する
+    - _要件: 8.3_
+  - [x] 7.5 `UpdateButton.tsx` を作成し `SummonerProfile` に配置する。テストを書く（更新中の無効化表示）
+    - _要件: 8.1, 8.2, 8.4_
+  - [x] 7.6 `SearchResultPage.tsx` を `useSummonerDetail` を使う形に変更し、セクション個別のローディング表示を削除する
+    - _要件: 8.3_
 
-- [x] 5. プロフィール取得サービスの実装
-  - [x] 5.1 `services/summoner/profile.py` を実装する
-    - `get_summoner_data(region: str, game_name: str, tag_line: str) -> SummonerData` を実装
-    - Regional ホストで `/riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}` を呼び出し PUUID 取得
-    - Platform ホストで `/lol/summoner/v4/summoners/by-puuid/{puuid}` を呼び出しサモナー情報取得
-    - `/lol/league/v4/entries/by-summoner/{summonerId}` でランク情報取得
-    - ランクデータなし時は `tier: "UNRANKED"`, `rank: ""`, `leaguePoints: 0`, `wins: 0`, `losses: 0` を返す
-    - `previousSeasonRank` は常に `"UNRANKED"` を設定
-    - `httpx.HTTPStatusError` を `handle_riot_error()` で変換
-    - _Requirements: 3.1, 3.2, 3.3, 3.4, 4.1, 4.5, 4.6_
+- [x] 8. 最終チェックポイント: フロントエンドの type-check・lint・テストが通ることを確認し、ローカルで検索・更新を動作確認する
 
-  - [x] 5.2 `profile.py` のユニットテストを書く
-    - ランクデータなし時の UNRANKED デフォルト値を確認
-    - 404/429/5xx エラーの HTTPException 変換を確認
-    - _Requirements: 4.5, 3.2, 3.3, 3.4_
+## 追加タスク: リクエスト削減・取りこぼし防止・レート制限
 
-- [x] 6. 試合履歴取得サービスの実装
-  - [x] 6.1 `services/summoner/matches.py` を実装する
-    - `get_matches(region: str, game_name: str, tag_line: str, count: int) -> list[MatchData]` を実装
-    - Regional ホストで PUUID 取得
-    - `/lol/match/v5/matches/by-puuid/{puuid}/ids?count={count}` で試合 ID リスト取得
-    - 各試合 ID に対して `/lol/match/v5/matches/{matchId}` で試合詳細取得（逐次処理）
-    - PUUID で参加者データを特定し `MatchData` を組み立て
-    - `timeAgoSeconds` を現在 UTC 時刻と試合終了時刻の差分で計算
-    - 個別試合の取得失敗は `logger.warning()` でログ記録してスキップ
-    - _Requirements: 5.1, 5.4, 5.5, 5.6_
+前提: database Spec のタスク5（failed_matches、flex 勝敗数）のマイグレーションファイルが作成済みであること（本番適用はユーザーが行う）
 
-  - [x] 6.2 `matches.py` のユニットテストを書く
-    - 試合取得失敗時のスキップ動作を確認
-    - `timeAgoSeconds` の計算ロジックを確認
-    - _Requirements: 5.4, 5.6_
+- [x] 9. レート制限
+  - [x] 9.1 `config.py` に `riot_rate_limit_per_second`（20）、`riot_rate_limit_per_2min`（100）、`riot_backfill_reserve`（30）を追加する
+  - [x] 9.2 `adapters/riot_rate_limiter.py` を実装し、`riot_api.get()` に `priority` を追加する（design.md「レート制限」）
+    - _要件: 9.1〜9.5_
+  - [x] 9.3 Backfill から呼ぶ取得処理に `priority="backfill"` を渡す
+  - [x] 9.4 テスト: 1秒上限で待機する / 2分上限で interactive は即 RiotRateLimitError / backfill は残り30未満で RiotRateLimitError / ホストごとに独立して数える
 
-- [x] 7. チャンピオン統計サービスの実装
-  - [x] 7.1 `services/summoner/champion_stats.py` を実装する
-    - `get_champion_stats(region: str, game_name: str, tag_line: str) -> list[ChampionStatData]` を実装
-    - 直近20試合の `MatchData` を `matches.py` から取得
-    - チャンピオン名でグループ化し wins/losses/cs/kda を集計
-    - `kda = (kills + assists) / max(deaths, 1)` で計算
-    - 総試合数（wins + losses）降順でソート
-    - 試合履歴なし時は空リストを返す
-    - _Requirements: 6.1, 6.3, 6.4, 6.5, 6.6_
+- [x] 10. 更新時の変更検知
+  - [x] 10.1 `schemas/summoner_store.py` の `SummonerRecord` に `flex_wins`、`flex_losses` を追加し、プロフィール取得時に保存する
+  - [x] 10.2 `fetch_profile` から league entries の取得を分離し、取得済みエントリを渡せるようにする
+  - [x] 10.3 `update.py`: league entries を先に取得し、ソロ+フレックスの勝敗数合計が同じなら `last_updated_at` だけ更新して返す。Backfill は `backfill_completed` が false のときだけ開始する
+    - _要件: 3.2〜3.4_
+  - [x] 10.4 テスト: 合計が同じなら Riot API 呼び出しは1回 / 異なれば従来の処理 / フレックス未参加（エントリなし）は0として扱う
 
-  - [x] 7.2 Property 4: KDA計算のゼロ除算回避プロパティテストを書く
-    - **Property 4: KDA計算のゼロ除算回避**
-    - `integers(min_value=0)` × 3 で任意の kills/deaths/assists を生成
-    - KDA 計算が常に有限の非負数を返すことを確認
-    - 最低100イテレーション実行
-    - **Validates: Requirements 6.4**
+- [x] 11. Backfill の取りこぼし防止
+  - [x] 11.1 `adapters/failed_match_store.py` に failed_matches の操作（失敗の記録と attempts 加算・3回で gave_up、gave_up 済み ID の取得、成功時の削除）を追加する
+  - [x] 11.2 `fetch_match_details` が失敗した match ID も返すようにする
+  - [x] 11.3 `backfill.py` を design.md「取得失敗した試合の扱い」に従って変更する
+    - _要件: 3.7, 3.8_
+  - [x] 11.4 テスト: 失敗した試合があるとカーソルがその手前で止まる / 再実行で取り直す / 3回失敗で gave_up になり先へ進む / 成功で failed_matches から消える / 最後のページに失敗があると completed にならない
 
-  - [x] 7.3 Property 5: チャンピオン統計のソート順プロパティテストを書く
-    - **Property 5: チャンピオン統計のソート順**
-    - `lists(builds(MatchData, ...))` で任意の試合リストを生成
-    - 結果リストが総試合数（wins + losses）の降順であることを確認
-    - 最低100イテレーション実行
-    - **Validates: Requirements 6.5**
+- [x] 12. フロントエンド
+  - [x] 12.1 検索・更新がレート制限で失敗したとき、API の detail（「レート制限に達しました。…」）が画面に表示されることをテストで確認する
+    - _要件: 8.5_
 
-  - [x] 7.4 `champion_stats.py` のユニットテストを書く
-    - 試合履歴なし時の空リスト返却を確認
-    - 集計ロジックの正確性を確認
-    - _Requirements: 6.3, 6.6_
+- [x] 13. チェックポイント: バックエンド・フロントエンドの全テスト・lint を通す
 
-- [x] 8. チェックポイント - サービス層の確認
-  - 全テストが通ることを確認し、疑問点があればユーザーに確認する。
-
-- [x] 9. HTTPルーターの実装
-  - [x] 9.1 `api/summoner/__init__.py` と `api/summoner/router.py` を実装する
-    - `APIRouter` を作成し prefix `/api/summoner` を設定
-    - `GET /{region}/{gameName}/{tagLine}` → `SummonerData` を実装
-    - `GET /{region}/{gameName}/{tagLine}/matches` → `list[MatchData]` を実装（`count: int = Query(default=10, ge=1, le=20)`）
-    - `GET /{region}/{gameName}/{tagLine}/champion-stats` → `list[ChampionStatData]` を実装
-    - `region`: `Literal["JP","KR","NA","EUW","EUNE","OCE"]` でバリデーション
-    - `gameName`: `Path(..., min_length=1, max_length=16)` でバリデーション
-    - `tagLine`: `Path(..., min_length=1, max_length=5)` でバリデーション
-    - URL デコードを正しく処理
-    - _Requirements: 4.1, 4.2, 5.1, 5.2, 5.7, 6.1, 7.1, 7.2, 7.3, 9.2_
-
-  - [x] 9.2 Property 6: 入力バリデーションの一貫性プロパティテストを書く
-    - **Property 6: 入力バリデーションの一貫性**
-    - `text(min_size=17)` で17文字以上の gameName を生成し HTTP 422 を確認
-    - `text(min_size=6)` で6文字以上の tagLine を生成し HTTP 422 を確認
-    - 許可されていない region 値で HTTP 422 を確認
-    - 最低100イテレーション実行
-    - **Validates: Requirements 7.1, 7.2, 7.3**
-
-  - [x] 9.3 Property 7: エラーレスポンス形式の一貫性プロパティテストを書く
-    - **Property 7: エラーレスポンス形式の一貫性**
-    - 各エラー条件（400, 404, 422, 429, 502）をモックで発生させる
-    - レスポンスボディが `{"detail": "<message>"}` 形式であることを確認
-    - スタックトレースや内部実装詳細が含まれないことを確認
-    - 最低100イテレーション実行
-    - **Validates: Requirements 8.1, 8.4**
-
-  - [x] 9.4 ルーターのインテグレーションテストを書く
-    - `TestClient` を使ったエンドポイント全体の E2E フロー確認（Riot API はモック）
-    - 正常系・異常系のレスポンスを確認
-    - _Requirements: 4.1, 5.1, 6.1_
-
-- [x] 10. `main.py` へのルーター登録
-  - [x] 10.1 `main.py` にサモナールーターを登録する
-    - `from api.summoner.router import router as summoner_router` を追加
-    - `app.include_router(summoner_router)` を追加
-    - _Requirements: 9.1, 9.2_
-
-- [x] 11. 最終チェックポイント - 全テストの確認
-  - 全テストが通ることを確認し、疑問点があればユーザーに確認する。
-
-## Notes
-
-- `*` が付いたタスクはオプションであり、MVP を優先する場合はスキップ可能
-- 各タスクは対応する要件番号を参照しており、トレーサビリティを確保
-- プロパティテストは `hypothesis` を使用し、最低100イテレーション実行（`@settings(max_examples=100)`）
-- タグ形式: `# Feature: summoner-search-api, Property {N}: {property_text}`
-- `adapters/riot_api.py` は変更なし（既存コードを利用）
-- 1ファイル250行以内の制約に従い、必要に応じてサブモジュールに分割
-
-## Task Dependency Graph
-
-```json
-{
-  "waves": [
-    { "id": 0, "tasks": ["1.1", "1.2"] },
-    { "id": 1, "tasks": ["2.1"] },
-    { "id": 2, "tasks": ["2.2", "2.3", "3.1"] },
-    { "id": 3, "tasks": ["3.2", "5.1"] },
-    { "id": 4, "tasks": ["5.2", "6.1"] },
-    { "id": 5, "tasks": ["6.2", "7.1"] },
-    { "id": 6, "tasks": ["7.2", "7.3", "7.4", "9.1"] },
-    { "id": 7, "tasks": ["9.2", "9.3", "9.4", "10.1"] }
-  ]
-}
-```
+- [x] 14. レート制限の調整
+  - [x] 14.1 `config.py` の既定値を `riot_rate_limit_per_second = 18`、`riot_rate_limit_per_2min = 95` にする
+  - [x] 14.2 `adapters/riot_api.py`: `interactive` で 429 を受け、`Retry-After` が2秒以内なら待って1回だけ再送する（再送もレート制限のカウント対象）
+    - _要件: 9.3_
+  - [x] 14.3 テスト: Retry-After 1 で再送して成功 / Retry-After なし・3秒・backfill では再送しない / 再送後も429なら例外

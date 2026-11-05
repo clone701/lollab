@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import type { MatchData } from '@/types/summoner';
+import { formatTimeAgo } from '@/lib/summoner-search';
 
 interface MatchCardProps {
   match: MatchData;
@@ -9,12 +10,6 @@ function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
-}
-
-function formatTimeAgo(seconds: number): string {
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}分前`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}時間前`;
-  return `${Math.floor(seconds / 86400)}日前`;
 }
 
 export default function MatchCard({ match }: MatchCardProps) {

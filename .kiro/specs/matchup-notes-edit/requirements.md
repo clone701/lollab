@@ -209,7 +209,7 @@
 - Supabase Clientを使用してデータベース操作
 - Spec 2-1の左サイドバー（ChampionSelectorSidebar）を再利用
 - Spec 2-2AのNoteForm、NoteList、NoteCardを拡張
-- Spec 3-1のデータベーススキーマ（champion_notesテーブル）を使用
+- database Specのデータベーススキーマ（champion_notesテーブル）を使用
 
 ## 非機能要件
 
@@ -224,7 +224,7 @@
 
 - **Spec 2-1 (champion-note-basic)**: タブナビゲーション、左サイドバー
 - **Spec 2-2A (matchup-notes-create)**: NoteList, NoteCard, NoteForm
-- **Spec 3-1 (note-database-design)**: データベーススキーマ、RLSポリシー
+- **database Spec**: データベーススキーマ、RLSポリシー
 - **Spec 1-1 (basic-ui-structure)**: 認証システム、ルートレイアウト
 - **Spec 1-2 (common-components)**: Panel、GlobalLoading
 

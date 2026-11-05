@@ -18,6 +18,7 @@ export const MOCK_SUMMONER: SummonerData = {
     wins: 312,
     losses: 298,
   },
+  lastUpdatedAt: '2025-01-01T00:00:00Z',
 };
 
 export const MOCK_MATCHES: MatchData[] = [

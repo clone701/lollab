@@ -5,7 +5,6 @@ lollab/
 ├── .kiro/
 │   ├── specs/                      # Spec定義ファイル
 │   └── steering/                   # ステアリングファイル
-├── docs/                           # プロジェクトドキュメント
 ├── frontend/
 │   ├── src/
 │   │   ├── app/                    # App Router（ルーティングのみ）

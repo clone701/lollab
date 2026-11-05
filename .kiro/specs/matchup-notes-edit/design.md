@@ -429,13 +429,13 @@ async function deleteNote(
 - Tailwind CSS 4
 - Supabase Client
 - Spec 2-2A の NoteForm を拡張
-- Spec 3-1 の champion_notes テーブルを使用
+- database Spec の champion_notes テーブルを使用
 
 ## 依存関係
 
 - **Spec 2-1**: ChampionSelectorSidebar
 - **Spec 2-2A**: NoteForm, NoteList, NoteCard
-- **Spec 3-1**: champion_notes テーブル、RLSポリシー
+- **database Spec**: champion_notes テーブル、RLSポリシー
 - **Spec 1-1**: 認証システム
 - **Spec 1-2**: Panel, GlobalLoading
 

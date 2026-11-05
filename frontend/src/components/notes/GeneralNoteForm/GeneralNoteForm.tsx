@@ -36,15 +36,13 @@ export function GeneralNoteForm({
   } = useGeneralNoteForm({ initialData, onSave });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const toolbar = useMarkdownToolbar(body, textareaRef);
-  const { suggest, handleBodyChange, selectCandidate, closeSuggest } =
-    useChampionSuggest(body, setBody, textareaRef);
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Escape' && suggest) {
-      closeSuggest();
-      e.preventDefault();
-    }
-  }
+  const {
+    suggest,
+    handleBodyChange,
+    selectCandidate,
+    closeSuggest,
+    handleKeyDown,
+  } = useChampionSuggest(body, setBody, textareaRef);
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -81,6 +79,7 @@ export function GeneralNoteForm({
         {suggest && (
           <ChampionSuggestDropdown
             candidates={suggest.candidates}
+            focusedIndex={suggest.focusedIndex}
             onSelect={selectCandidate}
             onClose={closeSuggest}
           />

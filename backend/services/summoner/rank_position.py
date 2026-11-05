@@ -1,13 +1,15 @@
 """ランク順位算出サービス: 同ティア内順位と全体上位%を算出する。"""
 
 import logging
+from typing import Any
 
 import httpx
 
 from adapters import riot_api
-from schemas.summoner import RankData, RankPositionData
-from services.summoner._error import handle_riot_error
-from services.summoner.region import get_platform, get_regional
+from adapters.riot_rate_limiter import RateLimitExceeded
+from schemas.summoner import RankData
+from services.summoner._error import handle_rate_limit_exceeded, handle_riot_error
+from services.summoner.region import get_platform
 
 logger = logging.getLogger(__name__)
 
@@ -36,14 +38,15 @@ class RankPositionResult:
 
 
 async def get_rank_position(
-    region: str, rank: RankData, summoner_id: str
+    region: str, rank: RankData, puuid: str = "", summoner_id: str = ""
 ) -> RankPositionResult | None:
     """同ティア内の順位と全体上位%を算出する。
 
     Args:
         region: リージョン文字列
         rank: サモナーのランクデータ
-        summoner_id: サモナーID（league-v4のエントリ照合用）
+        puuid: PUUID（league-v4のエントリ照合用。優先して使う）
+        summoner_id: サモナーID（puuid が空のときだけ照合に使う旧方式）
 
     Returns:
         RankPositionResult: 順位情報。UNRANKEDの場合はNone
@@ -55,13 +58,13 @@ async def get_rank_position(
 
     # Master以上はleague-v4の専用エンドポイントを使用
     if rank.tier in ("MASTER", "GRANDMASTER", "CHALLENGER"):
-        return await _get_apex_position(platform_host, rank, summoner_id)
+        return await _get_apex_position(platform_host, rank, puuid, summoner_id)
 
-    return await _get_division_position(platform_host, rank, summoner_id)
+    return await _get_division_position(platform_host, rank, puuid, summoner_id)
 
 
 async def _get_apex_position(
-    platform_host: str, rank: RankData, summoner_id: str
+    platform_host: str, rank: RankData, puuid: str, summoner_id: str
 ) -> RankPositionResult | None:
     """Master以上のティアの順位を取得する。"""
     tier_path = rank.tier.lower()
@@ -71,6 +74,8 @@ async def _get_apex_position(
         league_data = await riot_api.get(platform_host, path)
     except httpx.HTTPStatusError as e:
         handle_riot_error(e)
+    except RateLimitExceeded as e:
+        handle_rate_limit_exceeded(e)
 
     entries = league_data.get("entries", [])
     # LP降順でソート
@@ -78,7 +83,7 @@ async def _get_apex_position(
 
     position = 1
     for entry in sorted_entries:
-        if entry.get("summonerId") == summoner_id:
+        if _is_same_entry(entry, puuid, summoner_id):
             total = len(sorted_entries)
             top_percent = _calc_top_percent(rank.tier, position, total)
             return RankPositionResult(position, total, top_percent)
@@ -88,7 +93,7 @@ async def _get_apex_position(
 
 
 async def _get_division_position(
-    platform_host: str, rank: RankData, summoner_id: str
+    platform_host: str, rank: RankData, puuid: str, summoner_id: str
 ) -> RankPositionResult | None:
     """Diamond以下のティアの順位を取得する（1ページ目のみ）。"""
     path = f"/lol/league/v4/entries/RANKED_SOLO_5x5" f"/{rank.tier}/{rank.rank}?page=1"
@@ -97,13 +102,15 @@ async def _get_division_position(
         entries = await riot_api.get(platform_host, path)
     except httpx.HTTPStatusError as e:
         handle_riot_error(e)
+    except RateLimitExceeded as e:
+        handle_rate_limit_exceeded(e)
 
     # LP降順でソート
     sorted_entries = sorted(entries, key=lambda x: x["leaguePoints"], reverse=True)
 
     position = 1
     for entry in sorted_entries:
-        if entry.get("summonerId") == summoner_id:
+        if _is_same_entry(entry, puuid, summoner_id):
             total = len(sorted_entries)
             top_percent = _calc_top_percent(rank.tier, position, total)
             return RankPositionResult(position, total, top_percent)
@@ -112,6 +119,16 @@ async def _get_division_position(
     # 1ページ目に見つからない場合はLP基準で推定
     top_percent = _calc_top_percent(rank.tier, 0, 0)
     return RankPositionResult(0, 0, top_percent)
+
+
+def _is_same_entry(entry: dict[str, Any], puuid: str, summoner_id: str) -> bool:
+    """league-v4 のエントリが対象サモナーのものか判定する。
+
+    puuid があれば puuid で照合し、空のときだけ summonerId で照合する。
+    """
+    if puuid:
+        return bool(entry.get("puuid") == puuid)
+    return bool(summoner_id) and entry.get("summonerId") == summoner_id
 
 
 def _calc_top_percent(tier: str, position: int, total_in_tier: int) -> float:
@@ -148,58 +165,3 @@ def _calc_top_percent(tier: str, position: int, total_in_tier: int) -> float:
         percent_above += tier_percent * 0.5
 
     return round(percent_above, 4)
-
-
-async def get_rank_position_for_summoner(
-    region: str, game_name: str, tag_line: str
-) -> RankPositionData | None:
-    """サモナー名からランク順位情報を取得するファサード。"""
-    regional_host = get_regional(region)
-    platform_host = get_platform(region)
-
-    try:
-        account = await riot_api.get(
-            regional_host,
-            f"/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}",
-        )
-    except httpx.HTTPStatusError as e:
-        handle_riot_error(e)
-
-    puuid: str = account["puuid"]
-
-    try:
-        league_entries: list[dict] = await riot_api.get(  # type: ignore[assignment]
-            platform_host,
-            f"/lol/league/v4/entries/by-puuid/{puuid}",
-        )
-    except httpx.HTTPStatusError as e:
-        handle_riot_error(e)
-
-    # ソロランクを抽出
-    rank = None
-    summoner_id = ""
-    for entry in league_entries:
-        if entry.get("queueType") == "RANKED_SOLO_5x5":
-            summoner_id = entry.get("summonerId", "")
-            rank = RankData(
-                queueType="RANKED_SOLO_5x5",
-                tier=entry["tier"],
-                rank=entry["rank"],
-                leaguePoints=entry["leaguePoints"],
-                wins=entry["wins"],
-                losses=entry["losses"],
-            )
-            break
-
-    if rank is None or rank.tier == "UNRANKED":
-        return None
-
-    result = await get_rank_position(region, rank, summoner_id)
-    if result is None:
-        return None
-
-    return RankPositionData(
-        position=result.position,
-        totalPlayers=result.total_in_tier,
-        topPercent=result.top_percent,
-    )

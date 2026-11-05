@@ -5,6 +5,13 @@ fileMatchPattern: ".kiro/specs/**/requirements.md|.kiro/specs/**/design.md"
 
 # Spec作成ガイドライン
 
+## 共通ルール
+
+- requirements.md と design.md は常にその機能の**最新の仕様**を表す
+- 仕様変更時は「追加要件」「変更履歴」などのセクションを足さず、既存の該当箇所を書き換える。不要になった記述は削除する
+- 受け入れ基準を含め、すべて日本語で書く
+- テーブル定義は `database` Spec の design.md だけに書く。他の Spec は使うテーブル名とリンクだけを書き、テーブルを追加・変更する場合は database Spec を更新する
+
 ## 要件定義書（requirements.md）
 
 - **WHAT（何を）とWHY（なぜ）** に集中する

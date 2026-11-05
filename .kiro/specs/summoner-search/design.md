@@ -207,19 +207,7 @@ interface RankPositionData {
 
 ### Supabaseテーブル
 
-```sql
-CREATE TABLE favorites (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  summoner_name TEXT NOT NULL,
-  tag_line TEXT NOT NULL,
-  region TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(user_id, summoner_name, tag_line, region)
-);
-
-CREATE INDEX idx_favorites_user_id ON favorites(user_id);
-```
+`favorites` テーブルを使う。定義は [database Spec](../database/design.md) を参照。
 
 ### エンドポイント
 
