@@ -1,11 +1,23 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from adapters import riot_api
 from api.favorites.router import router as favorites_router
 from api.summoner.router import router as summoner_router
 from config import settings
 
-app = FastAPI(title=settings.app_name)
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    """アプリケーションの起動・終了処理。終了時に Riot API クライアントを閉じる。"""
+    yield
+    await riot_api.close()
+
+
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
 # CORS設定
 app.add_middleware(

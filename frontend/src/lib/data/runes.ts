@@ -381,31 +381,36 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
     ],
     1: [
       {
+        id: 8345,
+        name: 'Triple Tonic',
+        icon: '/images/runes/Styles/Inspiration/PerfectTiming/AlchemistCabinet.png',
+      },
+      {
         id: 8313,
         name: 'Time Warp Tonic',
         icon: '/images/runes/Styles/Inspiration/TimeWarpTonic/TimeWarpTonic.png',
       },
       {
-        id: 8352,
-        name: 'Jack of All Trades',
-        icon: '/images/runes/Styles/Inspiration/JackOfAllTrades/JackofAllTrades2.png',
-      },
-      {
-        id: 8345,
-        name: 'Triple Tonic',
-        icon: '/images/runes/Styles/Inspiration/TimeWarpTonic/TimeWarpTonic.png',
+        id: 8347,
+        name: 'Biscuit Delivery',
+        icon: '/images/runes/Styles/Inspiration/BiscuitDelivery/BiscuitDelivery.png',
       },
     ],
     2: [
+      {
+        id: 8316,
+        name: 'Cosmic Insight',
+        icon: '/images/runes/Styles/Inspiration/CosmicInsight/CosmicInsight.png',
+      },
       {
         id: 8410,
         name: 'Approach Velocity',
         icon: '/images/runes/Styles/Resolve/ApproachVelocity/ApproachVelocity.png',
       },
       {
-        id: 8316,
-        name: 'Cosmic Insight',
-        icon: '/images/runes/Styles/Inspiration/CosmicInsight/CosmicInsight.png',
+        id: 8352,
+        name: 'Jack of All Trades',
+        icon: '/images/runes/Styles/Inspiration/JackOfAllTrades/JackofAllTrades2.png',
       },
     ],
   },

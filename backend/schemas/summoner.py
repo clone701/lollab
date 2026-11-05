@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -16,6 +18,7 @@ class SummonerData(BaseModel):
     level: int
     profileIconId: int
     rank: RankData
+    lastUpdatedAt: datetime
 
 
 class RankPositionData(BaseModel):
@@ -44,3 +47,10 @@ class ChampionStatData(BaseModel):
     losses: int
     cs: float
     kda: float
+
+
+class SummonerDetail(BaseModel):
+    summoner: SummonerData
+    rankPosition: RankPositionData | None
+    matches: list[MatchData]  # 新しい順に最大20件
+    championStats: list[ChampionStatData]  # 現行シーズンの保存済み対象試合から集計

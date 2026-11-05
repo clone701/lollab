@@ -8,7 +8,7 @@
 -- 1. champion_notes テーブル
 -- ============================================================================
 
-CREATE TABLE champion_notes (
+CREATE TABLE IF NOT EXISTS champion_notes (
   id                bigserial    PRIMARY KEY,
   -- 実DBでは user_id が NULL 許容。general_notes / favorites は NOT NULL なので
   -- 設計上の不整合だが、既存行を壊さないため現状を維持している。
@@ -41,9 +41,9 @@ COMMENT ON COLUMN champion_notes.updated_at IS '更新日時（アプリ層で�
 -- 2. インデックス
 -- ============================================================================
 
-CREATE INDEX champion_notes_user_id_idx           ON champion_notes(user_id);
-CREATE INDEX champion_notes_my_champion_id_idx    ON champion_notes(my_champion_id);
-CREATE INDEX champion_notes_enemy_champion_id_idx ON champion_notes(enemy_champion_id);
+CREATE INDEX IF NOT EXISTS champion_notes_user_id_idx           ON champion_notes(user_id);
+CREATE INDEX IF NOT EXISTS champion_notes_my_champion_id_idx    ON champion_notes(my_champion_id);
+CREATE INDEX IF NOT EXISTS champion_notes_enemy_champion_id_idx ON champion_notes(enemy_champion_id);
 
 -- ============================================================================
 -- 3. Row Level Security (RLS) ポリシー
@@ -52,18 +52,21 @@ CREATE INDEX champion_notes_enemy_champion_id_idx ON champion_notes(enemy_champi
 ALTER TABLE champion_notes ENABLE ROW LEVEL SECURITY;
 
 -- SELECT ポリシー: ユーザーは自分のノートのみ読み取り可能
+DROP POLICY IF EXISTS "Users can view their own notes" ON champion_notes;
 CREATE POLICY "Users can view their own notes"
 ON champion_notes
 FOR SELECT
 USING (auth.uid() = user_id);
 
 -- INSERT ポリシー: ユーザーは自分のノートのみ作成可能
+DROP POLICY IF EXISTS "Users can create their own notes" ON champion_notes;
 CREATE POLICY "Users can create their own notes"
 ON champion_notes
 FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
 -- UPDATE ポリシー: ユーザーは自分のノートのみ更新可能
+DROP POLICY IF EXISTS "Users can update their own notes" ON champion_notes;
 CREATE POLICY "Users can update their own notes"
 ON champion_notes
 FOR UPDATE
@@ -71,6 +74,7 @@ USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
 
 -- DELETE ポリシー: ユーザーは自分のノートのみ削除可能
+DROP POLICY IF EXISTS "Users can delete their own notes" ON champion_notes;
 CREATE POLICY "Users can delete their own notes"
 ON champion_notes
 FOR DELETE
@@ -86,4 +90,5 @@ USING (auth.uid() = user_id);
 --
 -- PostgreSQLのpermissiveポリシーはOR結合されるため、上記が存在すると
 -- 上の4ポリシーによる auth.uid() = user_id の絞り込みが実質無効になる。
--- 削除手順は 20240104000000_drop_champion_notes_allok_policy.sql を参照。
+-- 削除手順は 20240104000000_drop_champion_notes_allok_policy.sql、
+-- 運用ルールは .kiro/specs/database/design.md を参照。

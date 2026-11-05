@@ -8,7 +8,7 @@
 -- 1. favorites テーブル
 -- ============================================================================
 
-CREATE TABLE favorites (
+CREATE TABLE IF NOT EXISTS favorites (
   id            uuid         PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id       uuid         NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   summoner_name text         NOT NULL,
@@ -33,7 +33,7 @@ COMMENT ON CONSTRAINT favorites_user_id_summoner_name_tag_line_region_key ON fav
 -- 2. インデックス
 -- ============================================================================
 
-CREATE INDEX idx_favorites_user_id ON favorites(user_id);
+CREATE INDEX IF NOT EXISTS idx_favorites_user_id ON favorites(user_id);
 
 COMMENT ON INDEX idx_favorites_user_id IS 'ユーザーごとのお気に入り一覧取得を最適化';
 
@@ -44,18 +44,21 @@ COMMENT ON INDEX idx_favorites_user_id IS 'ユーザーごとのお気に入り�
 ALTER TABLE favorites ENABLE ROW LEVEL SECURITY;
 
 -- SELECT ポリシー: ユーザーは自分のお気に入りのみ読み取り可能
+DROP POLICY IF EXISTS "Users can view own favorites" ON favorites;
 CREATE POLICY "Users can view own favorites"
 ON favorites
 FOR SELECT
 USING (auth.uid() = user_id);
 
 -- INSERT ポリシー: ユーザーは自分のお気に入りのみ登録可能
+DROP POLICY IF EXISTS "Users can insert own favorites" ON favorites;
 CREATE POLICY "Users can insert own favorites"
 ON favorites
 FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
 -- DELETE ポリシー: ユーザーは自分のお気に入りのみ削除可能
+DROP POLICY IF EXISTS "Users can delete own favorites" ON favorites;
 CREATE POLICY "Users can delete own favorites"
 ON favorites
 FOR DELETE

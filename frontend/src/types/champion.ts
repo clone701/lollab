@@ -13,4 +13,7 @@ export interface Champion {
 
   /** 画像パス（例: "/images/champion/Ahri.png"） */
   imagePath: string;
+
+  /** 読み仮名（ひらがな）（例: "あーり", "ぜど"） */
+  reading?: string;
 }

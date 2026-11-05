@@ -1,15 +1,9 @@
-import type {
-  SummonerData,
-  MatchData,
-  ChampionStatData,
-  Region,
-  RankPositionData,
-} from '@/types/summoner';
+import type { Region, SummonerDetail } from '@/types/summoner';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000';
 
-async function apiFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`);
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, init);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.detail ?? `APIエラー: ${res.status}`);
@@ -17,45 +11,30 @@ async function apiFetch<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function fetchSummoner(
+function buildSummonerPath(
   region: Region,
   gameName: string,
   tagLine: string
-): Promise<SummonerData> {
+): string {
   const encoded = `${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`;
-  return apiFetch<SummonerData>(`/api/summoner/${region}/${encoded}`);
+  return `/api/summoner/${region}/${encoded}`;
 }
 
-export async function fetchMatches(
-  region: Region,
-  gameName: string,
-  tagLine: string,
-  count = 10
-): Promise<MatchData[]> {
-  const encoded = `${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`;
-  return apiFetch<MatchData[]>(
-    `/api/summoner/${region}/${encoded}/matches?count=${count}`
-  );
-}
-
-export async function fetchChampionStats(
+export async function fetchSummonerDetail(
   region: Region,
   gameName: string,
   tagLine: string
-): Promise<ChampionStatData[]> {
-  const encoded = `${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`;
-  return apiFetch<ChampionStatData[]>(
-    `/api/summoner/${region}/${encoded}/champion-stats`
-  );
+): Promise<SummonerDetail> {
+  return apiFetch<SummonerDetail>(buildSummonerPath(region, gameName, tagLine));
 }
 
-export async function fetchRankPosition(
+export async function updateSummoner(
   region: Region,
   gameName: string,
   tagLine: string
-): Promise<RankPositionData | null> {
-  const encoded = `${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`;
-  return apiFetch<RankPositionData | null>(
-    `/api/summoner/${region}/${encoded}/rank-position`
+): Promise<SummonerDetail> {
+  return apiFetch<SummonerDetail>(
+    `${buildSummonerPath(region, gameName, tagLine)}/update`,
+    { method: 'POST' }
   );
 }

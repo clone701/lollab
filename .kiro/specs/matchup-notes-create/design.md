@@ -564,12 +564,12 @@ const STARTER_ITEMS: StarterItem[] = [
 - Tailwind CSS 4
 - Supabase Client
 - Spec 2-1の基本レイアウトを継承
-- Spec 3-1のchampion_notesテーブルを使用
+- database Specのchampion_notesテーブルを使用
 
 ## 依存関係
 
 - **Spec 2-1**: TabNavigation, ChampionSelectorSidebar
-- **Spec 3-1**: champion_notesテーブル、RLSポリシー
+- **database Spec**: champion_notesテーブル、RLSポリシー
 - **Spec 1-1**: 認証システム
 - **Spec 1-2**: Panel, GlobalLoading
 

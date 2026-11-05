@@ -75,8 +75,15 @@ export function useNoteForm({
 
     let finalPresetName = presetName.trim();
     if (!finalPresetName) {
-      const enemy = getChampionById(enemyChampionId);
-      finalPresetName = enemy ? `VS${enemy.name}` : 'デフォルトプリセット';
+      const myChamp = getChampionById(myChampionId);
+      const enemyChamp = getChampionById(enemyChampionId);
+      if (myChamp && enemyChamp) {
+        finalPresetName = `${myChamp.name} VS ${enemyChamp.name}`;
+      } else if (enemyChamp) {
+        finalPresetName = `VS ${enemyChamp.name}`;
+      } else {
+        finalPresetName = 'デフォルトプリセット';
+      }
     }
     setSaving(true);
     try {

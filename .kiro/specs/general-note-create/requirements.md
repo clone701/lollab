@@ -193,4 +193,4 @@
 ## 依存関係
 
 - **matchup-notes-create**: 対策ノートの新規作成UIパターンを参考にする
-- **note-database-design**: Supabase接続・RLSポリシーのパターンを参考にする
+- **database**: Supabase接続・RLSポリシーのパターンを参考にする

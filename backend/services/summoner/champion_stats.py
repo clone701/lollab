@@ -1,29 +1,8 @@
-"""チャンピオン統計サービス: 直近試合からチャンピオン別統計を集計する。"""
+"""チャンピオン統計サービス: 試合リストからチャンピオン別統計を集計する。"""
 
 from collections import defaultdict
 
 from schemas.summoner import ChampionStatData, MatchData
-from services.summoner.matches import get_matches
-
-
-async def get_champion_stats(
-    region: str, game_name: str, tag_line: str
-) -> list[ChampionStatData]:
-    """チャンピオン別統計を取得する。
-
-    Args:
-        region: リージョン文字列（例: "JP", "KR"）
-        game_name: ゲーム名（Riot ID のゲーム名部分）
-        tag_line: タグライン（Riot ID のタグ部分）
-
-    Returns:
-        list[ChampionStatData]: チャンピオン別統計リスト（総試合数降順）
-
-    Raises:
-        HTTPException: 404（サモナー未発見）、429（レート制限）、502（Riot API障害）
-    """
-    matches = await get_matches(region, game_name, tag_line, count=20)
-    return aggregate_champion_stats(matches)
 
 
 def aggregate_champion_stats(matches: list[MatchData]) -> list[ChampionStatData]:
