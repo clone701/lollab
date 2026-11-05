@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { GeneralNote } from '@/types/generalNote';
-import { getGeneralNotes } from '@/adapters/supabase';
+import { useState } from 'react';
+import { useGeneralNotes } from '@/components/notes/GeneralNoteList';
 import { formatDate } from '@/lib/utils/dateHelpers';
 
 interface AllGeneralNotesViewProps {
@@ -16,19 +15,10 @@ export function AllGeneralNotesView({
   onNoteClick,
   refreshKey,
 }: AllGeneralNotesViewProps) {
-  const [notes, setNotes] = useState<GeneralNote[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { notes, isLoading } = useGeneralNotes(refreshKey);
   const [page, setPage] = useState(0);
 
-  useEffect(() => {
-    setLoading(true);
-    getGeneralNotes()
-      .then(setNotes)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [refreshKey]);
-
-  if (loading)
+  if (isLoading)
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-800" />

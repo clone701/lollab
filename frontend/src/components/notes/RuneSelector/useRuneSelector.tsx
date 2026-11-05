@@ -27,16 +27,8 @@ export function useRuneSelector({ value, onChange }: UseRuneSelectorProps) {
   );
   const [shards, setShards] = useState<number[]>(value?.shards || []);
 
-  useEffect(() => {
-    if (value === null) {
-      setPrimaryPath(null);
-      setSecondaryPath(null);
-      setKeystone(null);
-      setPrimaryRunes([]);
-      setSecondaryRunes([]);
-      setShards([]);
-    }
-  }, [value]);
+  // value が null になったときのリセットは、親が key を付け替えて再マウントすることで行う
+  // （NoteFormRuneSection の runeKey）
 
   const handlePrimaryPathChange = useCallback((pathId: number) => {
     setPrimaryPath(pathId);

@@ -39,29 +39,29 @@ export default function SearchResultPage({
   const [isFav, setIsFav] = useState(false);
   const [favId, setFavId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!query) return;
+  // 未ログイン中はお気に入り状態を持たない（レンダー中に初期化）
+  if (!user && (isFav || favId)) {
+    setIsFav(false);
+    setFavId(null);
+  }
 
+  useEffect(() => {
+    if (!query || !user) return;
     // お気に入り状態チェック
-    if (user) {
-      checkFavorite(gameName, tagLine, region)
-        .then(setIsFav)
-        .catch(() => setIsFav(false));
-      fetchFavorites()
-        .then((favs) => {
-          const match = favs.find(
-            (f) =>
-              f.summoner_name === gameName &&
-              f.tag_line === tagLine &&
-              f.region === region
-          );
-          setFavId(match?.id ?? null);
-        })
-        .catch(() => {});
-    } else {
-      setIsFav(false);
-      setFavId(null);
-    }
+    checkFavorite(gameName, tagLine, region)
+      .then(setIsFav)
+      .catch(() => setIsFav(false));
+    fetchFavorites()
+      .then((favs) => {
+        const match = favs.find(
+          (f) =>
+            f.summoner_name === gameName &&
+            f.tag_line === tagLine &&
+            f.region === region
+        );
+        setFavId(match?.id ?? null);
+      })
+      .catch(() => {});
   }, [query, region, user, gameName, tagLine]);
 
   const handleToggleFavorite = async () => {

@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { GeneralNote } from '@/types/generalNote';
-import { getGeneralNotes } from '@/adapters/supabase';
+import { useState } from 'react';
 import { GeneralNoteCard } from '../GeneralNoteCard';
 import { NoteFilterBar } from './NoteFilterBar';
+import { useGeneralNotes } from './useGeneralNotes';
 import { useNoteFilter } from './useNoteFilter';
 
 interface GeneralNoteListProps {
@@ -18,9 +17,7 @@ export function GeneralNoteList({
   onCreateNew,
   onNoteClick,
 }: GeneralNoteListProps) {
-  const [notes, setNotes] = useState<GeneralNote[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { notes, isLoading, hasError } = useGeneralNotes(refreshKey);
   const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
   const {
     searchQuery,
@@ -31,28 +28,22 @@ export function GeneralNoteList({
     filteredNotes,
   } = useNoteFilter(notes);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    getGeneralNotes()
-      .then(setNotes)
-      .catch(() => setError('ノートの取得に失敗しました'))
-      .finally(() => setLoading(false));
-  }, [refreshKey]);
-
   const handleNoteClick = (noteId: number) => {
     setSelectedNoteId(noteId);
     onNoteClick(noteId);
   };
 
-  if (loading)
+  if (isLoading)
     return (
       <div className="flex items-center justify-center h-40">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800" />
       </div>
     );
 
-  if (error) return <p className="text-red-600 text-sm p-4">{error}</p>;
+  if (hasError)
+    return (
+      <p className="text-red-600 text-sm p-4">ノートの取得に失敗しました</p>
+    );
 
   return (
     <div>
