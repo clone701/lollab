@@ -1,7 +1,5 @@
 from functools import lru_cache
-from typing import Any
 
-from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -16,7 +14,7 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_key: str = ""
 
-    # Riot API設定（オプショナル - 今後使用）
+    # Riot API設定
     riot_api_key: str = ""
 
     # Riot API レート制限（Personal キーの上限。Production キーに切り替えたら変更する）
