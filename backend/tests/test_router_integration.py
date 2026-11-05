@@ -17,7 +17,7 @@ from tests.sync_helpers import install_store_stub
 # config と adapters を router の import 前にモックする
 _mock_settings = MagicMock()
 _mock_settings.riot_api_key = "test-key"
-_mock_settings.cors_origins = ["http://localhost:3000"]
+_mock_settings.cors_origins_list = ["http://localhost:3000"]
 _mock_config = ModuleType("config")
 _mock_config.settings = _mock_settings  # type: ignore[attr-defined]
 sys.modules.setdefault("config", _mock_config)
