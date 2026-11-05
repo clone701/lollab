@@ -73,9 +73,32 @@ describe('selectOption', () => {
 });
 
 describe('selectTopOptions', () => {
-  it('上位 limit 件だけ返す', () => {
-    expect(selectTopOptions(element, 1)).toHaveLength(1);
-    expect(selectTopOptions(element)).toHaveLength(2);
+  const items: BuildElement = {
+    games: 20,
+    options: [
+      { key: [1], games: 10, wins: 4 },
+      { key: [2], games: 6, wins: 4 },
+      { key: [3], games: 3, wins: 2 },
+      { key: [4], games: 1, wins: 0 },
+    ],
+    best_win_rate: { key: [5], games: 1, wins: 1 },
+  };
+  it('最多は試合数の多い順に上位 limit 件', () => {
+    expect(selectTopOptions(items, 'most_games', 2).map((o) => o.key)).toEqual([
+      [1],
+      [2],
+    ]);
+  });
+  it('最高勝率は best_win_rate を含めて勝率順（同率は試合数の多い順）', () => {
+    expect(selectTopOptions(items, 'best_win_rate').map((o) => o.key)).toEqual([
+      [5],
+      [2],
+      [3],
+    ]);
+  });
+  it('best_win_rate が options にある場合は重複させない', () => {
+    const dup = { ...items, best_win_rate: items.options[1] };
+    expect(selectTopOptions(dup, 'best_win_rate', 10)).toHaveLength(4);
   });
 });
 

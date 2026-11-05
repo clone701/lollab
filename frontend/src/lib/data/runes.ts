@@ -32,12 +32,12 @@ export const RUNE_PATHS: RunePath[] = [
     icon: '/images/runes/Styles/7202_Sorcery.png',
   },
   {
-    id: 8300,
+    id: 8400,
     name: 'Resolve',
     icon: '/images/runes/Styles/7204_Resolve.png',
   },
   {
-    id: 8400,
+    id: 8300,
     name: 'Inspiration',
     icon: '/images/runes/Styles/7203_Whimsy.png',
   },
@@ -76,12 +76,12 @@ export const KEYSTONES: Record<number, Rune[]> = {
       icon: '/images/runes/Styles/Domination/Electrocute/Electrocute.png',
     },
     {
-      id: 8124,
+      id: 8128,
       name: 'Dark Harvest',
       icon: '/images/runes/Styles/Domination/DarkHarvest/DarkHarvest.png',
     },
     {
-      id: 8128,
+      id: 9923,
       name: 'Hail of Blades',
       icon: '/images/runes/Styles/Domination/HailOfBlades/HailOfBlades.png',
     },
@@ -100,11 +100,11 @@ export const KEYSTONES: Record<number, Rune[]> = {
     },
     {
       id: 8230,
-      name: '嵐乗りの勇躍',
+      name: "Stormraider's Surge",
       icon: '/images/runes/Styles/Sorcery/PhaseRush/PhaseRush.png',
     },
   ],
-  8300: [
+  8400: [
     // Resolve
     {
       id: 8437,
@@ -113,7 +113,7 @@ export const KEYSTONES: Record<number, Rune[]> = {
     },
     {
       id: 8439,
-      name: 'Veteran Aftershock',
+      name: 'Aftershock',
       icon: '/images/runes/Styles/Resolve/VeteranAftershock/VeteranAftershock.png',
     },
     {
@@ -122,7 +122,7 @@ export const KEYSTONES: Record<number, Rune[]> = {
       icon: '/images/runes/Styles/Resolve/Guardian/Guardian.png',
     },
   ],
-  8400: [
+  8300: [
     // Inspiration
     {
       id: 8351,
@@ -219,17 +219,17 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
     ],
     1: [
       {
-        id: 8136,
+        id: 8137,
         name: 'Sixth Sense',
         icon: '/images/runes/Styles/Domination/SixthSense/SixthSense.png',
       },
       {
-        id: 8120,
+        id: 8140,
         name: 'Grisly Mementos',
         icon: '/images/runes/Styles/Domination/GhostPoro/GhostPoro.png',
       },
       {
-        id: 8138,
+        id: 8141,
         name: 'Deep Ward',
         icon: '/images/runes/Styles/Domination/EyeballCollection/EyeballCollection.png',
       },
@@ -241,7 +241,7 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
         icon: '/images/runes/Styles/Domination/TreasureHunter/TreasureHunter.png',
       },
       {
-        id: 8134,
+        id: 8106,
         name: 'Ultimate Hunter',
         icon: '/images/runes/Styles/Domination/UltimateHunter/UltimateHunter.png',
       },
@@ -257,7 +257,7 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
     0: [
       {
         id: 8224,
-        name: 'Nullifying Orb',
+        name: 'Axiom Arcanist',
         icon: '/images/runes/Styles/Sorcery/NullifyingOrb/Axiom_Arcanist.png',
       },
       {
@@ -267,7 +267,7 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
       },
       {
         id: 8275,
-        name: 'Axiom Arcanist',
+        name: 'Nimbus Cloak',
         icon: '/images/runes/Styles/Sorcery/NimbusCloak/6361.png',
       },
     ],
@@ -306,7 +306,7 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
       },
     ],
   },
-  8300: {
+  8400: {
     // Resolve
     0: [
       {
@@ -321,7 +321,7 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
       },
       {
         id: 8401,
-        name: 'Mirror Shell',
+        name: 'Shield Bash',
         icon: '/images/runes/Styles/Resolve/MirrorShell/MirrorShell.png',
       },
     ],
@@ -354,13 +354,13 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
         icon: '/images/runes/Styles/Resolve/Revitalize/Revitalize.png',
       },
       {
-        id: 8358,
+        id: 8242,
         name: 'Unflinching',
         icon: '/images/runes/Styles/Sorcery/Unflinching/Unflinching.png',
       },
     ],
   },
-  8400: {
+  8300: {
     // Inspiration
     0: [
       {
@@ -381,24 +381,24 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
     ],
     1: [
       {
-        id: 8345,
+        id: 8313,
         name: 'Triple Tonic',
         icon: '/images/runes/Styles/Inspiration/PerfectTiming/AlchemistCabinet.png',
       },
       {
-        id: 8313,
+        id: 8352,
         name: 'Time Warp Tonic',
         icon: '/images/runes/Styles/Inspiration/TimeWarpTonic/TimeWarpTonic.png',
       },
       {
-        id: 8347,
+        id: 8345,
         name: 'Biscuit Delivery',
         icon: '/images/runes/Styles/Inspiration/BiscuitDelivery/BiscuitDelivery.png',
       },
     ],
     2: [
       {
-        id: 8316,
+        id: 8347,
         name: 'Cosmic Insight',
         icon: '/images/runes/Styles/Inspiration/CosmicInsight/CosmicInsight.png',
       },
@@ -408,7 +408,7 @@ export const PRIMARY_RUNES: Record<number, Record<number, Rune[]>> = {
         icon: '/images/runes/Styles/Resolve/ApproachVelocity/ApproachVelocity.png',
       },
       {
-        id: 8352,
+        id: 8316,
         name: 'Jack of All Trades',
         icon: '/images/runes/Styles/Inspiration/JackOfAllTrades/JackofAllTrades2.png',
       },
@@ -493,17 +493,17 @@ export const SHARDS: Record<number, Rune[]> = {
   2: [
     // Defense
     {
-      id: 5001,
+      id: 5011,
       name: 'Health',
       icon: '/images/runes/StatMods/StatModsHealthScalingIcon.png',
     },
     {
-      id: 5002,
+      id: 5013,
       name: 'Tenacity',
       icon: '/images/runes/StatMods/StatModsTenacityIcon.png',
     },
     {
-      id: 5003,
+      id: 5001,
       name: 'Health Scaling',
       icon: '/images/runes/StatMods/StatModsHealthPlusIcon.png',
     },

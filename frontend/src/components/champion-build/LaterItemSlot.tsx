@@ -1,5 +1,5 @@
 import { selectTopOptions } from '@/lib/champion-build';
-import type { BuildElement } from '@/types/championBuild';
+import type { BuildElement, BuildMode } from '@/types/championBuild';
 import { ItemIcons } from './ItemIcons';
 import { NoData } from './NoData';
 import { OptionStat } from './OptionStat';
@@ -7,11 +7,12 @@ import { OptionStat } from './OptionStat';
 interface LaterItemSlotProps {
   label: string;
   element: BuildElement;
+  mode: BuildMode;
 }
 
-// 4〜6番目のアイテム。試合数の多い上位3件を「OR」で並べる
-export function LaterItemSlot({ label, element }: LaterItemSlotProps) {
-  const options = selectTopOptions(element);
+// 4〜6番目のアイテム。表示モードに応じた上位3件を「OR」で並べる
+export function LaterItemSlot({ label, element, mode }: LaterItemSlotProps) {
+  const options = selectTopOptions(element, mode);
   return (
     <div className="flex flex-col gap-1">
       <h3 className="text-sm text-fg-muted">{label}</h3>

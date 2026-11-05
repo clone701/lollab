@@ -34,9 +34,9 @@ export function ItemPanel({
         mode={mode}
         separator="→"
       />
-      <LaterItemSlot label="4番目" element={item4} />
-      <LaterItemSlot label="5番目" element={item5} />
-      <LaterItemSlot label="6番目" element={item6} />
+      <LaterItemSlot label="4番目" element={item4} mode={mode} />
+      <LaterItemSlot label="5番目" element={item5} mode={mode} />
+      <LaterItemSlot label="6番目" element={item6} mode={mode} />
     </PanelSection>
   );
 }
