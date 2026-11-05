@@ -10,6 +10,8 @@ export interface ChampionNote {
   enemy_champion_id: string;
   preset_name: string;
   runes: RuneConfig | null;
+  /** runes の ID 体系の版。2 = Riot（Data Dragon）の ID。保存時にアダプターが書き込む */
+  runes_id_version?: number;
   spells: string[] | null;
   items: string[] | null;
   memo: string | null;

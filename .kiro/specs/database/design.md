@@ -34,6 +34,8 @@
 | `20261105105912_insert_seasons.sql` | seasons の初期データ |
 | `20261106000000_add_failed_matches.sql` | failed_matches の作成、summoners に flex_wins / flex_losses を追加 |
 | `20261106000100_add_match_build_data.sql` | matches・match_participants の列追加、match_bans・summoner_rank_snapshots の作成、ビルド集計用インデックス |
+| `20261106000200_add_champion_note_runes_id_version.sql` | champion_notes に runes_id_version を追加（ルーン ID 移行の第1段階。フロントエンドのデプロイ前に適用） |
+| `20261106000300_migrate_champion_note_rune_ids.sql` | 保存済みノートのルーン ID を Riot の値に変換し、旧値を champion_notes_runes_backup に退避（第2段階。デプロイ後に適用、再実行可） |
 
 `20240101`〜`20240104` は命名ルール制定前のファイルで、日時は実際の作成日ではない。
 
@@ -64,6 +66,7 @@ erDiagram
 | 区分 | テーブル | RLS | アクセス元 |
 |---|---|---|---|
 | ユーザーデータ | champion_notes, general_notes, favorites | 有効。`auth.uid() = user_id` の行だけ操作可 | フロントエンド（anon キー + ログイン） |
+| 移行用バックアップ | champion_notes_runes_backup | 有効、ポリシーなし（anon は全拒否） | 運用者（SQL Editor） |
 | Riot API データ | summoners, matches, match_participants, match_bans, failed_matches, summoner_rank_snapshots, seasons | 有効、ポリシーなし（anon は全拒否） | バックエンド（service キー） |
 
 ---
@@ -79,7 +82,8 @@ erDiagram
 | my_champion_id | text | NOT NULL | 例: `Ahri` |
 | enemy_champion_id | text | NOT NULL | |
 | preset_name | text | NOT NULL | 例: 「序盤安定型」 |
-| runes | jsonb | | 下記 JSON 構造 |
+| runes | jsonb | | 下記 JSON 構造。ID は Riot（Data Dragon）の値 |
+| runes_id_version | int | NOT NULL、既定 1 | runes の ID 体系の版。1 = 旧 ID、2 = Riot（Data Dragon）の ID。保存時にアプリ層が 2 を書き込む |
 | spells | jsonb | | サモナースペルID 2要素の配列。例: `["SummonerFlash","SummonerIgnite"]` |
 | items | jsonb | | アイテムIDの配列。例: `["1055","2003"]` |
 | memo | text | | 最大10,000文字（アプリ層で検証） |
@@ -97,7 +101,22 @@ erDiagram
 | keystone | number | キーストーンID |
 | primaryRunes | number[3] | メインルーン |
 | secondaryRunes | number[2] | サブルーン |
-| shards | number[3] | Offense / Flex / Defense |
+| shards | number[3] | Offense / Flex / Defense（位置でシャードの種類が決まる） |
+
+ID は Riot（Data Dragon）の値（`runes_id_version = 2`）。`runes_id_version = 1` の行は旧 ID のまま残っている可能性があり、マイグレーション `20261106000300` で変換する。
+
+### champion_notes_runes_backup（ルーン ID 移行前の退避）
+
+`20261106000200` で作成。ルーン ID の変換前に `champion_notes.runes` を退避し、戻し用に使う。
+
+| カラム | 型 | 制約 | 説明 |
+|---|---|---|---|
+| note_id | bigint | PK | champion_notes.id。外部キーは張らない（ノートが削除されても残す） |
+| runes | jsonb | | 移行前の runes（旧 ID） |
+| backed_up_at | timestamptz | 既定 now() | 退避日時 |
+
+- RLS: 有効、ポリシーなし（anon は全拒否）。SQL Editor からだけ操作する
+- 移行が不要になった時点でテーブルを削除してよい
 
 ### general_notes（汎用ノート）
 

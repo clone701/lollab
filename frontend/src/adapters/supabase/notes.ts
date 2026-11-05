@@ -6,6 +6,9 @@
 import { createClient } from '@/lib/supabase/client';
 import { ChampionNote, RuneConfig } from '@/types/note';
 
+// runes の ID 体系の版（2 = Riot（Data Dragon）の ID）。保存時に必ず書き込む
+const RUNES_ID_VERSION = 2;
+
 export async function getAllNotes(): Promise<ChampionNote[]> {
   const supabase = createClient();
 
@@ -44,7 +47,10 @@ export async function getNotes(
 }
 
 export async function createNote(
-  note: Omit<ChampionNote, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  note: Omit<
+    ChampionNote,
+    'id' | 'user_id' | 'created_at' | 'updated_at' | 'runes_id_version'
+  >
 ): Promise<ChampionNote> {
   const supabase = createClient();
 
@@ -55,7 +61,11 @@ export async function createNote(
 
   const { data, error } = await supabase
     .from('champion_notes')
-    .insert({ ...note, user_id: user.id })
+    .insert({
+      ...note,
+      user_id: user.id,
+      runes_id_version: RUNES_ID_VERSION,
+    })
     .select()
     .single();
 
@@ -105,7 +115,11 @@ export async function updateNote(
 
   const { data: updatedNote, error } = await supabase
     .from('champion_notes')
-    .update({ ...data, updated_at: new Date().toISOString() })
+    .update({
+      ...data,
+      runes_id_version: RUNES_ID_VERSION,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', noteId)
     .eq('user_id', userId)
     .select()
