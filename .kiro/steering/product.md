@@ -204,6 +204,11 @@ League of Legendsプレイヤーが戦略的思考を深め、継続的にスキ
 - **ルーン**: 試合前に設定する能力強化システム
 - **スペル**: サモナースペル（Flash, Igniteなど）
 - **リージョン**: サーバー地域（NA, KR, JP等）
+- **ノート / メモ**: ノートはマッチアップ・ルーン等を含む記録全体、メモはその中の自由記述テキスト
+
+### コード上の用語
+- 同一概念には同一の英単語を使う（summoner, champion, matchup, note, memo）
+- アプリ利用者は `user`、LoLプレイヤーは `summoner` と区別する
 
 ### 技術用語
 - **API**: Application Programming Interface
