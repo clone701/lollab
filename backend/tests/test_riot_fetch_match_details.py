@@ -19,9 +19,11 @@ from services.summoner.riot_fetch import RiotRateLimitError, fetch_match_details
 from tests.riot_fetch_helpers import (
     GAME_END_MS,
     GET,
+    is_timeline_path,
     match_detail,
     match_id_of,
     status_error,
+    timeline_detail,
 )
 
 # fetch_match_details: 変換
@@ -34,6 +36,8 @@ def test_fetch_match_details_converts_to_records() -> None:
     async def fake_get(
         host: str, path: str, params: Any = None, priority: str = "interactive"
     ) -> Any:
+        if is_timeline_path(path):
+            return timeline_detail()
         assert host == "asia"
         return match_detail(match_id_of(path))
 
@@ -116,6 +120,8 @@ def test_fetch_match_details_propagates_429_with_fetched_matches() -> None:
     async def fake_get(
         host: str, path: str, params: Any = None, priority: str = "interactive"
     ) -> Any:
+        if is_timeline_path(path):
+            return timeline_detail()
         match_id = match_id_of(path)
         requested.append(match_id)
         if match_id == "JP1_2":
@@ -147,6 +153,8 @@ def test_fetch_match_details_skips_individual_failures(
     async def fake_get(
         host: str, path: str, params: Any = None, priority: str = "interactive"
     ) -> Any:
+        if is_timeline_path(path):
+            return timeline_detail()
         match_id = match_id_of(path)
         if match_id == "JP1_1":
             raise status_error(500)
@@ -175,6 +183,8 @@ def test_fetch_match_details_limits_concurrency_to_10() -> None:
     async def fake_get(
         host: str, path: str, params: Any = None, priority: str = "interactive"
     ) -> Any:
+        if is_timeline_path(path):
+            return timeline_detail()
         nonlocal in_flight, max_in_flight
         in_flight += 1
         max_in_flight = max(max_in_flight, in_flight)

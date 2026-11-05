@@ -43,7 +43,7 @@ export default function NoteList({
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <p className="text-gray-500 text-lg">
+          <p className="text-fg-muted text-lg">
             チャンピオンを選択してください
           </p>
         </div>
@@ -56,8 +56,8 @@ export default function NoteList({
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800 mx-auto mb-4"></div>
-          <p className="text-gray-500">読み込み中...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+          <p className="text-fg-muted">読み込み中...</p>
         </div>
       </div>
     );
@@ -68,10 +68,10 @@ export default function NoteList({
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <p className="text-red-600 text-lg mb-4">{error}</p>
+          <p className="text-danger-fg text-lg mb-4">{error}</p>
           <button
             onClick={handleReload}
-            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-black transition focus:outline-none focus:ring-2 focus:ring-gray-800"
+            className="px-4 py-2 bg-action text-white rounded-lg hover:bg-action-hover transition focus:outline-none focus:ring-2 focus:ring-accent"
             aria-label="再読み込み"
           >
             再読み込み
@@ -85,10 +85,10 @@ export default function NoteList({
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">対策ノート一覧</h2>
+        <h2 className="text-2xl font-bold text-fg">対策ノート一覧</h2>
         <button
           onClick={onCreateNew}
-          className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-black transition focus:outline-none focus:ring-2 focus:ring-gray-800"
+          className="px-4 py-2 bg-action text-white rounded-lg hover:bg-action-hover transition focus:outline-none focus:ring-2 focus:ring-accent"
           aria-label="新規ノート作成"
         >
           新規ノート作成
@@ -96,9 +96,9 @@ export default function NoteList({
       </div>
 
       {notes.length === 0 ? (
-        <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+        <div className="flex items-center justify-center h-64 bg-surface rounded-lg border-2 border-dashed border-line-strong">
           <div className="text-center">
-            <p className="text-gray-500 text-lg">ノートがありません</p>
+            <p className="text-fg-muted text-lg">ノートがありません</p>
           </div>
         </div>
       ) : (

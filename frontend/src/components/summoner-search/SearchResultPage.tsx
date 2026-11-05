@@ -101,15 +101,15 @@ export default function SearchResultPage({
   return (
     <main className="py-8 px-4">
       {/* ヘッダー */}
-      <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
-        <span className="font-bold text-gray-700 bg-gray-100 border border-gray-300 rounded px-2 py-0.5 text-xs">
+      <div className="mb-4 flex items-center gap-2 text-sm text-fg-muted">
+        <span className="font-bold text-fg-muted bg-surface-2 border border-line-strong rounded px-2 py-0.5 text-xs">
           {region}
         </span>
-        <span className="font-medium text-gray-800">{query}</span>
+        <span className="font-medium text-fg">{query}</span>
         <button
           type="button"
           onClick={() => onSearch('', region)}
-          className="ml-2 text-blue-500 hover:underline text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="ml-2 text-accent hover:underline text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           ← 戻る
         </button>
@@ -124,12 +124,12 @@ export default function SearchResultPage({
             alt="読み込み中"
             className="w-32 h-32"
           />
-          <span className="text-gray-500 text-sm">読み込み中...</span>
+          <span className="text-fg-muted text-sm">読み込み中...</span>
         </div>
       )}
 
       {/* エラー */}
-      {error && <div className="text-center py-16 text-red-500">{error}</div>}
+      {error && <div className="text-center py-16 text-danger-fg">{error}</div>}
 
       {/* 結果: プロフィールバー → タブメニュー → タブコンテンツ */}
       {!isLoading && !error && detail && (
@@ -160,12 +160,12 @@ export default function SearchResultPage({
               </div>
             )}
             {activeTab === 'champions' && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-fg-muted">
                 チャンピオン詳細（今後実装）
               </div>
             )}
             {activeTab === 'live-game' && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-fg-muted">
                 現在の対戦情報（今後実装）
               </div>
             )}

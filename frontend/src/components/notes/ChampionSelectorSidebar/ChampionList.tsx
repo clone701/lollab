@@ -22,8 +22,8 @@ export function ChampionList({
 }: ChampionListProps) {
   if (champions.length === 0) {
     return (
-      <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
-        <p className="text-xs text-gray-500">
+      <div className="p-3 bg-surface-2 border border-line rounded-lg text-center">
+        <p className="text-xs text-fg-muted">
           該当するチャンピオンが見つかりません
         </p>
       </div>

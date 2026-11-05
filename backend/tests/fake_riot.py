@@ -43,11 +43,18 @@ class FakeRiot:
         history: list[tuple[str, datetime]] | None = None,
         rate_limit_after: int | None = None,
         fail_ids: set[str] | None = None,
+        timeline_fail_ids: set[str] | None = None,
+        extra_times: dict[str, datetime] | None = None,
     ) -> None:
         self.history = history or []
+        # 試合ID一覧には出ないが、詳細は取得できる試合（補完対象）の終了日時
+        self.extra_times = dict(extra_times or {})
         self.rate_limit_after = rate_limit_after
         # 取得に失敗（429 以外）させる試合ID。テスト中に書き換えられる
         self.fail_ids: set[str] = set(fail_ids or ())
+        # 詳細は取得できるがタイムラインの取得に失敗（429 以外）させる試合ID
+        self.timeline_fail_ids: set[str] = set(timeline_fail_ids or ())
+        self.timeline_only_calls: list[frozenset[str]] = []
         self.league = LeagueInfo(
             solo=RankData(
                 queueType="RANKED_SOLO_5x5",
@@ -138,12 +145,17 @@ class FakeRiot:
         return ids[start : start + count]
 
     async def fetch_match_details(
-        self, region: str, match_ids: list[str], priority: str = "interactive"
+        self,
+        region: str,
+        match_ids: list[str],
+        priority: str = "interactive",
+        timeline_only_ids: frozenset[str] = frozenset(),
     ) -> MatchDetailsResult:
         self.calls.append("match_details")
         self.detail_calls.append(list(match_ids))
+        self.timeline_only_calls.append(timeline_only_ids)
         self.detail_priorities.append(priority)
-        times = dict(self.history)
+        times = {**self.extra_times, **dict(self.history)}
         fetched: list[FetchedMatch] = []
         failures: list[FailedFetch] = []
         for match_id in match_ids:
@@ -165,9 +177,17 @@ class FakeRiot:
                 game_version="15.10.1",
                 game_duration=1800,
                 game_end_at=times[match_id],
+                detail_version=2,
             )
+            timeline_failed = match_id in self.timeline_fail_ids
+            if not timeline_failed:
+                match = match.model_copy(update={"timeline_fetched_at": BASE_TIME})
             fetched.append(
-                FetchedMatch(match=match, participants=[participant(match_id)])
+                FetchedMatch(
+                    match=match,
+                    participants=[participant(match_id)],
+                    timeline_error="HTTP 500" if timeline_failed else None,
+                )
             )
             self.served += 1
         return MatchDetailsResult(fetched=fetched, failures=failures)

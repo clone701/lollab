@@ -13,8 +13,10 @@ from pydantic import TypeAdapter
 
 from adapters.query_runner import execute as _execute
 from adapters.supabase import supabase
+from adapters.upsert_rows import MATCH_ROWS, PART_ROWS, dump_rows
 from schemas.summoner_store import (
     BackfillState,
+    BanRecord,
     MatchRecord,
     ParticipantRecord,
     ParticipationRecord,
@@ -175,28 +177,35 @@ async def get_match_end_times(match_ids: list[str]) -> dict[str, datetime]:
 
 
 async def save_matches(
-    matches: list[MatchRecord], participants: list[ParticipantRecord]
+    matches: list[MatchRecord],
+    participants: list[ParticipantRecord],
+    bans: list[BanRecord] | None = None,
 ) -> None:
-    """試合と参加者を upsert する。主キー衝突時は上書きするため冪等。
+    """試合・参加者・BAN を upsert する。主キー衝突時は上書きするため冪等。
 
-    参加者は matches への外部キーを持つため、matches を先に書き込む。
+    参加者と BAN は matches への外部キーを持つため、matches を先に書き込む。
+    タイムライン由来の列は、値がある行だけ書き込む（詳細の取り直しで
+    取り込み済みの値を NULL で上書きしない。dump_rows を参照）。
     """
     if not matches:
         return
-    match_rows = [m.model_dump(mode="json", exclude={"created_at"}) for m in matches]
-    participant_rows = [p.model_dump(mode="json") for p in participants]
+    batches = [
+        ("matches", "match_id", dump_rows(matches, **MATCH_ROWS)),
+        ("match_participants", "match_id,puuid", dump_rows(participants, **PART_ROWS)),
+        (
+            "match_bans",
+            "match_id,team_id,pick_turn",
+            [[b.model_dump() for b in bans or []]],
+        ),
+    ]
 
     # 書き込んだ行は使わないため、レスポンスには含めない（returning=minimal）
     def _query() -> None:
-        supabase.table("matches").upsert(
-            match_rows, on_conflict="match_id", returning=ReturnMethod.minimal
-        ).execute()
-        if participant_rows:
-            supabase.table("match_participants").upsert(
-                participant_rows,
-                on_conflict="match_id,puuid",
-                returning=ReturnMethod.minimal,
-            ).execute()
+        for table, conflict, groups in batches:
+            for rows in filter(None, groups):
+                supabase.table(table).upsert(
+                    rows, on_conflict=conflict, returning=ReturnMethod.minimal
+                ).execute()
 
     await asyncio.to_thread(_query)
 

@@ -17,7 +17,7 @@ export function ShardsSection({
   const slotLabels = ['攻撃', 'フレックス', '防御'];
   return (
     <div>
-      <h4 className="text-sm font-semibold text-gray-700 mb-3">Shards</h4>
+      <h4 className="text-sm font-semibold text-fg-muted mb-3">Shards</h4>
       <div className="space-y-2">
         {[0, 1, 2].map((slot) => (
           <div key={slot} className="flex gap-2">

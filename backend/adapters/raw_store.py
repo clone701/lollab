@@ -1,0 +1,66 @@
+"""試合の生データ（Riot API のレスポンス）の保管。
+
+Supabase Storage の非公開バケット riot-raw に gzip 圧縮して保存する。
+AWS 移行時は S3 に差し替える。同期 API のため asyncio.to_thread で呼び出す。
+"""
+
+import asyncio
+import gzip
+import json
+import logging
+from typing import Any
+
+logger = logging.getLogger(__name__)
+
+BUCKET_NAME = "riot-raw"
+
+
+def detail_path(match_id: str) -> str:
+    return f"matches/{match_id}/detail.json.gz"
+
+
+def timeline_path(match_id: str) -> str:
+    return f"matches/{match_id}/timeline.json.gz"
+
+
+def _bucket() -> Any:
+    # Supabase クライアントは import 時に作られる。環境変数なしのテストで
+    # このモジュールを読み込めるよう、使う時点で import する
+    from adapters.supabase import supabase
+
+    return supabase.storage.from_(BUCKET_NAME)
+
+
+def _upload(path: str, payload: dict[str, Any]) -> None:
+    data = gzip.compress(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
+    _bucket().upload(path, data, {"content-type": "application/gzip", "upsert": "true"})
+
+
+def _download(path: str) -> dict[str, Any] | None:
+    try:
+        data = _bucket().download(path)
+        return json.loads(gzip.decompress(data))  # type: ignore[no-any-return]
+    except Exception:
+        # 未保存（ファイルなし）を含め、読み出せない場合は None にする
+        logger.info("生データを読み出せませんでした: %s", path)
+        return None
+
+
+async def save_detail(match_id: str, payload: dict[str, Any]) -> None:
+    """試合詳細を保存する（同じパスは上書き）。失敗時は例外を送出する。"""
+    await asyncio.to_thread(_upload, detail_path(match_id), payload)
+
+
+async def save_timeline(match_id: str, payload: dict[str, Any]) -> None:
+    """タイムラインを保存する（同じパスは上書き）。失敗時は例外を送出する。"""
+    await asyncio.to_thread(_upload, timeline_path(match_id), payload)
+
+
+async def load_detail(match_id: str) -> dict[str, Any] | None:
+    """保存済みの試合詳細を返す。未保存・読み出し失敗は None。"""
+    return await asyncio.to_thread(_download, detail_path(match_id))
+
+
+async def load_timeline(match_id: str) -> dict[str, Any] | None:
+    """保存済みのタイムラインを返す。未保存・読み出し失敗は None。"""
+    return await asyncio.to_thread(_download, timeline_path(match_id))

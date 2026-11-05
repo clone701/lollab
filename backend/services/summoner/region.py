@@ -21,6 +21,18 @@ REGIONAL_MAP: dict[str, str] = {
 }
 
 
+def region_of_match_id(match_id: str) -> str | None:
+    """試合ID（例: "JP1_123456"）のプレフィックスからリージョン文字列を求める。
+
+    未知のプレフィックスなら None。
+    """
+    prefix = match_id.split("_", 1)[0].lower()
+    for region, platform in PLATFORM_MAP.items():
+        if platform == prefix:
+            return region
+    return None
+
+
 def get_platform(region: str) -> str:
     """リージョン文字列をPlatformホスト識別子に変換する。
 

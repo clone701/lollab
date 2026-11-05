@@ -13,7 +13,7 @@ export default function ChampionStatRow({ champion }: ChampionStatRowProps) {
   return (
     <li className="flex items-center gap-3 py-2">
       {/* チャンピオンアイコン */}
-      <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+      <div className="w-10 h-10 rounded-full bg-surface-2 overflow-hidden flex-shrink-0">
         <Image
           src={`/images/champion/${championName}.png`}
           alt={championName}
@@ -25,17 +25,15 @@ export default function ChampionStatRow({ champion }: ChampionStatRowProps) {
 
       {/* 名前・CS・KDA */}
       <div className="flex-1 min-w-0 space-y-0.5">
-        <p className="text-sm font-medium text-gray-800 truncate">
-          {championName}
-        </p>
-        <p className="text-xs text-gray-500">
+        <p className="text-sm font-medium text-fg truncate">{championName}</p>
+        <p className="text-xs text-fg-muted">
           CS {cs} · {kda.toFixed(1)} KDA
         </p>
         {/* プログレスバー */}
-        <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+        <div className="w-full h-1.5 bg-surface-2 rounded-full overflow-hidden">
           <div
             data-testid="win-rate-bar"
-            className="h-full bg-green-500 rounded-full"
+            className="h-full bg-win rounded-full"
             style={{ width: `${winRatePct}%` }}
           />
         </div>
@@ -43,10 +41,10 @@ export default function ChampionStatRow({ champion }: ChampionStatRowProps) {
 
       {/* 勝敗・勝率 */}
       <div className="text-right flex-shrink-0 space-y-0.5">
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-fg-muted">
           {wins}勝 {losses}敗
         </p>
-        <p className="text-xs font-semibold text-green-600">{winRatePct}%</p>
+        <p className="text-xs font-semibold text-win">{winRatePct}%</p>
       </div>
     </li>
   );

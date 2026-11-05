@@ -3,7 +3,7 @@
 from pydantic import BaseModel
 
 from schemas.summoner import RankData
-from schemas.summoner_store import MatchRecord, ParticipantRecord
+from schemas.summoner_store import BanRecord, MatchRecord, ParticipantRecord
 
 
 class AccountInfo(BaseModel):
@@ -24,6 +24,10 @@ class LeagueInfo(BaseModel):
     solo_summoner_id: str = ""
     flex_wins: int = 0
     flex_losses: int = 0
+    # フレックスのエントリがなければ UNRANKED（ランクの記録に使う）
+    flex_tier: str = "UNRANKED"
+    flex_rank: str = ""
+    flex_lp: int = 0
 
     @property
     def total_games(self) -> int:
@@ -47,11 +51,28 @@ class ProfileInfo(BaseModel):
     rank_top_percent: float | None = None
 
 
+class ParticipantTimeline(BaseModel):
+    """タイムラインから求めた、参加者1人分のスキル習得順とアイテム購入"""
+
+    puuid: str
+    skill_order: list[int]
+    starting_items: list[int]
+    completed_items: list[int]
+
+
 class FetchedMatch(BaseModel):
-    """試合詳細1件分（matches 1行 + match_participants 10行）"""
+    """試合1件分（matches 1行 + match_participants 10行 + match_bans）
+
+    タイムラインを取り込めた場合は、match.timeline_fetched_at と
+    participants のタイムライン由来の列が入っている。取り込めなかった場合は
+    それらが None で、タイムライン取得が（429 以外で）失敗したときだけ
+    timeline_error に短いエラー内容が入る。
+    """
 
     match: MatchRecord
     participants: list[ParticipantRecord]
+    bans: list[BanRecord] = []
+    timeline_error: str | None = None
 
 
 class FailedFetch(BaseModel):

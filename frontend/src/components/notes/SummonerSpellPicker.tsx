@@ -32,12 +32,12 @@ function SummonerSpellPicker({
           type="button"
           onClick={() => handleSpellClick(spell.id)}
           disabled={disabled}
-          className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+          className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
             value.includes(spell.id)
-              ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50'
+              ? 'ring-2 ring-accent bg-accent/15'
               : disabled
-                ? 'opacity-50 cursor-not-allowed bg-white'
-                : 'hover:ring-2 hover:ring-gray-300 bg-white'
+                ? 'opacity-50 cursor-not-allowed bg-surface-2'
+                : 'hover:ring-2 hover:ring-accent/60 bg-surface-2'
           }`}
           aria-label={`サモナースペル: ${spell.name}`}
           aria-pressed={value.includes(spell.id)}
@@ -51,7 +51,7 @@ function SummonerSpellPicker({
             height={48}
             loading="lazy"
           />
-          <span className="text-xs text-gray-600 mt-1">{spell.name}</span>
+          <span className="text-xs text-fg-muted mt-1">{spell.name}</span>
         </button>
       ))}
     </div>

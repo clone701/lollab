@@ -106,3 +106,36 @@
   - [x] 14.2 `adapters/riot_api.py`: `interactive` で 429 を受け、`Retry-After` が2秒以内なら待って1回だけ再送する（再送もレート制限のカウント対象）
     - _要件: 9.3_
   - [x] 14.3 テスト: Retry-After 1 で再送して成功 / Retry-After なし・3秒・backfill では再送しない / 再送後も429なら例外
+
+## 追加タスク: ビルド・試合詳細用データの取り込み
+
+前提: database Spec のタスク7のマイグレーションが本番に適用済みであること
+
+- [x] 15. 外部データの adapters
+  - [x] 15.1 `adapters/raw_store.py`: 試合詳細・タイムラインを gzip で `riot-raw` バケットに保存・読み出し（上書き可）
+  - [x] 15.2 `adapters/ddragon.py`: `versions.json` と `item.json` の取得
+  - [x] 15.3 `services/summoner/item_catalog.py`: パッチから Data Dragon の版を選び、完成アイテムを判定（パッチ単位でメモリキャッシュ）
+  - [x] 15.4 テスト: 完成アイテム判定（完成品・2段階目の靴・消耗品・トリンケット・素材）、版の選択、raw_store の gzip 往復
+    - _要件: 4.6, 4.8, 12.4_
+
+- [x] 16. 試合詳細の取り込み項目の追加
+  - [x] 16.1 `match_convert.py`: `patch`、`is_remake`、`detail_version = 2`、ルーン全構成・シャード、BAN を変換
+  - [x] 16.2 `schemas/summoner_store.py`・`summoner_store.save_matches` を新しい列と `match_bans` に対応させる
+  - [x] 16.3 テスト: 変換結果（ルーン順序・シャード・BAN・リメイク判定・patch）
+    - _要件: 4.5_
+
+- [x] 17. タイムラインの取り込み
+  - [x] 17.1 `riot_fetch.py` にタイムライン取得を追加し、試合1件の取得を「詳細 + タイムライン」にする。タイムライン失敗時は詳細だけ保存
+  - [x] 17.2 `services/summoner/timeline_convert.py`: participantId → puuid の対応、スキル順、開始アイテム（60秒以内・取り消し反映）、完成アイテム（購入順・取り消し反映）
+  - [x] 17.3 取得したレスポンスを raw_store に保存（失敗はログのみ）
+  - [x] 17.4 テスト: timeline_convert の各計算、タイムライン失敗時の詳細保存
+    - _要件: 4.6, 4.8_
+
+- [x] 18. 既存試合の補完とランクの記録
+  - [x] 18.1 `services/summoner/enrich.py`: Backfill のフェーズ2の後に、`detail_version < 2` と `timeline_fetched_at IS NULL` の試合を古い順に補完。Backfill の予約枠に達したら終了
+  - [x] 18.2 更新時の Backfill 開始条件に「補完対象の試合が残っている」を追加
+  - [x] 18.3 初回登録・更新で `summoner_rank_snapshots` に記録（直前と同じなら記録しない）
+  - [x] 18.4 テスト: 補完の対象抽出と順序、レート制限での終了、ランク記録の重複防止
+    - _要件: 4.7, 4.9_
+
+- [x] 19. チェックポイント: バックエンドの全テスト・lint を通し、ローカルで1サモナーを更新して DB・ストレージに新しい項目が入ることを確認する

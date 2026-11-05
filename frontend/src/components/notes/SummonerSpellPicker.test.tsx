@@ -77,7 +77,7 @@ describe('SummonerSpellPicker', () => {
       />
     );
 
-    const selectedSpells = container.querySelectorAll('.ring-blue-500');
+    const selectedSpells = container.querySelectorAll('.ring-accent');
     expect(selectedSpells.length).toBeGreaterThan(0);
   });
 });

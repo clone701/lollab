@@ -22,16 +22,16 @@ export function GeneralNoteCard({
       onClick={() => onClick(note.id)}
       className={`w-full text-left p-3 rounded-lg border transition-colors duration-150 ${
         isSelected
-          ? 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20 bg-blue-50 border-blue-200'
-          : 'hover:ring-2 hover:ring-blue-400 bg-white border-gray-200'
+          ? 'ring-2 ring-accent bg-accent/15 border-accent/30'
+          : 'hover:ring-2 hover:ring-accent/60 bg-surface border-line'
       }`}
     >
-      <h3 className="font-semibold text-gray-800 text-sm mb-1 truncate">
+      <h3 className="font-semibold text-fg text-sm mb-1 truncate">
         {note.title}
       </h3>
 
       {bodyPreview && (
-        <p className="text-xs text-gray-500 mb-2 line-clamp-2">{bodyPreview}</p>
+        <p className="text-xs text-fg-muted mb-2 line-clamp-2">{bodyPreview}</p>
       )}
 
       {note.tags.length > 0 && (
@@ -39,7 +39,7 @@ export function GeneralNoteCard({
           {note.tags.map((tag) => (
             <span
               key={tag}
-              className="px-1.5 py-0.5 bg-white text-gray-600 text-xs rounded border border-gray-300"
+              className="px-1.5 py-0.5 bg-surface-2 text-fg-muted text-xs rounded border border-line-strong"
             >
               {tag}
             </span>
@@ -47,7 +47,7 @@ export function GeneralNoteCard({
         </div>
       )}
 
-      <div className="text-xs text-gray-400 space-y-0.5">
+      <div className="text-xs text-fg-subtle space-y-0.5">
         <p>作成: {formatDate(note.created_at)}</p>
         <p>更新: {formatDate(note.updated_at)}</p>
       </div>

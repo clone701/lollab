@@ -32,20 +32,20 @@ export default function MatchCard({ match }: MatchCardProps) {
   return (
     <article
       className={`flex items-center gap-3 p-3 rounded-lg border ${
-        isWin ? 'border-blue-200 bg-blue-50' : 'border-red-200 bg-red-50'
+        isWin ? 'border-win/40 bg-win/15' : 'border-loss/40 bg-loss/15'
       }`}
     >
       {/* 勝敗ラベル */}
       <div
         className={`w-10 text-center text-xs font-bold rounded py-1 ${
-          isWin ? 'bg-blue-500 text-white' : 'bg-red-500 text-white'
+          isWin ? 'bg-win text-canvas' : 'bg-loss text-canvas'
         }`}
       >
         {isWin ? '勝利' : '敗北'}
       </div>
 
       {/* チャンピオンアイコン */}
-      <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+      <div className="w-10 h-10 rounded-full bg-surface-2 overflow-hidden flex-shrink-0">
         <Image
           src={`/images/champion/${championName}.png`}
           alt={championName}
@@ -58,11 +58,11 @@ export default function MatchCard({ match }: MatchCardProps) {
 
       {/* 中央情報 */}
       <div className="flex-1 min-w-0 space-y-0.5">
-        <p className="text-xs text-gray-500">{gameMode}</p>
-        <p className="text-xs font-medium text-gray-800">
+        <p className="text-xs text-fg-muted">{gameMode}</p>
+        <p className="text-xs font-medium text-fg">
           {kills}/{deaths}/{assists} — {kda}
         </p>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-fg-muted">
           CS {cs} ({(cs / (gameDurationSeconds / 60)).toFixed(1)}) ·{' '}
           {formatDuration(gameDurationSeconds)}
         </p>
@@ -87,11 +87,13 @@ export default function MatchCard({ match }: MatchCardProps) {
 
       {/* 右側 */}
       <div className="flex flex-col items-end gap-1 flex-shrink-0">
-        <p className="text-xs text-gray-400">{formatTimeAgo(timeAgoSeconds)}</p>
+        <p className="text-xs text-fg-subtle">
+          {formatTimeAgo(timeAgoSeconds)}
+        </p>
         <button
           type="button"
           aria-label="詳細を展開"
-          className="text-gray-400 hover:text-gray-600 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="text-fg-subtle hover:text-fg-muted text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           ▼
         </button>

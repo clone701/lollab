@@ -996,6 +996,18 @@ export const champions: Champion[] = [
     reading: 'ゆーみ',
   },
   {
+    id: 'Yunara',
+    name: 'ユナラ',
+    imagePath: '/images/champion/Yunara.png',
+    reading: 'ゆなら',
+  },
+  {
+    id: 'Zaahen',
+    name: 'ザーヘン',
+    imagePath: '/images/champion/Zaahen.png',
+    reading: 'ざーへん',
+  },
+  {
     id: 'Zac',
     name: 'ザック',
     imagePath: '/images/champion/Zac.png',

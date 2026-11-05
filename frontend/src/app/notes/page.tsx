@@ -13,10 +13,10 @@ export default function NotesPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          <h2 className="text-2xl font-bold text-fg mb-4">
             ログインが必要です
           </h2>
-          <p className="text-gray-600">
+          <p className="text-fg-muted">
             ノート機能を利用するには、ログインしてください。
           </p>
         </div>

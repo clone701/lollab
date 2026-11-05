@@ -32,14 +32,14 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
   }, [onClose]);
 
   const bgColor = {
-    success: 'bg-green-700',
-    error: 'bg-red-500',
-    info: 'bg-blue-500',
+    success: 'bg-surface-2 ring-2 ring-win',
+    error: 'bg-surface-2 ring-2 ring-danger',
+    info: 'bg-surface-2 ring-2 ring-accent',
   }[type];
 
   return (
     <div
-      className={`fixed bottom-4 right-4 ${bgColor} text-white px-8 py-4 rounded-lg shadow-lg transition-all duration-300 min-w-[300px] ${
+      className={`fixed bottom-4 right-4 ${bgColor} text-fg px-8 py-4 rounded-lg shadow-lg transition-all duration-300 min-w-[300px] ${
         isExiting
           ? 'translate-y-20 opacity-0'
           : isEntering

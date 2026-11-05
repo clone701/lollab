@@ -24,8 +24,13 @@ def parse_league(entries: list[dict[str, Any]]) -> LeagueInfo:
         losses=0,
     )
     solo_summoner_id = ""
-    flex_wins = 0
-    flex_losses = 0
+    flex: dict[str, Any] = {
+        "tier": "UNRANKED",
+        "rank": "",
+        "leaguePoints": 0,
+        "wins": 0,
+        "losses": 0,
+    }
     for entry in entries:
         queue = entry.get("queueType")
         if queue == SOLO_QUEUE:
@@ -39,11 +44,13 @@ def parse_league(entries: list[dict[str, Any]]) -> LeagueInfo:
             )
             solo_summoner_id = entry.get("summonerId", "")
         elif queue == FLEX_QUEUE:
-            flex_wins = entry.get("wins", 0)
-            flex_losses = entry.get("losses", 0)
+            flex = {key: entry.get(key, value) for key, value in flex.items()}
     return LeagueInfo(
         solo=solo,
         solo_summoner_id=solo_summoner_id,
-        flex_wins=flex_wins,
-        flex_losses=flex_losses,
+        flex_wins=flex["wins"],
+        flex_losses=flex["losses"],
+        flex_tier=flex["tier"],
+        flex_rank=flex["rank"],
+        flex_lp=flex["leaguePoints"],
     )

@@ -18,7 +18,7 @@ export function NoteFormMemoField({
     <div className="mb-6">
       <label
         htmlFor="memo"
-        className="block text-sm font-medium text-gray-700 mb-2"
+        className="block text-sm font-medium text-fg-muted mb-2"
       >
         対策メモ
       </label>
@@ -28,13 +28,13 @@ export function NoteFormMemoField({
         onChange={(e) => setMemo(e.target.value)}
         disabled={isView}
         rows={6}
-        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800 ${errors.memo ? 'border-red-500' : 'border-gray-300'} ${isView ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent ${errors.memo ? 'border-danger' : 'border-line-strong'} ${isView ? 'bg-surface-2 cursor-not-allowed' : ''}`}
         placeholder="対策のポイントやコツを記入してください"
         aria-invalid={!!errors.memo}
         aria-describedby={errors.memo ? 'memo-error' : undefined}
       />
       {errors.memo && (
-        <p id="memo-error" className="text-sm text-red-600 mt-1" role="alert">
+        <p id="memo-error" className="text-sm text-danger-fg mt-1" role="alert">
           {errors.memo}
         </p>
       )}

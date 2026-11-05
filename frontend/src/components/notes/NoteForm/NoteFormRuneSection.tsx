@@ -23,11 +23,11 @@ export function NoteFormRuneSection({
   return (
     <div className="mb-6" id="section-runes">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-gray-900">ルーン</h3>
+        <h3 className="text-lg font-semibold text-fg">ルーン</h3>
         {mode !== 'view' && (
           <button
             onClick={handleRuneReset}
-            className="px-2 py-1 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-100 transition-colors duration-150"
+            className="px-2 py-1 text-xs text-fg-muted border border-line-strong rounded hover:bg-surface-2 transition-colors duration-150"
           >
             リセット
           </button>
@@ -40,7 +40,7 @@ export function NoteFormRuneSection({
         disabled={mode === 'view'}
       />
       {errors.runes && (
-        <p className="text-sm text-red-600 mt-1" role="alert">
+        <p className="text-sm text-danger-fg mt-1" role="alert">
           {errors.runes}
         </p>
       )}
