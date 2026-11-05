@@ -39,22 +39,33 @@ async def process_page(region: str, match_ids: list[str]) -> list[str]:
             region, to_fetch, priority="backfill"
         )
     except riot_fetch.RiotRateLimitError as e:
-        await _store_result(e.fetched, e.failures)
+        await store_result(e.fetched, e.failures)
         raise
-    newly_gave_up = await _store_result(result.fetched, result.failures)
+    newly_gave_up = await store_result(result.fetched, result.failures)
 
     fetched_ids = {f.match.match_id for f in result.fetched}
     return [m for m in to_fetch if m not in fetched_ids and m not in newly_gave_up]
 
 
-async def _store_result(
+async def store_result(
     fetched: list[FetchedMatch], failures: list[FailedFetch]
 ) -> set[str]:
     """取得できた試合を保存して失敗記録を消し、失敗を記録する。
+
+    タイムラインだけ失敗した試合（保存はされる）は、失敗記録を消さずに回数を数える。
+    補完フェーズが再取得し、3回失敗すると補完の対象から外れる。
 
     Returns:
         今回の記録で取得不能（gave_up）になっている試合ID
     """
     await save_fetched(fetched)
-    await failed_match_store.delete_failed_matches([f.match.match_id for f in fetched])
-    return await failed_match_store.record_failed_matches(failures, MAX_ATTEMPTS)
+    succeeded = [f.match.match_id for f in fetched if f.timeline_error is None]
+    await failed_match_store.delete_failed_matches(succeeded)
+    timeline_failures = [
+        FailedFetch(match_id=f.match.match_id, error=f.timeline_error)
+        for f in fetched
+        if f.timeline_error is not None
+    ]
+    return await failed_match_store.record_failed_matches(
+        [*failures, *timeline_failures], MAX_ATTEMPTS
+    )

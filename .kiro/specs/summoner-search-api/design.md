@@ -70,7 +70,7 @@ stateDiagram-v2
 | league entries by-puuid | 1 |
 | ランク順位（同ティアのリーグ一覧） | 0〜1（UNRANKED は 0） |
 | match ids（`type=ranked&count=20`） | 1 |
-| match 詳細 | DB に未保存の件数（最大20） |
+| match 詳細 + タイムライン | DB に未保存の件数 × 2（最大40） |
 
 取得した PUUID が別の RiotId で登録済みなら、既存レコードの RiotId を更新する。初回登録の応答後は、手動更新と同じく BackgroundTasks で Backfill を開始する。
 
@@ -82,9 +82,9 @@ stateDiagram-v2
    - **同じ**: 新しいランク戦はない。`last_updated_at` だけ更新して応答する（合計1回）
    - **異なる**: 4 に進む
 4. account by-puuid（RiotId 変更の反映）、summoner by-puuid、ランク順位を取得する（2〜3回）。league entries は 2 の結果を使う
-5. match ids（`type=ranked&count=20`）を取得し、DB に未保存の試合詳細だけを取得する（1回 + 最大20回）
+5. match ids（`type=ranked&count=20`）を取得し、DB に未保存の試合だけ詳細とタイムラインを取得する（1回 + 最大40回）
 6. サモナー情報・試合を保存し、`last_updated_at` を記録する
-7. 応答を返した後、BackgroundTasks で Backfill を開始する（3 で「同じ」の場合も、Backfill が未完了なら開始する）
+7. 応答を返した後、BackgroundTasks で Backfill を開始する（3 で「同じ」の場合も、Backfill が未完了か、補完対象の試合が残っていれば開始する）
 
 同期部分でエラーが起きた場合は、保存できた試合を残し、`last_updated_at` を変えずにエラーを返す。
 
@@ -123,6 +123,44 @@ stateDiagram-v2
 - 初回登録時は `synced_until` を取得した最新試合、`backfill_cursor` を最古試合の時刻にする。20件未満なら `backfill_completed = true`。試合が0件なら `synced_until` を登録時刻にする（登録後の試合をフェーズ1で取得するため）
 - 試合の終了日時は `matches` から引く（`match_participants` は他のサモナーの試合も含むため使わない）
 - 取得不能（3回失敗）の試合は `failed_matches` に `gave_up = true` で残り、欠けている試合を後から確認できる
+
+### 試合データの取り込み（ビルド・試合詳細用）
+
+試合1件の取り込みは「試合詳細 + タイムライン」の2リクエストで行う。
+
+1. 試合詳細を取得し、`matches`（`patch`・`is_remake`・`detail_version = 2`）、`match_participants`（ルーン全構成・シャード含む）、`match_bans` を保存する
+2. タイムラインを取得し、参加者ごとに次を計算して `match_participants` を更新し、`matches.timeline_fetched_at` を記録する
+   - `skill_order`: `SKILL_LEVEL_UP`（`levelUpType = NORMAL`）の `skillSlot` を時刻順に並べる
+   - `starting_items`: 60秒以内の `ITEM_PURCHASED` から `ITEM_UNDO` で取り消されたものを除く（トリンケットは含める。サポートが開始時に赤トリンケットを選ぶ場合があるため）
+   - `completed_items`: `ITEM_PURCHASED`（`ITEM_UNDO` を反映）のうち完成アイテムを購入順に並べる
+3. 2つのレスポンスをそのまま gzip 圧縮してファイルストレージに保存する（`adapters/raw_store.py`）
+
+- タイムラインの参加者は `participantId`（1〜10）で、試合詳細の `info.participants[].participantId` と突き合わせて puuid に変換する
+- `is_remake` は試合詳細の `gameEndedInEarlySurrender` が true の参加者がいる試合
+- 完成アイテムの判定は Data Dragon の `item.json`（その試合のパッチに対応する版）で行う（`services/summoner/item_catalog.py`）
+  - 完成アイテム: `into` が空、`from` が空でない、`Consumable`・`Trinket` タグなし、`inStore` が false でない。加えて `Boots` タグかつ `depth = 2` の靴
+  - Data Dragon の版は `versions.json` から、パッチ（`16.22`）が一致する最新版を選ぶ。取得結果はパッチ単位でメモリにキャッシュする
+- タイムラインの取得に失敗した場合は、試合詳細の保存は残し、`timeline_fetched_at = NULL` のままにする（補完で再取得）
+- ファイルストレージへの保存に失敗した場合はログに記録し、DB への保存は続ける（生データは補完の対象にしない）
+
+- 詳細を取り直すとき、タイムライン由来の列（`skill_order`・`starting_items`・`completed_items`）は、タイムラインを取得した行だけ書き込む（NULL で上書きしない）。そのため1回の保存は最大5リクエスト（matches・participants をそれぞれ2グループ + bans）になる（`adapters/upsert_rows.py`）
+- タイムラインだけ失敗した試合は Backfill の「通過済み」として扱いカーソルを進める。Backfill・補完では失敗回数を数え、詳細の失敗と合わせて3回で `gave_up` になり補完対象から外す。同期部分では数えない
+
+**既存試合の補完**
+
+Backfill のフェーズ2の後に「補完フェーズ」を追加する。対象は全サモナー共通の試合で、サモナー単位ではない。
+
+- `detail_version < 2` の試合: 試合詳細を取り直し、ルーン・シャード・BAN・生データを保存する
+- `timeline_fetched_at IS NULL` の試合: タイムラインを取得して保存する
+- 1回の Backfill で処理する件数に上限を設けず、レート制限（Backfill の予約枠）に達したら終了する。古い試合から順に処理する
+- フェーズ1・2が取得失敗で途中終了した場合は補完を行わない（レート制限での終了は正常終了として補完に進む）
+- タイムラインだけ欠けた試合は、participantId と puuid の対応を得るため、保存済みの生データ（なければ Riot API）から詳細を読む
+- 補完対象の試合のリージョンは match ID の接頭辞（`JP1_` など）から求める
+- 「補完対象あり」の判定（更新時の Backfill 開始条件）は `gave_up` の試合を除く
+
+**ランクの記録**
+
+初回登録・更新で league entries を取得したとき、ソロ・フレックスそれぞれを `summoner_rank_snapshots` に記録する（直前と同じなら記録しない）。変更検知で「新しい試合なし」と判定した場合も、取得した league entries で記録する。
 
 ### 試合詳細の取得
 
@@ -231,7 +269,12 @@ backend/
 │   ├── riot_rate_limiter.py  # 新規: Riot API のレート制限
 │   ├── query_runner.py     # 新規: Supabase クエリ実行の共通処理
 │   ├── summoner_store.py   # 新規: DB アクセス（summoners / matches / match_participants / seasons）
-│   └── failed_match_store.py  # 新規: DB アクセス（failed_matches）
+│   ├── failed_match_store.py  # 新規: DB アクセス（failed_matches）
+│   ├── raw_store.py        # 新規: 試合の生データの保存・読み出し（Supabase Storage。AWS 移行時は S3 に差し替え）
+│   ├── enrich_store.py     # 新規: 補完対象の試合の抽出
+│   ├── rank_snapshot_store.py  # 新規: summoner_rank_snapshots
+│   ├── upsert_rows.py      # 新規: upsert 用の行のグループ分け
+│   └── ddragon.py          # 新規: Data Dragon の取得（Riot API のレート制限の対象外）
 ├── api/summoner/router.py  # GET 検索・POST 更新の2エンドポイントに変更
 ├── services/summoner/
 │   ├── search.py           # 新規: 検索・初回登録
@@ -240,6 +283,12 @@ backend/
 │   ├── sync.py             # 新規: search / update / backfill 共通の試合取得・保存
 │   ├── backfill_page.py    # 新規: Backfill の1ページ分の取得・保存・失敗記録
 │   ├── league.py           # 新規: league entries の解析（ソロ・フレックス）
+│   ├── timeline_convert.py # 新規: タイムラインからスキル順・開始アイテム・完成アイテムを計算
+│   ├── item_catalog.py     # 新規: Data Dragon のアイテム情報（完成アイテム判定）
+│   ├── enrich.py           # 新規: 既存試合の補完フェーズ
+│   ├── match_bundle.py     # 新規: 試合1件の「詳細 + タイムライン」取得と生データ保存
+│   ├── riot_request.py     # 新規: Riot API 呼び出しと 429 変換の共通処理
+│   ├── rank_record.py      # 新規: ランクの記録
 │   ├── riot_errors.py      # 新規: RiotRateLimitError
 │   ├── match_convert.py    # 新規: 試合詳細を保存用レコードに変換
 │   ├── riot_fetch.py       # 新規: Riot API 取得と保存用データへの変換

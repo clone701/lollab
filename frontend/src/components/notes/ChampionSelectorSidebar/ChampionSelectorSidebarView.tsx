@@ -30,7 +30,7 @@ export function ChampionSelectorSidebarView({
 }: SidebarViewProps) {
   const bothSelected = !!(myChampionId && enemyChampionId);
   return (
-    <aside className="w-80 h-screen overflow-y-auto bg-white border-r border-gray-200">
+    <aside className="w-80 h-screen overflow-y-auto bg-surface border-r border-line">
       <div className="p-4">
         <section className="mb-4">
           <ChampionPickButton
@@ -64,7 +64,7 @@ export function ChampionSelectorSidebarView({
           <section className="mb-4">
             <button
               onClick={handleReset}
-              className="w-full py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="w-full py-3 bg-surface border-2 border-line-strong text-fg-muted rounded-lg hover:bg-surface-2 transition-colors"
             >
               リセット
             </button>
@@ -77,13 +77,13 @@ export function ChampionSelectorSidebarView({
               placeholder="チャンピオン名で検索..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              className="w-full px-2 py-1.5 text-sm border border-line-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             />
           </section>
         )}
         {!bothSelected && recentChampions.length > 0 && (
           <section className="mb-4">
-            <h2 className="text-sm font-semibold text-gray-800 mb-2">
+            <h2 className="text-sm font-semibold text-fg mb-2">
               よく使うチャンピオン
             </h2>
             <FavoriteChampions
@@ -97,7 +97,7 @@ export function ChampionSelectorSidebarView({
         )}
         {!bothSelected && (
           <section className="mb-4">
-            <h2 className="text-sm font-semibold text-gray-800 mb-2">
+            <h2 className="text-sm font-semibold text-fg mb-2">
               チャンピオン一覧
             </h2>
             <div className="space-y-1 max-h-96 overflow-y-auto">

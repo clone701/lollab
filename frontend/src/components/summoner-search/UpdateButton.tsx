@@ -18,11 +18,11 @@ export default function UpdateButton({
         type="button"
         onClick={onUpdate}
         disabled={isUpdating}
-        className="rounded bg-gray-800 px-4 py-2 text-sm font-medium text-white transition-colors duration-150 enabled:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded bg-action px-4 py-2 text-sm font-medium text-white transition-colors duration-150 enabled:hover:bg-action-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isUpdating ? '更新中...' : '更新'}
       </button>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-fg-muted">
         最終更新: {formatTimeAgo(secondsSince(lastUpdatedAt))}
       </p>
     </div>

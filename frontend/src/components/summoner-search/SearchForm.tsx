@@ -113,13 +113,13 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
 
   return (
     <div className="w-full space-y-2">
-      <div className="relative flex items-center bg-white border border-gray-300 rounded-full shadow-sm focus-within:ring-2 focus-within:ring-blue-400 overflow-visible">
+      <div className="relative flex items-center bg-surface border border-line-strong rounded-full shadow-sm focus-within:ring-2 focus-within:ring-accent overflow-visible">
         {/* 地域セレクター */}
         <RegionSelector value={region} onChange={setRegion} />
 
         {/* 区切り線 */}
         <div
-          className="w-px h-5 bg-gray-300 mx-1 flex-shrink-0"
+          className="w-px h-5 bg-line-strong mx-1 flex-shrink-0"
           aria-hidden="true"
         />
 
@@ -145,7 +145,7 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
           type="button"
           onClick={() => handleSubmit()}
           aria-label="検索"
-          className="flex-shrink-0 mr-2 p-2 text-gray-400 hover:text-gray-600 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-full"
+          className="flex-shrink-0 mr-2 p-2 text-fg-subtle hover:text-fg-muted transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-full"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -199,7 +199,7 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
       </div>
 
       {error && (
-        <p className="text-red-500 text-sm px-2" role="alert">
+        <p className="text-danger-fg text-sm px-2" role="alert">
           {error}
         </p>
       )}

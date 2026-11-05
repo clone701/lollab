@@ -24,7 +24,7 @@ function NoteCard({ note, onClick }: NoteCardProps) {
 
   return (
     <div
-      className="bg-white rounded-lg border border-gray-200 p-3 transition-all duration-150 cursor-pointer hover:ring-2 hover:ring-blue-400 flex items-center gap-3"
+      className="bg-surface rounded-lg border border-line p-3 transition-all duration-150 cursor-pointer hover:ring-2 hover:ring-accent/60 flex items-center gap-3"
       onClick={() => onClick?.(note.id)}
     >
       {/* チャンピオンアイコン */}
@@ -40,7 +40,7 @@ function NoteCard({ note, onClick }: NoteCardProps) {
             loading="lazy"
           />
         )}
-        <span className="text-gray-400 text-xs">vs</span>
+        <span className="text-fg-subtle text-xs">vs</span>
         {enemyChampion && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -55,12 +55,12 @@ function NoteCard({ note, onClick }: NoteCardProps) {
       </div>
 
       {/* プリセット名 */}
-      <p className="flex-1 text-sm font-semibold text-gray-900 truncate">
+      <p className="flex-1 text-sm font-semibold text-fg truncate">
         {note.preset_name}
       </p>
 
       {/* 更新日時 */}
-      <span className="text-xs text-gray-400 shrink-0">
+      <span className="text-xs text-fg-subtle shrink-0">
         {formatDate(note.updated_at)}
       </span>
     </div>

@@ -51,6 +51,18 @@
 
 - [x] 6. チェックポイント: ユーザーが SQL Editor でタスク5のファイルを実行する
 
+- [x] 7. ビルド集計・試合詳細用のデータの DDL を作成する（champion-stats で使用）
+  - ファイル: `supabase/migrations/<作成時のUTC>_add_match_build_data.sql`（design.md のファイル一覧の予定名を実ファイル名に更新する）
+  - `matches` に `patch`、`is_remake`、`detail_version`、`timeline_fetched_at` を追加
+  - `match_participants` に `primary_perk_ids`、`sub_perk_ids`、`stat_perk_ids`、`skill_order`、`starting_items`、`completed_items`、`patch`、`is_remake` を追加
+  - 既存行の `patch` を `game_version` から埋める（`matches` と `match_participants` の両方。冪等な UPDATE）
+  - `match_bans`、`summoner_rank_snapshots` を作成し RLS を有効化（ポリシーなし）
+  - インデックス: `match_participants(champion_name, team_position, patch)`、`match_bans(champion_id)`、`summoner_rank_snapshots(puuid, fetched_at DESC)`、`matches` の補完対象抽出用の部分インデックス
+  - Storage の非公開バケット `riot-raw` を `storage.buckets` への冪等な INSERT で作成
+  - _要件: 3.2, 3.3, 3.4_
+
+- [x] 8. チェックポイント: ユーザーが SQL Editor でタスク7のファイルを実行する
+
 ## 注意事項
 
 - シーズン日付の出典: [BoostRoyal](https://boostroyal.com/blog/start-and-end-dates-for-all-league-of-legends-seasons)、2023・2024 のスプリット境界は Riot 公式の [パッチ13.14ノート](https://www.leagueoflegends.com/en-us/news/game-updates/patch-13-14-notes/)・[Split 2 プレビュー](https://www.leagueoflegends.com/en-us/news/dev/split-2-gameplay-preview/) と [GameLeap](https://www.gameleap.com/articles/lol-when-does-ranked-split-2-end-and-split-3-start) で確認済み

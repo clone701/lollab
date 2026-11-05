@@ -36,11 +36,11 @@ export function SidebarLayout({
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <button
-            className="absolute inset-0 bg-black/50 cursor-default"
+            className="absolute inset-0 bg-black/60 cursor-default"
             onClick={onCloseSidebar}
             aria-label="サイドバーを閉じる"
           />
-          <div className="absolute left-0 top-0 bottom-0 w-80 bg-white">
+          <div className="absolute left-0 top-0 bottom-0 w-80 bg-surface">
             <ChampionSelectorSidebar {...sidebarProps} />
           </div>
         </div>

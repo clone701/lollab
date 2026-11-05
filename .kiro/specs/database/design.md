@@ -33,6 +33,7 @@
 | `20261105105911_create_summoner_store.sql` | summoners / matches / match_participants / seasons |
 | `20261105105912_insert_seasons.sql` | seasons の初期データ |
 | `20261106000000_add_failed_matches.sql` | failed_matches の作成、summoners に flex_wins / flex_losses を追加 |
+| `20261106000100_add_match_build_data.sql` | matches・match_participants の列追加、match_bans・summoner_rank_snapshots の作成、ビルド集計用インデックス |
 
 `20240101`〜`20240104` は命名ルール制定前のファイルで、日時は実際の作成日ではない。
 
@@ -63,7 +64,7 @@ erDiagram
 | 区分 | テーブル | RLS | アクセス元 |
 |---|---|---|---|
 | ユーザーデータ | champion_notes, general_notes, favorites | 有効。`auth.uid() = user_id` の行だけ操作可 | フロントエンド（anon キー + ログイン） |
-| Riot API データ | summoners, matches, match_participants, failed_matches, seasons | 有効、ポリシーなし（anon は全拒否） | バックエンド（service キー） |
+| Riot API データ | summoners, matches, match_participants, match_bans, failed_matches, summoner_rank_snapshots, seasons | 有効、ポリシーなし（anon は全拒否） | バックエンド（service キー） |
 
 ---
 
@@ -167,7 +168,26 @@ erDiagram
 | game_version | text | NOT NULL | 例: `15.10.678.1234`。パッチ別分析用 |
 | game_duration | int | NOT NULL | 秒 |
 | game_end_at | timestamptz | NOT NULL | |
+| patch | text | | `game_version` の先頭2要素（例: `16.22`）。パッチでの絞り込み用 |
+| is_remake | boolean | NOT NULL、既定 false | リメイク（早期降伏）の試合。統計から除外する |
+| detail_version | int | NOT NULL、既定 1 | 試合詳細から取り込んだ項目の版。2 = ルーン全構成・シャード・BAN を含む |
+| timeline_fetched_at | timestamptz | | タイムライン由来の項目を取り込んだ日時。未取得は NULL |
 | created_at | timestamptz | NOT NULL、既定 now() | |
+
+- インデックス: `(detail_version)`、`(timeline_fetched_at)`（補完対象の抽出用。部分インデックスで可）
+
+### match_bans（試合の BAN）
+
+1試合につき最大10行。
+
+| カラム | 型 | 制約 | 説明 |
+|---|---|---|---|
+| match_id | text | PK、FK → matches ON DELETE CASCADE | |
+| team_id | int | PK | 100 / 200 |
+| pick_turn | int | PK | BAN の順番 |
+| champion_id | int | NOT NULL | BAN なしは -1（保存しない） |
+
+- インデックス: `(champion_id)`（BAN 率の集計用）
 
 ### match_participants（試合参加者の成績）
 
@@ -192,11 +212,20 @@ erDiagram
 | spell1_id, spell2_id | int | NOT NULL | サモナースペル |
 | keystone_id | int | NOT NULL | |
 | primary_style_id, sub_style_id | int | NOT NULL | ルーンツリー |
+| primary_perk_ids | int[] | | メインルーン4つ（キーストーン含む、スロット順）。detail_version 2 以降 |
+| sub_perk_ids | int[] | | サブルーン2つ。detail_version 2 以降 |
+| stat_perk_ids | int[] | | ステータスシャード3つ（offense, flex, defense）。detail_version 2 以降 |
+| skill_order | smallint[] | | スキル習得順（1=Q, 2=W, 3=E, 4=R）。タイムライン由来 |
+| starting_items | int[] | | 開始アイテム（試合開始60秒以内の購入。取り消しを反映。トリンケットを含む）。タイムライン由来 |
+| completed_items | int[] | | 完成アイテムを完成順に並べたもの。タイムライン由来 |
 | queue_id | int | NOT NULL | matches から非正規化 |
 | game_end_at | timestamptz | NOT NULL | matches から非正規化 |
+| patch | text | | matches から非正規化 |
+| is_remake | boolean | NOT NULL、既定 false | matches から非正規化 |
 
-- インデックス: `(puuid, game_end_at DESC)`（サモナーの試合一覧・期間集計）、`(champion_id, team_position)`（チャンピオン・ロール別の分析）
-- `queue_id` と `game_end_at` は、サモナー単位の一覧・集計を JOIN なしで行うために持つ
+- インデックス: `(puuid, game_end_at DESC)`（サモナーの試合一覧・期間集計）、`(champion_name, team_position, patch)`（チャンピオンビルドの集計）
+- `queue_id`・`game_end_at`・`patch`・`is_remake` は、集計を JOIN なしで行うために持つ
+- タイムライン由来の列は、取り込み時に Data Dragon のアイテム情報（その試合のパッチ）で計算して保存する。生のイベントは DB に保存せず、ファイルストレージの生データから読む
 - マッチアップ（同じ試合・同じ `team_position`・異なる `team_id`）は自己結合で求める
 
 ### failed_matches（取得に失敗した試合）
@@ -213,6 +242,23 @@ Backfill で試合詳細の取得に失敗した試合を記録し、再取得�
 
 - 取得に成功したら行を削除する
 
+### summoner_rank_snapshots（ランクの記録）
+
+初回登録・更新で取得したランクを記録する。将来のランク帯での絞り込みで、クローラーが集めるランクと合わせて使う。
+
+| カラム | 型 | 制約 | 説明 |
+|---|---|---|---|
+| puuid | text | PK | |
+| queue_type | text | PK | RANKED_SOLO_5x5 / RANKED_FLEX_SR |
+| fetched_at | timestamptz | PK | 取得日時 |
+| region | text | NOT NULL | |
+| tier, rank | text | NOT NULL | |
+| league_points, wins, losses | int | NOT NULL | |
+| source | text | NOT NULL | 取得元（`summoner_update`、将来 `crawler`） |
+
+- 直前の記録と tier・rank・LP・勝敗数がすべて同じなら記録しない
+- インデックス: `(puuid, fetched_at DESC)`
+
 ### seasons（シーズン定義）
 
 | カラム | 型 | 制約 | 説明 |
@@ -228,7 +274,18 @@ Backfill で試合詳細の取得に失敗した試合を記録し、再取得�
 
 ---
 
+## ファイルストレージ（試合の生データ）
+
+| 項目 | 内容 |
+|---|---|
+| 保管先 | Supabase Storage のバケット `riot-raw`（非公開。将来 AWS では S3） |
+| パス | `matches/{match_id}/detail.json.gz`、`matches/{match_id}/timeline.json.gz` |
+| 形式 | Riot API のレスポンスをそのまま gzip 圧縮 |
+| アクセス | バックエンド（service キー）のみ。バケットのポリシーは作らない |
+| 上書き | 同じパスへの再保存は上書き（再取得時） |
+
 ## 容量の目安
 
-- `match_participants` は1行あたり約300バイト（インデックス込み）。1試合で約3KB
-- Supabase 無料プラン（500MB）では約15万試合が上限の目安。超える場合は有料プランまたは AWS への移行で対応する
+- DB: `match_participants` は1行あたり約350バイト（インデックス込み）。1試合で約4KB。Supabase 無料プラン（500MB）では約12万試合が目安
+- ファイルストレージ: 1試合で約50〜100KB（詳細 + タイムライン、gzip 後）。無料プラン（1GB）では約1万〜2万試合が目安
+- 超える場合は有料プランまたは AWS への移行で対応する

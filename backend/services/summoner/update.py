@@ -4,6 +4,7 @@
 同じなら、新しいランク戦はないとみなして last_updated_at だけを更新する。
 """
 
+import logging
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -13,7 +14,11 @@ from schemas.summoner import SummonerDetail
 from schemas.summoner_store import SummonerRecord
 from services.summoner import riot_fetch
 from services.summoner.detail import build_detail
+from services.summoner.enrich import has_pending_targets
+from services.summoner.rank_record import record_rank_snapshots
 from services.summoner.sync import build_summoner_record, sync_recent_matches
+
+logger = logging.getLogger(__name__)
 
 
 async def update_summoner(
@@ -31,8 +36,8 @@ async def update_summoner(
         tag_line: タグライン（Riot ID のタグ部分）
 
     Returns:
-        (詳細, Backfill 用 PUUID)。勝敗数の合計が同じで Backfill も完了済みの場合、
-        PUUID は None（Backfill 不要）。
+        (詳細, Backfill 用 PUUID)。勝敗数の合計が同じで、Backfill も完了済みで、
+        補完対象の試合もない場合、PUUID は None（Backfill 不要）。
 
     Raises:
         HTTPException: 404（未登録）、429（レート制限）、502（Riot API障害）
@@ -43,6 +48,7 @@ async def update_summoner(
         raise HTTPException(status_code=404, detail="サモナーが見つかりません")
 
     league = await riot_fetch.fetch_league(region, record.puuid)
+    await record_rank_snapshots(region, record.puuid, league)
     if league.total_games == _stored_total_games(record):
         return await _touch_only(record)
 
@@ -66,10 +72,20 @@ async def _touch_only(
     """新しい試合がない場合: last_updated_at だけを更新し、保存済みのデータで応答する。
 
     プロフィールアイコン・RiotId の変更は反映されない。
-    Backfill が未完了のときだけ、Backfill 用の PUUID を返す。
+    Backfill が未完了か、補完対象の試合が残っているときだけ、
+    Backfill 用の PUUID を返す。
     """
     now = datetime.now(timezone.utc)
     await summoner_store.update_last_updated_at(record.puuid, record.region, now)
     touched = record.model_copy(update={"last_updated_at": now})
-    backfill_puuid = None if record.backfill_completed else record.puuid
-    return await build_detail(touched), backfill_puuid
+    needs_backfill = not record.backfill_completed or await _has_pending_enrichment()
+    return await build_detail(touched), record.puuid if needs_backfill else None
+
+
+async def _has_pending_enrichment() -> bool:
+    """補完対象の試合があるか。確認に失敗した場合は、更新を失敗させず False にする。"""
+    try:
+        return await has_pending_targets()
+    except Exception:
+        logger.error("補完対象の確認に失敗しました", exc_info=True)
+        return False

@@ -40,7 +40,7 @@ const TabContentPlaceholder: React.FC<TabContentPlaceholderProps> = ({
   if (tab === 'create') {
     return (
       <div className="flex items-center justify-center h-full p-8">
-        <div className="text-center text-gray-500">
+        <div className="text-center text-fg-muted">
           <p className="text-lg mb-2">チャンピオンを選択してください</p>
           <p className="text-sm">
             左のパネルで自分のチャンピオンと相手のチャンピオンを選択してください
@@ -54,7 +54,7 @@ const TabContentPlaceholder: React.FC<TabContentPlaceholderProps> = ({
   if (tab === 'general') {
     return (
       <div className="flex items-center justify-center h-full p-8">
-        <div className="text-center text-gray-500">
+        <div className="text-center text-fg-muted">
           <p className="text-lg mb-2">汎用ノート機能</p>
           <p className="text-sm">汎用ノート機能は別Specで実装予定です</p>
         </div>
@@ -66,7 +66,7 @@ const TabContentPlaceholder: React.FC<TabContentPlaceholderProps> = ({
   if (tab === 'matchup') {
     return (
       <div className="flex items-center justify-center h-full p-8">
-        <div className="text-center text-gray-500">
+        <div className="text-center text-fg-muted">
           <p className="text-lg mb-2">チャンピオンを選択してください</p>
           <p className="text-sm">対策ノート一覧機能は別Specで実装予定です</p>
         </div>

@@ -35,13 +35,13 @@ export const ITEM_BTN_BASE =
  * アイテムボタンのアクティブ状態スタイル（ピンク系カラー）
  */
 export const ITEM_BTN_ACTIVE =
-  'bg-pink-100 border-pink-200 text-pink-700 shadow-sm ring-2 ring-pink-50';
+  'ring-2 ring-accent bg-accent/15 border-transparent text-fg';
 
 /**
  * アイテムボタンの非アクティブ状態スタイル（グレー系カラー、ホバー効果）
  */
 export const ITEM_BTN_INACTIVE =
-  'bg-white border-gray-200 text-gray-700 hover:bg-pink-50 hover:border-pink-100';
+  'bg-surface-2 border-line text-fg-muted hover:ring-2 hover:ring-accent/60';
 
 /**
  * アイテムボタンの無効状態スタイル
@@ -52,7 +52,7 @@ export const ITEM_BTN_DISABLED = 'opacity-60 cursor-not-allowed';
  * 入力フィールドの共通スタイル
  */
 export const BORDER_STYLE_1 =
-  'mb-2 px-3 py-2 border border-gray-200 rounded w-full text-sm transition-colors duration-150 hover:border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-300';
+  'mb-2 px-3 py-2 border border-line rounded w-full text-sm transition-colors duration-150 hover:border-line-strong focus:outline-none focus:ring-0 focus:border-line-strong';
 
 // ========================================
 // ユーティリティ関数
@@ -88,7 +88,7 @@ export function itemBtnClass(options: ItemBtnClassOptions = {}): string {
 export default function Panel({ children, className = '' }: PanelProps) {
   return (
     <div
-      className={`p-4 border border-transparent rounded bg-white ${className}`.trim()}
+      className={`p-4 border border-transparent rounded bg-surface ${className}`.trim()}
     >
       {children}
     </div>

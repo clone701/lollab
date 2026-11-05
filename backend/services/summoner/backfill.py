@@ -12,6 +12,7 @@ from adapters import summoner_store
 from schemas.summoner_store import BackfillState
 from services.summoner import riot_fetch
 from services.summoner.backfill_page import process_page
+from services.summoner.enrich import run_enrichment
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +52,10 @@ async def _run(region: str, puuid: str) -> None:
         state, all_passed = await _fill_newer(region, puuid, state)
         if not all_passed:
             return
-    if not state.backfill_completed:
-        await _fill_older(region, puuid, state)
+    if not state.backfill_completed and not await _fill_older(region, puuid, state):
+        return
+    # 補完は全サモナー共通。取得に失敗した試合が残っている間は進めない
+    await run_enrichment()
 
 
 async def _page_end_times(ids: list[str]) -> list[datetime]:
@@ -98,12 +101,15 @@ async def _fill_newer(
     return updated, True
 
 
-async def _fill_older(region: str, puuid: str, state: BackfillState) -> None:
+async def _fill_older(region: str, puuid: str, state: BackfillState) -> bool:
     """フェーズB: backfill_cursor から過去へさかのぼり、1ページごとにカーソルを進める。
 
     カーソルは、ページの先頭から「最初の通過済みでない試合」の直前までの
     最古の時刻に進める。通過済みでない試合が残ったページでは、
     backfill_completed を true にせず Backfill を終了する。
+
+    Returns:
+        履歴の最後まで取得できたら True。途中で終了したら False（補完は行わない）。
     """
     cursor = state.backfill_cursor
     while True:
@@ -126,15 +132,15 @@ async def _fill_older(region: str, puuid: str, state: BackfillState) -> None:
             logger.info("Backfill: 取得に失敗した試合が残っています: puuid=%s", puuid)
             if new_cursor != cursor:
                 await _save_cursor(puuid, region, state, new_cursor, False)
-            return
+            return False
         if not completed and (oldest is None or (cursor and oldest >= cursor)):
             # 次のページが同じ範囲になり、無限ループになるため終了する
             logger.warning("Backfill のカーソルが進まないため終了: puuid=%s", puuid)
-            return
+            return False
 
         await _save_cursor(puuid, region, state, new_cursor, completed)
         if completed:
-            return
+            return True
         cursor = new_cursor
 
 

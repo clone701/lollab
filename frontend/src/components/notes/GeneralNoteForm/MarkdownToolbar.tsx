@@ -30,14 +30,14 @@ export function MarkdownToolbar({
   ];
 
   return (
-    <div className="flex gap-1 px-2 py-1.5 border border-gray-200 border-b-0 rounded-t bg-gray-50">
+    <div className="flex gap-1 px-2 py-1.5 border border-line border-b-0 rounded-t bg-surface-2">
       {buttons.map((btn) => (
         <button
           key={btn.label}
           type="button"
           title={btn.title}
           onClick={btn.onClick}
-          className="px-3 py-1.5 text-sm font-medium text-gray-600 rounded hover:bg-gray-200 transition-colors duration-150 min-w-[36px]"
+          className="px-3 py-1.5 text-sm font-medium text-fg-muted rounded hover:bg-line transition-colors duration-150 min-w-[36px]"
         >
           {btn.label}
         </button>

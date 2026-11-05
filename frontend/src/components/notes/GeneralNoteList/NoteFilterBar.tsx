@@ -22,7 +22,7 @@ export function NoteFilterBar({
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder="タイトル・本文を検索..."
-        className="w-full border border-gray-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-800"
+        className="w-full border border-line rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
       />
       {allTags.length > 0 && (
         <div className="flex flex-wrap gap-1">
@@ -33,8 +33,8 @@ export function NoteFilterBar({
               onClick={() => onToggleTag(tag)}
               className={`px-2 py-0.5 text-xs rounded-full border transition-colors duration-150 ${
                 activeTag === tag
-                  ? 'bg-gray-800 text-white border-gray-800'
-                  : 'bg-white text-gray-600 border-gray-300 hover:border-gray-500'
+                  ? 'ring-2 ring-accent bg-accent/15 text-fg border-transparent'
+                  : 'bg-surface text-fg-muted border-line-strong hover:border-accent/60'
               }`}
             >
               {tag}

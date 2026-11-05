@@ -47,8 +47,16 @@ class SummonerRecord(BaseModel):
     created_at: datetime | None = None
 
 
+# 試合詳細から取り込んだ項目の版。2 = ルーン全構成・シャード・BAN を含む
+DETAIL_VERSION = 2
+
+
 class MatchRecord(BaseModel):
-    """matches テーブルの1行"""
+    """matches テーブルの1行
+
+    timeline_fetched_at が None のときは、保存時にその列を書き込まない
+    （詳細の取り直しで、取り込み済みのタイムラインの記録を消さないため）。
+    """
 
     match_id: str
     queue_id: int
@@ -56,7 +64,20 @@ class MatchRecord(BaseModel):
     game_version: str
     game_duration: int
     game_end_at: datetime
+    patch: str | None = None
+    is_remake: bool = False
+    detail_version: int = 1
+    timeline_fetched_at: datetime | None = None
     created_at: datetime | None = None
+
+
+class BanRecord(BaseModel):
+    """match_bans テーブルの1行（BAN なしの -1 は保存しない）"""
+
+    match_id: str
+    team_id: int
+    pick_turn: int
+    champion_id: int
 
 
 class ParticipantRecord(BaseModel):
@@ -84,8 +105,17 @@ class ParticipantRecord(BaseModel):
     keystone_id: int
     primary_style_id: int
     sub_style_id: int
+    primary_perk_ids: list[int] | None = None
+    sub_perk_ids: list[int] | None = None
+    stat_perk_ids: list[int] | None = None
+    # タイムライン由来。skill_order が None のときは3列とも書き込まない
+    skill_order: list[int] | None = None
+    starting_items: list[int] | None = None
+    completed_items: list[int] | None = None
     queue_id: int
     game_end_at: datetime
+    patch: str | None = None
+    is_remake: bool = False
 
 
 class ParticipationRecord(ParticipantRecord):
@@ -96,6 +126,30 @@ class ParticipationRecord(ParticipantRecord):
 
     game_mode: str
     game_duration: int
+
+
+class EnrichTarget(BaseModel):
+    """補完対象の試合（matches の1行から求める）"""
+
+    match_id: str
+    game_end_at: datetime
+    needs_detail: bool
+    needs_timeline: bool
+
+
+class RankSnapshotRecord(BaseModel):
+    """summoner_rank_snapshots テーブルの1行"""
+
+    puuid: str
+    queue_type: str
+    fetched_at: datetime
+    region: str
+    tier: str
+    rank: str
+    league_points: int
+    wins: int
+    losses: int
+    source: str
 
 
 class SeasonRecord(BaseModel):

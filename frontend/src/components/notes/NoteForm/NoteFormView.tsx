@@ -44,7 +44,7 @@ export function NoteFormView({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-surface rounded-lg border border-line p-6">
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={hideToast} />
       )}

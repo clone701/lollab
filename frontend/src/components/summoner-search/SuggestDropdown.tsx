@@ -19,7 +19,7 @@ export default function SuggestDropdown({
     <ul
       role="listbox"
       aria-label="サモナー候補"
-      className="absolute left-0 right-0 top-full mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden"
+      className="absolute left-0 right-0 top-full mt-1 z-50 bg-surface border border-line rounded-lg shadow-md overflow-hidden"
     >
       {candidates.map((candidate, index) => (
         <li
@@ -36,15 +36,17 @@ export default function SuggestDropdown({
             }}
             className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors duration-150 focus:outline-none ${
               index === focusedIndex
-                ? 'bg-blue-50 text-blue-700'
-                : 'text-gray-700 hover:bg-gray-50'
+                ? 'bg-accent/15 text-accent'
+                : 'text-fg-muted hover:bg-surface-2'
             }`}
           >
             <span className="font-medium">{candidate.name}</span>
-            <span className="text-xs text-gray-400 ml-2">
+            <span className="text-xs text-fg-subtle ml-2">
               #{candidate.tagLine}
               {candidate.region !== region && (
-                <span className="ml-1 text-gray-300">· {candidate.region}</span>
+                <span className="ml-1 text-fg-subtle">
+                  · {candidate.region}
+                </span>
               )}
             </span>
           </button>

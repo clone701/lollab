@@ -77,7 +77,7 @@ export function NotesPageContent(p: NotesPageContentProps) {
       {shouldShowSidebar && (
         <button
           onClick={p.onToggleSidebar}
-          className="md:hidden fixed bottom-4 right-4 z-40 bg-gray-800 text-white p-4 rounded-full shadow-lg hover:bg-gray-700 transition-colors duration-150"
+          className="md:hidden fixed bottom-4 right-4 z-40 bg-action text-white p-4 rounded-full shadow-lg hover:bg-action-hover transition-colors duration-150"
           aria-label="チャンピオン選択メニューを開く"
         >
           <svg

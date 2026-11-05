@@ -53,10 +53,10 @@ export function GeneralNoteForm({
           onChange={(e) => setTitle(e.target.value)}
           placeholder="タイトル"
           maxLength={101}
-          className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-800"
+          className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
         />
         {errors.title && (
-          <p className="text-red-500 text-xs mt-1">{errors.title}</p>
+          <p className="text-danger-fg text-xs mt-1">{errors.title}</p>
         )}
       </div>
       <div className="relative">
@@ -74,7 +74,7 @@ export function GeneralNoteForm({
           onKeyDown={handleKeyDown}
           placeholder="本文 （/yasuoでチャンピオン補完）"
           rows={8}
-          className="w-full border border-gray-200 rounded-b px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-800 resize-none"
+          className="w-full border border-line rounded-b px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none"
         />
         {suggest && (
           <ChampionSuggestDropdown
@@ -86,7 +86,7 @@ export function GeneralNoteForm({
         )}
         <div className="flex justify-between items-center mt-1">
           {errors.body ? (
-            <p className="text-red-500 text-xs">{errors.body}</p>
+            <p className="text-danger-fg text-xs">{errors.body}</p>
           ) : (
             <span />
           )}
@@ -94,12 +94,14 @@ export function GeneralNoteForm({
         </div>
       </div>
       <TagInput tags={tags} onChange={setTags} />
-      {errors.submit && <p className="text-red-500 text-sm">{errors.submit}</p>}
+      {errors.submit && (
+        <p className="text-danger-fg text-sm">{errors.submit}</p>
+      )}
       <div className="flex justify-end gap-2">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm border border-gray-200 rounded hover:bg-gray-50 transition-colors duration-150"
+          className="px-4 py-2 text-sm border border-line rounded hover:bg-surface-2 transition-colors duration-150"
         >
           キャンセル
         </button>
@@ -107,7 +109,7 @@ export function GeneralNoteForm({
           type="button"
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="px-4 py-2 text-sm bg-gray-800 text-white rounded hover:bg-gray-700 disabled:opacity-50 transition-colors duration-150"
+          className="px-4 py-2 text-sm bg-action text-white rounded hover:bg-action-hover disabled:opacity-50 transition-colors duration-150"
         >
           保存
         </button>

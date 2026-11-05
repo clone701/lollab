@@ -81,17 +81,17 @@ export default function Navbar() {
   }, [isMenuOpen]);
 
   return (
-    <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
+    <header className="bg-surface border-b border-line sticky top-0 z-40">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         {/* Left: ロゴとベータバッジ */}
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="text-2xl font-bold text-white tracking-tight hover:text-gray-200 transition-all"
+            className="text-2xl font-bold text-fg tracking-tight hover:text-fg-muted transition-all"
           >
             LoL Lab
           </Link>
-          <span className="bg-gray-700 text-gray-300 text-xs font-semibold rounded-full px-2.5 py-1">
+          <span className="bg-surface-2 text-fg-muted text-xs font-semibold rounded-full px-2.5 py-1">
             ベータ
           </span>
         </div>
@@ -100,19 +100,19 @@ export default function Navbar() {
         <nav className="hidden gap-8 md:flex">
           <Link
             href="/"
-            className="text-sm text-gray-300 hover:text-white transition"
+            className="text-sm text-fg-muted hover:text-fg transition"
           >
             ホーム
           </Link>
           <Link
             href="/champion"
-            className="text-sm text-gray-300 hover:text-white transition"
+            className="text-sm text-fg-muted hover:text-fg transition"
           >
             チャンピオン
           </Link>
           <Link
             href="/notes"
-            className="text-sm text-gray-300 hover:text-white transition"
+            className="text-sm text-fg-muted hover:text-fg transition"
           >
             ノート
           </Link>
@@ -122,7 +122,7 @@ export default function Navbar() {
         <div className="flex items-center gap-2">
           {loading ? (
             // ローディング時: アニメーションするプレースホルダー（円形、36px）
-            <div className="h-9 w-9 animate-pulse rounded-full bg-gray-200" />
+            <div className="h-9 w-9 animate-pulse rounded-full bg-surface-2" />
           ) : session ? (
             // ログイン時: Googleアカウントのアバター画像（円形、36px）
             <div className="relative" ref={menuRef}>
@@ -138,24 +138,24 @@ export default function Navbar() {
                     '/images/default-avatar.png'
                   }
                   alt={user?.user_metadata?.name || 'User'}
-                  className="h-9 w-9 rounded-full border-2 border-gray-200 hover:border-blue-400 transition cursor-pointer"
+                  className="h-9 w-9 rounded-full border-2 border-line-strong hover:border-accent/60 transition cursor-pointer"
                 />
               </button>
 
               {/* ドロップダウンメニュー: フェードイン/アウトアニメーション */}
               {isMenuOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg border border-gray-200 py-2 animate-fadeIn"
+                  className="absolute right-0 mt-2 w-60 bg-surface rounded-lg shadow-lg border border-line py-2 animate-fadeIn"
                   style={{
                     animation: 'fadeIn 0.2s ease-in-out',
                   }}
                 >
                   {/* メニュー内容: ユーザー名、メールアドレス */}
-                  <div className="px-4 py-3 border-b border-gray-200">
-                    <p className="text-base font-semibold text-gray-900">
+                  <div className="px-4 py-3 border-b border-line">
+                    <p className="text-base font-semibold text-fg">
                       {user?.user_metadata?.name || 'ユーザー'}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-fg-muted mt-1">
                       {user?.email || ''}
                     </p>
                   </div>
@@ -163,7 +163,7 @@ export default function Navbar() {
                   {/* ログアウトボタン */}
                   <button
                     onClick={handleSignOut}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                    className="w-full text-left px-4 py-2 text-sm text-danger-fg hover:bg-danger/15 transition"
                   >
                     ログアウト
                   </button>
@@ -171,10 +171,10 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            // 未ログイン時: 濃いグレーボタン（bg-gray-800）、ホバー効果（hover:bg-gray-900）
+            // 未ログイン時: アクションボタン（bg-action）、ホバー効果（hover:bg-action-hover）
             <button
               onClick={handleSignIn}
-              className="px-6 py-2.5 text-sm font-semibold text-white bg-gray-800 hover:bg-gray-900 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+              className="px-6 py-2.5 text-sm font-semibold text-white bg-action hover:bg-action-hover rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
             >
               ログイン
             </button>
@@ -182,7 +182,7 @@ export default function Navbar() {
           {/* モバイルハンバーガーボタン */}
           <button
             onClick={() => setIsMobileMenuOpen((p) => !p)}
-            className="md:hidden p-2 rounded-lg text-gray-300 hover:bg-gray-700 transition"
+            className="md:hidden p-2 rounded-lg text-fg-muted hover:bg-surface-2 transition"
             aria-label="メニューを開く"
           >
             <svg
@@ -209,25 +209,25 @@ export default function Navbar() {
 
       {/* モバイルメニュー */}
       {isMobileMenuOpen && (
-        <nav className="md:hidden border-t border-gray-700 bg-gray-800 px-4 py-2 flex flex-col gap-1">
+        <nav className="md:hidden border-t border-line bg-surface px-4 py-2 flex flex-col gap-1">
           <Link
             href="/"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="py-2 text-sm text-gray-300 hover:text-white border-b border-gray-700"
+            className="py-2 text-sm text-fg-muted hover:text-fg border-b border-line"
           >
             ホーム
           </Link>
           <Link
             href="/champion"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="py-2 text-sm text-gray-300 hover:text-white border-b border-gray-700"
+            className="py-2 text-sm text-fg-muted hover:text-fg border-b border-line"
           >
             チャンピオン
           </Link>
           <Link
             href="/notes"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="py-2 text-sm text-gray-300 hover:text-white"
+            className="py-2 text-sm text-fg-muted hover:text-fg"
           >
             ノート
           </Link>

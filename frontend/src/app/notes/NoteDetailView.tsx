@@ -37,7 +37,7 @@ export function NoteDetailView({
     <div>
       <button
         onClick={onBackToList}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4 transition-colors"
+        className="flex items-center gap-2 text-fg-muted hover:text-fg mb-4 transition-colors"
         aria-label="一覧へ戻る"
       >
         <svg
@@ -56,7 +56,7 @@ export function NoteDetailView({
         </svg>
         <span className="text-sm font-medium">一覧へ戻る</span>
       </button>
-      <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+      <div className="flex items-center gap-4 mb-6 p-4 bg-surface rounded-lg">
         <div className="flex items-center gap-2">
           <Image
             src={`/images/champion/${myChampion?.id}.png`}
@@ -65,11 +65,11 @@ export function NoteDetailView({
             height={48}
             className="rounded-full"
           />
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-fg-muted">
             {myChampion?.name}
           </span>
         </div>
-        <span className="text-gray-400 text-xl">VS</span>
+        <span className="text-fg-subtle text-xl">VS</span>
         <div className="flex items-center gap-2">
           <Image
             src={`/images/champion/${enemyChampion?.id}.png`}
@@ -78,7 +78,7 @@ export function NoteDetailView({
             height={48}
             className="rounded-full"
           />
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-fg-muted">
             {enemyChampion?.name}
           </span>
         </div>
