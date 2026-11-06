@@ -2,58 +2,63 @@
 
 ## 概要
 
-このドキュメントはLoL Labプロジェクトで使用する技術スタックと技術的制約を定義します。
+このドキュメントはLoL Labプロジェクトで使用する技術スタックと技術的制約を定義します。構成図・デプロイ・秘密情報・アクセス制限の手順は `docs/architecture.md` を参照。
 
 ## フロントエンド技術
 
 ### コア技術
-- **Next.js 15**: React フレームワーク (App Router)
+- **Next.js 16**: React フレームワーク (App Router、静的書き出し `output: 'export'`)
 - **TypeScript 5**: 型安全性とコード品質向上
 - **React 19**: ユーザーインターフェース構築
 - **Tailwind CSS 4**: ユーティリティファーストCSS
 
 ### 認証・セキュリティ
-- **NextAuth.js 4**: 認証システム
-- **Google OAuth 2.0**: ソーシャルログイン
+- **Supabase Auth**: 認証（Google OAuth 2.0）。ブラウザで `exchangeCodeForSession` を行う
+- **AuthGate**: 未ログイン時はログイン画面だけを表示（`NEXT_PUBLIC_AUTH_GATE_ENABLED`）
 
 ### データ管理
-- **Supabase Client**: PostgreSQL データベースクライアント
-- **fetch API**: データフェッチング
+- **Supabase Client**: ノート・お気に入りをブラウザから直接読み書き（RLS で本人のデータだけ）
+- **apiFetch**（`lib/api/request.ts`）: バックエンド API の呼び出し。`X-Lollab-Auth` と `x-amz-content-sha256` を付ける
+
+### 静的書き出しの制約
+- サーバー処理（Route Handler、`await searchParams`、Middleware、`next/image` の最適化）は使えない
+- クエリはクライアントで `useSearchParams` を `Suspense` で囲んで読む
+- 動的ルートは `generateStaticParams` で全件を事前生成する
 
 ## バックエンド技術
 
 ### コア技術
-- **Python 3.11+**: プログラミング言語
-- **FastAPI**: 高性能WebAPIフレームワーク
-- **Pydantic**: データ検証とシリアライゼーション
-- **Uvicorn**: ASGIサーバー
+- **Python 3.12**: プログラミング言語（Lambda のランタイム）
+- **FastAPI**: WebAPI フレームワーク
+- **Mangum**: FastAPI を Lambda で動かすアダプター（`lambda_handlers/`）
+- **Pydantic / pydantic-settings**: データ検証と設定管理
+- **Uvicorn**: ローカル開発用の ASGI サーバー
 
-### データベース
+### データベース・ストレージ
 - **Supabase**: PostgreSQL データベース (BaaS)
-- **SQLAlchemy**: ORM (今後導入予定)
+- **S3**: 試合の生データ（`RAW_BUCKET`。未設定のローカルでは Supabase Storage）
 
 ### 外部API
 - **Riot Games API**: League of Legends データ取得
-- **httpx**: 非同期HTTPクライアント (今後導入予定)
+- **httpx**: HTTP クライアント
 
 ## インフラストラクチャ
 
-### デプロイメント
-- **Vercel**: フロントエンドホスティング
-  - 自動デプロイ: GitHubプッシュ時に自動ビルド・デプロイ
-  - 本番URL: https://lollab.vercel.app (または設定したURL)
-  - グローバルCDN対応
-  - 無料プラン: 100GB帯域幅/月
-- **Render**: バックエンドホスティング
-  - 自動デプロイ: GitHubプッシュ時に自動デプロイ
-  - 本番URL: https://lollab-backend.onrender.com (または設定したURL)
-  - 無料プラン: 750時間/月、自動スリープ機能あり
-- **Supabase**: データベースホスティング
+### デプロイメント（AWS、ap-northeast-1）
+- **CloudFront**: 入口。`/*` は S3 の静的ファイル、`/api/*` は Lambda 関数 URL（どちらも OAC）
+- **CloudFront Function `lollab-gate`**: 第1段階のアクセス制限（許可 IP / ベーシック認証）と URL の書き換え
+- **Lambda**: `lollab-api`（API）、`lollab-backfill`（過去の試合の取得。API から非同期起動）。arm64、512MB
+- **SSM Parameter Store**: 秘密情報（`/lollab/*`、SecureString）
+- **CloudFormation**: `infra/bootstrap.yaml`（手動）、`infra/app.yaml`（CodeBuild が更新）
+- **CodeBuild `lollab-deploy`**: `buildspec.yml` でビルドとデプロイ。中身が変わった側だけビルドする
+- **Supabase**: データベースと認証のホスティング
 
 ### 開発ツール
-- **Git**: バージョン管理
-- **GitHub**: コードリポジトリ
-- **ESLint**: コード品質チェック (フロントエンド)
+- **Git / GitHub**: バージョン管理・コードリポジトリ
+- **GitHub Actions**: テスト。`main` では OIDC で CodeBuild を起動してデプロイ
+- **ESLint / Prettier / Jest**: フロントエンドの品質チェックとテスト
+- **pytest / hypothesis / moto / black / flake8 / mypy**: バックエンドのテストと品質チェック
+- **cfn-lint**: CloudFormation テンプレートの検査
 
 ## 技術的制約
 
@@ -63,21 +68,17 @@
 - **同時接続数**: 1,000ユーザー対応目標
 
 ### リソース制約
-- **Riot API制限**: 100req/2min (個人キー)
-- **Vercel制限（フロントエンド）**: 
-  - 無料プラン: 100GB帯域幅/月、100ビルド時間/月
-  - 関数実行時間: 10秒 (Hobby), 60秒 (Pro)
-  - 関数サイズ: 50MB (圧縮後)
-- **Render制限（バックエンド）**:
-  - 無料プラン: 750時間/月、15分間非アクティブで自動スリープ
-  - ビルド時間: 最大15分/ビルド
-  - メモリ: 512MB (無料プラン)
-  - 帯域幅: 100GB/月
+- **Riot API制限**: Personal キーは 20req/1s・100req/2min。関数ごとに分け合う（`lollab-api` 8:1,50:120、`lollab-backfill` 10:1,45:120。`app.yaml` のパラメータ）
+- **費用**: 商用リリースまで AWS の Always Free の範囲（月の予算上限500円）。VPC・NAT・常時起動のサーバー・WAF・Secrets Manager・KMS のカスタマー管理キーは使わない
+- **Lambda**: `lollab-api` のタイムアウト29秒（CloudFront の待ち時間30秒以内）、`lollab-backfill` 300秒
+- **CodeBuild**: 無料枠は月100分
+- **CloudFront Functions**: JavaScript runtime 2.0（ES5.1 と一部の ES6 以降のみ。`for...of`・分割代入・スプレッド構文・クラスは使えない）、コード10KB以内
 
 ### セキュリティ制約
 - **認証**: OAuth 2.0必須
 - **データ暗号化**: HTTPS通信必須
 - **入力検証**: 全ユーザー入力の検証必須
+- **アクセス制限**: 一般公開まで2段階（第1段階 CloudFront、第2段階 API の許可メール）
 
 ## ブラウザサポート
 
@@ -93,58 +94,30 @@
 
 ## 環境変数
 
+本番の値は CodeBuild の環境変数（`bootstrap.yaml` のパラメータ）と SSM で管理する。ローカルは次のファイル。
+
 ### フロントエンド (.env.local)
 ```bash
-NEXT_PUBLIC_API_URL=https://lollab-backend.onrender.com
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-NEXTAUTH_SECRET=your-secret
-NEXTAUTH_URL=http://localhost:3000
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...   # publishable キー
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000      # 本番は未設定（同じオリジン）
+NEXT_PUBLIC_AUTH_GATE_ENABLED=false                # 本番は true
 ```
 
 ### バックエンド (.env)
 ```bash
 SUPABASE_URL=your-supabase-url
-SUPABASE_KEY=your-supabase-service-key
+SUPABASE_KEY=sb_secret_...                         # secret キー
 RIOT_API_KEY=your-riot-api-key
-CORS_ORIGINS=["http://localhost:3000","https://lollab.vercel.app"]
+CORS_ORIGINS=["http://localhost:3000"]
 DEBUG=False
-```
-
-## 依存関係管理
-
-### フロントエンド主要パッケージ
-```json
-{
-  "dependencies": {
-    "next": "15.5.9",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "@supabase/supabase-js": "^2.43.4",
-    "next-auth": "^4.24.11"
-  },
-  "devDependencies": {
-    "typescript": "^5",
-    "tailwindcss": "^4.1.14",
-    "eslint": "^9.36.0"
-  }
-}
-```
-
-### バックエンド主要パッケージ
-```txt
-fastapi
-uvicorn[standard]
-requests
-pydantic-settings
+# Lambda 用（ローカルでは設定しない）: SSM_PARAMETER_PATH, USER_GATE_ENABLED, BACKFILL_MODE, RAW_BUCKET など
 ```
 
 ## API設計原則
 
 ### RESTful API
-- **エンドポイント**: `/api/v1/` プレフィックス (今後)
+- **エンドポイント**: `/api/` プレフィックス
 - **HTTPメソッド**: GET, POST, PUT, DELETE
 - **ステータスコード**: 標準HTTPステータスコード使用
 
@@ -160,44 +133,40 @@ interface APIResponse<T> {
 ## パフォーマンス最適化
 
 ### フロントエンド
-- **画像最適化**: Next.js Image (静的画像)、通常のimg (GIF)
+- **画像**: 静的書き出しのため最適化なし（`images.unoptimized`）
 - **コード分割**: 動的インポート活用
-- **キャッシング**: ブラウザキャッシュ活用
+- **キャッシング**: CloudFront（`_next/static` は1年、ページは5分）
 
 ### バックエンド
-- **レスポンスキャッシュ**: Riot APIレスポンスのキャッシング (今後)
-- **非同期処理**: async/await活用
-- **データベース最適化**: インデックス活用 (今後)
+- **DB キャッシュ**: サモナー・試合は DB に保存し、手動更新で取り直す
+- **非同期処理**: async/await 活用。Backfill は別の Lambda
+- **データベース最適化**: インデックス活用
 
 ## セキュリティ対策
 
 ### 認証・認可
-- OAuth 2.0による安全な認証
-- JWTトークンベースのセッション管理
-- ユーザー固有データの分離
+- Supabase Auth（Google OAuth 2.0）
+- API は `X-Lollab-Auth` の JWT を検証（ES256/RS256 は JWKS、HS256 は JWT シークレットがあるときだけ）
+- ユーザー固有データは RLS で分離
 
 ### データ保護
 - HTTPS通信の強制
-- 環境変数による機密情報管理
+- 秘密情報は SSM Parameter Store（ローカルは `.env`）。コード・ログに出さない
 - 入力バリデーション
 
 ### API セキュリティ
-- CORS設定
-- レート制限 (今後)
+- CloudFront → Lambda は OAC（関数 URL は `AWS_IAM` 認証で直接呼べない）
+- Riot API のレート制限（`RIOT_RATE_LIMITS`）
 - 入力サニタイゼーション
 
 ## 開発環境セットアップ
 
 ### 必要なソフトウェア
 ```bash
-# Node.js (LTS版)
-node --version  # v18.17.0+
-
-# Python
-python --version  # 3.11+
-
-# Git
-git --version  # 2.40.0+
+node --version    # v22+
+python --version  # 3.12+
+git --version     # 2.40.0+
+aws --version     # 2.x（デプロイ・運用時のみ）
 ```
 
 ### セットアップ手順
@@ -213,77 +182,9 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-## デプロイメント
-
-### フロントエンド: Vercelへのデプロイ
-
-#### 初回セットアップ
-1. GitHubリポジトリをVercelに接続
-2. 新しいWeb Serviceを作成
-3. プロジェクト設定:
-   - Framework Preset: Next.js
-   - Root Directory: `frontend`
-   - Build Command: `npm run build`
-   - Output Directory: `.next`
-4. 環境変数を設定（Vercel Dashboard）
-
-#### 環境変数設定（Vercel）
-```bash
-# Production環境
-NEXT_PUBLIC_API_URL=https://lollab-backend.onrender.com
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-NEXTAUTH_SECRET=your-production-secret
-NEXTAUTH_URL=https://lollab.vercel.app
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-```
-
-#### 注意事項
-- 無料プランでも十分な性能
-- 自動スリープなし
-- グローバルCDN対応
-
-### バックエンド: Renderへのデプロイ
-
-#### 初回セットアップ
-1. GitHubリポジトリをRenderに接続
-2. 新しいWeb Serviceを作成
-3. プロジェクト設定:
-   - Environment: Python 3
-   - Root Directory: `backend`
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn main:app --host 0.0.0.0 --port 10000`
-4. 環境変数を設定（Render Dashboard）
-
-#### 環境変数設定（Render）
-```bash
-# Production環境
-SUPABASE_URL=your-supabase-url
-SUPABASE_KEY=your-supabase-service-key
-RIOT_API_KEY=your-riot-api-key
-CORS_ORIGINS=["https://lollab.vercel.app"]
-DEBUG=False
-```
-
-#### 注意事項
-- 無料プランは15分間非アクティブで自動スリープ
-- 初回アクセス時にコールドスタート（30秒程度）
-- 本番運用には有料プラン推奨
-
 ## 今後の技術導入予定
 
-### 短期 (1-3ヶ月)
-- Redis: キャッシング
-- SQLAlchemy: ORM
-- pytest: バックエンドテスト
+- クローラー（30分ごとの Lambda）
+- Sentry 等のエラー監視
+- 一般公開時: 独自ドメイン、404 ページ、SEO 対応
 
-### 中期 (3-6ヶ月)
-- Jest + React Testing Library: フロントエンドテスト
-- GitHub Actions: CI/CD
-- Sentry: エラー監視
-
-### 長期 (6ヶ月以降)
-- GraphQL: API改善
-- WebSocket: リアルタイム機能
-- Docker: コンテナ化
