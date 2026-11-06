@@ -26,10 +26,13 @@ from fastapi.testclient import TestClient  # noqa: E402
 from hypothesis import given, settings  # noqa: E402
 from hypothesis.strategies import characters, text  # noqa: E402
 
+from api.deps.auth import require_allowed_user  # noqa: E402
 from api.summoner.router import router  # noqa: E402
 
 app = FastAPI()
 app.include_router(router)
+# 認証は test_auth_dependency.py で検証する。ここでは判定を通す
+app.dependency_overrides[require_allowed_user] = lambda: None
 client = TestClient(app)
 
 VALID_REGIONS = ["JP", "KR", "NA", "EUW", "EUNE", "OCE"]

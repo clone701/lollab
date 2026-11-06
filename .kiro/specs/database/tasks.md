@@ -67,3 +67,10 @@
 
 - シーズン日付の出典: [BoostRoyal](https://boostroyal.com/blog/start-and-end-dates-for-all-league-of-legends-seasons)、2023・2024 のスプリット境界は Riot 公式の [パッチ13.14ノート](https://www.leagueoflegends.com/en-us/news/game-updates/patch-13-14-notes/)・[Split 2 プレビュー](https://www.leagueoflegends.com/en-us/news/dev/split-2-gameplay-preview/) と [GameLeap](https://www.gameleap.com/articles/lol-when-does-ranked-split-2-end-and-split-3-start) で確認済み
 - 2021年6月より前の試合は Riot API の試合ID一覧で取得できないが、シーズン2021の行は集計範囲として登録する
+
+- [x] 9. worker_leases の DDL を作成する（aws-migration で使用）
+  - ファイル: `supabase/migrations/<作成時のUTC>_create_worker_leases.sql`（design.md のファイル一覧にも追加）
+  - design.md の定義どおりに作成し RLS を有効化（ポリシーなし）
+  - _要件: 1.1_
+
+- [x] 10. チェックポイント: ユーザーが SQL Editor でタスク9のファイルを実行する

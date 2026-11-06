@@ -35,10 +35,15 @@ class FakeTime:
 
 
 def _limiter(
-    fake: FakeTime, per_second: int = 20, per_2min: int = 100, reserve: int = 30
+    fake: FakeTime, per_second: int = 20, per_2min: int = 100, ratio: float = 0.3
 ) -> RiotRateLimiter:
+    """1秒・2分の2窓（max_wait 10秒）のレート制限。"""
     return RiotRateLimiter(
-        per_second, per_2min, reserve, clock=fake.clock, sleep=fake.sleep
+        [(per_second, 1.0), (per_2min, 120.0)],
+        max_wait=10,
+        backfill_reserve_ratio=ratio,
+        clock=fake.clock,
+        sleep=fake.sleep,
     )
 
 
@@ -124,7 +129,7 @@ def test_2min_window_frees_up_after_120_seconds() -> None:
 def test_backfill_stops_when_remaining_is_below_reserve() -> None:
     """Backfill は残りが予約分未満なら送らない。検索・更新は上限まで送れる。"""
     fake = FakeTime()
-    limiter = _limiter(fake, per_second=100, per_2min=10, reserve=3)
+    limiter = _limiter(fake, per_second=100, per_2min=10, ratio=0.3)
     _acquire_n(limiter, "asia", 7, "backfill")  # 残り3 → まだ送れる
     _acquire_n(limiter, "asia", 1, "backfill")  # 残り2になる
 
@@ -189,7 +194,9 @@ def test_riot_api_get_does_not_send_when_rate_limited(
 ) -> None:
     """上限に達していたら HTTP リクエストを送らずに RateLimitExceeded を送出する。"""
     riot_api = _load_riot_api()
-    set_limiter(_limiter(FakeTime(), per_2min=0))
+    limiter = _limiter(FakeTime(), per_2min=1)
+    asyncio.run(limiter.acquire("asia"))
+    set_limiter(limiter)
     client = MagicMock()
     client.get = AsyncMock()
     monkeypatch.setattr(riot_api, "_get_client", lambda: client)

@@ -4,16 +4,17 @@ import logging
 from collections.abc import Awaitable
 from typing import Annotated, Literal, TypeVar
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Path
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path
 
+from api.deps.auth import require_allowed_user
 from schemas.summoner import SummonerDetail
-from services.summoner.backfill import run_backfill
+from services.summoner.backfill_dispatch import dispatch_backfill
 from services.summoner.search import search_summoner
 from services.summoner.update import update_summoner
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/summoner")
+router = APIRouter(prefix="/api/summoner", dependencies=[Depends(require_allowed_user)])
 
 Region = Literal["JP", "KR", "NA", "EUW", "EUNE", "OCE"]
 
@@ -61,7 +62,7 @@ async def get_summoner(
         search_summoner(region, gameName, tagLine)
     )
     if puuid is not None:
-        background_tasks.add_task(run_backfill, region, puuid)
+        await dispatch_backfill(background_tasks, region, puuid)
     return detail
 
 
@@ -82,5 +83,5 @@ async def update_summoner_detail(
         update_summoner(region, gameName, tagLine)
     )
     if puuid is not None:
-        background_tasks.add_task(run_backfill, region, puuid)
+        await dispatch_backfill(background_tasks, region, puuid)
     return detail

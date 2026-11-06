@@ -1,0 +1,11 @@
+# Lambda に載せる依存（buildspec.yml が arm64 用にインストールする）。
+# boto3 は Lambda のランタイムに含まれるため入れない。
+# テスト・開発・セキュリティ用のツール（hypothesis、moto、black、flake8、mypy、isort、bandit、safety、pip-audit）と、
+# Lambda では使わない uvicorn、requests も入れない。
+# バージョンの固定は requirements.txt と揃える。
+fastapi
+pydantic-settings
+httpx==0.28.1
+supabase==2.34.0
+mangum
+PyJWT[crypto]

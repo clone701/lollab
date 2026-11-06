@@ -4,9 +4,7 @@ _Requirements: 9.3_
 """
 
 import asyncio
-import importlib.util
 from collections.abc import Iterator
-from pathlib import Path
 from types import ModuleType, SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock
@@ -194,17 +192,3 @@ def test_non_429_errors_are_not_retried(
         _get(riot_api)
 
     assert server.requests == 1
-
-
-def test_default_rate_limits_leave_margin_below_personal_key() -> None:
-    """既定値は Personal キー（20/秒・100/2分）より余裕を持たせた 18 / 95。"""
-    # 他のテストが sys.modules["config"] を差し替えていても影響されないよう、パスから読み込む
-    path = Path(__file__).resolve().parent.parent / "config.py"
-    spec = importlib.util.spec_from_file_location("config_under_test", path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-
-    fields = module.Settings.model_fields
-    assert fields["riot_rate_limit_per_second"].default == 18
-    assert fields["riot_rate_limit_per_2min"].default == 95

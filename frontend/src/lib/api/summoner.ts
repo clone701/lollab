@@ -1,9 +1,8 @@
 import type { Region, SummonerDetail } from '@/types/summoner';
+import { apiFetch } from './request';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000';
-
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, init);
+async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await apiFetch(path, init);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.detail ?? `APIエラー: ${res.status}`);
@@ -25,7 +24,9 @@ export async function fetchSummonerDetail(
   gameName: string,
   tagLine: string
 ): Promise<SummonerDetail> {
-  return apiFetch<SummonerDetail>(buildSummonerPath(region, gameName, tagLine));
+  return fetchJson<SummonerDetail>(
+    buildSummonerPath(region, gameName, tagLine)
+  );
 }
 
 export async function updateSummoner(
@@ -33,7 +34,7 @@ export async function updateSummoner(
   gameName: string,
   tagLine: string
 ): Promise<SummonerDetail> {
-  return apiFetch<SummonerDetail>(
+  return fetchJson<SummonerDetail>(
     `${buildSummonerPath(region, gameName, tagLine)}/update`,
     { method: 'POST' }
   );

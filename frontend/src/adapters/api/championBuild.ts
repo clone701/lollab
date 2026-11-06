@@ -1,16 +1,15 @@
 import type { BuildQuery, ChampionBuildResponse } from '@/types/championBuild';
+import { ApiAuthError, apiFetch } from '@/lib/api';
 import { toChampionBuildErrorMessage } from './championBuildError';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000';
-
-function buildUrl(championName: string, query: BuildQuery): string {
+function buildPath(championName: string, query: BuildQuery): string {
   const params = new URLSearchParams({
     period: query.period,
     queue: query.queue,
   });
   if (query.role) params.set('role', query.role);
   const name = encodeURIComponent(championName);
-  return `${BASE_URL}/api/champion/${name}/build?${params.toString()}`;
+  return `/api/champion/${name}/build?${params.toString()}`;
 }
 
 /** チャンピオンのビルド集計を取得する。失敗時は画面表示用のメッセージで throw する */
@@ -21,9 +20,10 @@ export async function fetchChampionBuild(
 ): Promise<ChampionBuildResponse> {
   let res: Response;
   try {
-    res = await fetch(buildUrl(championName, query), { signal });
+    res = await apiFetch(buildPath(championName, query), { signal });
   } catch (e: unknown) {
     if (e instanceof DOMException && e.name === 'AbortError') throw e;
+    if (e instanceof ApiAuthError) throw e;
     throw new Error('サーバーに接続できませんでした');
   }
   if (!res.ok) {

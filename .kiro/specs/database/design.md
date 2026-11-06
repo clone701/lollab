@@ -36,6 +36,7 @@
 | `20261106000100_add_match_build_data.sql` | matches・match_participants の列追加、match_bans・summoner_rank_snapshots の作成、ビルド集計用インデックス |
 | `20261106000200_add_champion_note_runes_id_version.sql` | champion_notes に runes_id_version を追加（ルーン ID 移行の第1段階。フロントエンドのデプロイ前に適用） |
 | `20261106000300_migrate_champion_note_rune_ids.sql` | 保存済みノートのルーン ID を Riot の値に変換し、旧値を champion_notes_runes_backup に退避（第2段階。デプロイ後に適用、再実行可） |
+| `20261105191256_create_worker_leases.sql` | worker_leases の作成（aws-migration の Backfill の同時実行制限用。適用順は他のテーブルと独立） |
 
 `20240101`〜`20240104` は命名ルール制定前のファイルで、日時は実際の作成日ではない。
 
@@ -67,7 +68,7 @@ erDiagram
 |---|---|---|---|
 | ユーザーデータ | champion_notes, general_notes, favorites | 有効。`auth.uid() = user_id` の行だけ操作可 | フロントエンド（anon キー + ログイン） |
 | 移行用バックアップ | champion_notes_runes_backup | 有効、ポリシーなし（anon は全拒否） | 運用者（SQL Editor） |
-| Riot API データ | summoners, matches, match_participants, match_bans, failed_matches, summoner_rank_snapshots, seasons | 有効、ポリシーなし（anon は全拒否） | バックエンド（service キー） |
+| Riot API データ | summoners, matches, match_participants, match_bans, failed_matches, summoner_rank_snapshots, worker_leases, seasons | 有効、ポリシーなし（anon は全拒否） | バックエンド（service キー） |
 
 ---
 
@@ -277,6 +278,19 @@ Backfill で試合詳細の取得に失敗した試合を記録し、再取得�
 
 - 直前の記録と tier・rank・LP・勝敗数がすべて同じなら記録しない
 - インデックス: `(puuid, fetched_at DESC)`
+
+### worker_leases（バックグラウンド処理のリース）
+
+同じ処理（Backfill など）が同時に複数動かないよう、名前ごとに実行権を貸し出す。
+
+| カラム | 型 | 制約 | 説明 |
+|---|---|---|---|
+| name | text | PK | 処理の名前（例: `riot-backfill`） |
+| holder | text | | 実行中の識別子（Lambda のリクエスト ID など） |
+| expires_at | timestamptz | | リースの期限。過ぎていれば他の実行が取得できる |
+
+- 取得は「`expires_at` が NULL か現在時刻より前」の条件付き UPDATE 1回で行う。行がなければ INSERT する
+- 処理の終了時に `expires_at` を NULL にして返す
 
 ### seasons（シーズン定義）
 

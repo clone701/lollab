@@ -2,21 +2,29 @@
 
 from typing import Any, cast
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 
 from adapters.supabase import supabase
+from api.deps.auth import extract_bearer, require_allowed_user
 from schemas.favorites import FavoriteCreate, FavoriteResponse
 
-router = APIRouter(prefix="/api/favorites")
+router = APIRouter(
+    prefix="/api/favorites", dependencies=[Depends(require_allowed_user)]
+)
 
 MAX_FAVORITES = 10
 
 
-def _get_user_id(authorization: str | None) -> str:
-    """Authorizationヘッダーからユーザー情報を取得する。"""
-    if not authorization or not authorization.startswith("Bearer "):
+def _get_user_id(authorization: str | None, x_lollab_auth: str | None = None) -> str:
+    """X-Lollab-Auth（なければ Authorization）のトークンからユーザーIDを取得する。"""
+    if x_lollab_auth is not None:
+        token = extract_bearer(x_lollab_auth)
+    elif authorization and authorization.startswith("Bearer "):
+        token = authorization.removeprefix("Bearer ")
+    else:
+        token = None
+    if not token:
         raise HTTPException(status_code=401, detail="認証が必要です")
-    token = authorization.removeprefix("Bearer ")
     # Supabaseでトークンを検証してユーザーIDを取得
     user = supabase.auth.get_user(token)
     if not user or not user.user:
@@ -27,9 +35,10 @@ def _get_user_id(authorization: str | None) -> str:
 @router.get("")
 async def list_favorites(
     authorization: str | None = Header(default=None),
+    x_lollab_auth: str | None = Header(default=None),
 ) -> list[FavoriteResponse]:
     """ログインユーザーのお気に入り一覧を取得する。"""
-    user_id = _get_user_id(authorization)
+    user_id = _get_user_id(authorization, x_lollab_auth)
     result = (
         supabase.table("favorites")
         .select("*")
@@ -53,9 +62,10 @@ async def list_favorites(
 async def add_favorite(
     body: FavoriteCreate,
     authorization: str | None = Header(default=None),
+    x_lollab_auth: str | None = Header(default=None),
 ) -> FavoriteResponse:
     """お気に入りに追加する（上限10人）。"""
-    user_id = _get_user_id(authorization)
+    user_id = _get_user_id(authorization, x_lollab_auth)
 
     # 上限チェック
     count_result = (
@@ -109,9 +119,10 @@ async def add_favorite(
 async def remove_favorite(
     favorite_id: str,
     authorization: str | None = Header(default=None),
+    x_lollab_auth: str | None = Header(default=None),
 ) -> None:
     """お気に入りを削除する。"""
-    user_id = _get_user_id(authorization)
+    user_id = _get_user_id(authorization, x_lollab_auth)
     result = (
         supabase.table("favorites")
         .delete()

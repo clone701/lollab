@@ -1,0 +1,229 @@
+version: 0.2
+
+# CodeBuild プロジェクト lollab-deploy（infra/bootstrap.yaml）が実行する。
+# 使う環境変数はプロジェクトに設定済み:
+#   STACK_NAME, ARTIFACT_BUCKET, SITE_BUCKET, CFN_ROLE_ARN, NEXT_PUBLIC_*（フロントエンドの公開設定）,
+#   APP_*（app.yaml のパラメータの上書き。「-」なら上書きしない）
+# ビルドとデプロイは build フェーズにまとめる（post_build は build が失敗しても実行されるため）。
+#
+# リリース ID はコミットではなく中身のハッシュで決める（変わった側だけビルド・配置するため）:
+#   FRONTEND_ID = f- + SHA-256 先頭16文字（frontend/ の内容、ビルド時に埋め込む NEXT_PUBLIC_*、このファイル）
+#   BACKEND_ID  = b- + SHA-256 先頭16文字（ZIP に入れる backend/ の内容、このファイル）
+# S3 に同じ ID の成果物（releases/<FRONTEND_ID>/index.html、lambda/<BACKEND_ID>.zip）が既にあれば、
+# その側のビルドとアップロードを省く。確認に失敗した場合は安全側でビルドする。
+
+env:
+  shell: bash
+  variables:
+    HUSKY: '0'
+    NEXT_TELEMETRY_DISABLED: '1'
+    PIP_DISABLE_PIP_VERSION_CHECK: '1'
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+      python: 3.12
+
+  pre_build:
+    commands:
+      - |
+        set -euo pipefail
+        for name in STACK_NAME ARTIFACT_BUCKET SITE_BUCKET CFN_ROLE_ARN NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY; do
+          [ -n "${!name:-}" ] || { echo "環境変数 ${name} が未設定です"; exit 1; }
+        done
+
+        # 中身から決定的なダイジェスト（先頭16文字）を作る。.git に依存しない。
+        # ファイルはパス順（LC_ALL=C）に並べ、パスと内容のハッシュを sha256sum の出力で連結する
+        frontend_digest() {
+          {
+            find frontend -type d \( -name node_modules -o -name .next -o -name out \) -prune -o -type f -print0 \
+              | LC_ALL=C sort -z | xargs -0 -r sha256sum
+            # ビルド時に埋め込まれる公開設定（値そのものはログに出さず、ハッシュにだけ含める）
+            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\n' "${NEXT_PUBLIC_SUPABASE_URL}"
+            printf 'NEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n' "${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+            printf 'NEXT_PUBLIC_AUTH_GATE_ENABLED=%s\n' "${NEXT_PUBLIC_AUTH_GATE_ENABLED:-}"
+            sha256sum buildspec.yml
+          } | sha256sum | cut -c1-16
+        }
+        backend_digest() {
+          {
+            # ZIP に入れるものだけを対象にする（__pycache__ は除外）
+            find backend/adapters backend/api backend/lambda_handlers backend/schemas backend/services backend/utils \
+              backend/config.py backend/main.py backend/requirements-lambda.txt \
+              -type d -name __pycache__ -prune -o -type f -print0 \
+              | LC_ALL=C sort -z | xargs -0 -r sha256sum
+            sha256sum buildspec.yml
+          } | sha256sum | cut -c1-16
+        }
+
+        # 後続のコマンドは同じシェルで動くため、export した値がそのまま使える
+        export FRONTEND_ID="f-$(frontend_digest)"
+        export BACKEND_ID="b-$(backend_digest)"
+        echo "FRONTEND_ID: ${FRONTEND_ID}"
+        echo "BACKEND_ID: ${BACKEND_ID}"
+
+  build:
+    commands:
+      # 1. ゲート関数のテスト
+      - node --test infra/functions/gate.test.mjs
+
+      # 2. フロントエンド（NEXT_PUBLIC_* は環境変数から。NEXT_PUBLIC_BACKEND_URL は未設定＝同じオリジン）
+      # 同じ ID の成果物が配置済みならビルドとアップロードを省く（head-object が失敗したらビルドする）
+      # 同じフェーズのコマンドは1つのシェルで動き cd が次のコマンドに残るため、サブシェルで実行する
+      - |
+        set -euo pipefail
+        if aws s3api head-object --bucket "${SITE_BUCKET}" --key "releases/${FRONTEND_ID}/index.html" >/dev/null 2>&1; then
+          echo "フロントエンド: ${FRONTEND_ID} は配置済みのため、ビルドとアップロードを省略"
+          export FRONTEND_SKIP=1
+        else
+          export FRONTEND_SKIP=0
+          (
+            cd frontend
+            npm ci
+            npm run build
+            test -f out/index.html
+            test -f out/404.html
+          )
+        fi
+
+      # 3. バックエンドを arm64 の Lambda 用 ZIP にする。テスト・開発用ツールと .env は含めない
+      # 同じ ID の ZIP がアップロード済みなら省く（head-object が失敗したらビルドする）
+      # 注意: ヒアドキュメント（Python のコード）は、字下げすると構文エラーになるため字下げしない
+      - |
+        set -euo pipefail
+        if aws s3api head-object --bucket "${ARTIFACT_BUCKET}" --key "lambda/${BACKEND_ID}.zip" >/dev/null 2>&1; then
+          echo "バックエンド: ${BACKEND_ID} はアップロード済みのため、ZIP の作成とアップロードを省略"
+        else
+          rm -rf build
+          mkdir -p build/lambda
+          python -m pip install -r backend/requirements-lambda.txt \
+            --platform manylinux2014_aarch64 --platform manylinux_2_28_aarch64 \
+            --implementation cp --python-version 3.12 --only-binary=:all: \
+            --target build/lambda --quiet
+          for item in adapters api lambda_handlers schemas services utils; do
+            cp -r "backend/${item}" build/lambda/
+          done
+          cp backend/config.py backend/main.py build/lambda/
+          rm -rf build/lambda/bin
+          find build/lambda -type d -name __pycache__ -prune -exec rm -rf {} +
+          test ! -e build/lambda/.env
+          # 依存が arm64 の Lambda と同じ環境で読み込めることを確認する（このビルド環境も arm64）
+          (cd build/lambda && SUPABASE_URL=https://example.supabase.co SUPABASE_KEY=dummy \
+            python -c "import lambda_handlers.api, lambda_handlers.backfill")
+          find build/lambda -type d -name __pycache__ -prune -exec rm -rf {} +
+          python - <<'PY'
+        import os
+        import zipfile
+
+        root = "build/lambda"
+        with zipfile.ZipFile("build/lambda.zip", "w", zipfile.ZIP_DEFLATED) as archive:
+            for directory, names, files in os.walk(root):
+                names.sort()
+                for name in sorted(files):
+                    path = os.path.join(directory, name)
+                    archive.write(path, os.path.relpath(path, root))
+        PY
+          aws s3 cp build/lambda.zip "s3://${ARTIFACT_BUCKET}/lambda/${BACKEND_ID}.zip" --only-show-errors
+        fi
+
+      # 4. gate.js を埋め込んだテンプレートを作る
+      #    （バックエンドを省いたときは build/ が無いので作る）
+      - mkdir -p build && node infra/scripts/render-app-template.mjs infra/app.yaml infra/functions/gate.js build/app.yaml
+
+      # 5. 配置とスタックの更新。失敗するとスタックは自動で元に戻り、CloudFront は前のリリースを参照したまま
+      - |
+        set -euo pipefail
+
+        # index.html を最後に置く。配置済みの判定に index.html を使うため、途中で失敗した配置を完了と誤認しない
+        upload_site() {
+          aws s3 sync frontend/out/_next/static "s3://${SITE_BUCKET}/releases/${FRONTEND_ID}/_next/static/" \
+            --only-show-errors --cache-control "public,max-age=31536000,immutable"
+          aws s3 sync frontend/out "s3://${SITE_BUCKET}/releases/${FRONTEND_ID}/" \
+            --only-show-errors --cache-control "public,max-age=300" --exclude "_next/static/*" --exclude "index.html"
+          aws s3 cp frontend/out/index.html "s3://${SITE_BUCKET}/releases/${FRONTEND_ID}/index.html" \
+            --only-show-errors --cache-control "public,max-age=300"
+        }
+
+        PARAMS=("ReleaseId=${FRONTEND_ID}" "ArtifactBucket=${ARTIFACT_BUCKET}" "LambdaCodeKey=lambda/${BACKEND_ID}.zip")
+        # 環境変数が設定されていれば app.yaml のパラメータを上書きする（未指定はスタックの現在値のまま）
+        add_override() {
+          local value="${!1:-}"
+          if [ -n "${value}" ] && [ "${value}" != "-" ]; then PARAMS+=("$2=${value}"); fi
+        }
+        add_override APP_GATE_ENABLED GateEnabled
+        add_override APP_ALLOWED_CIDRS AllowedCidrs
+        add_override APP_BASIC_AUTH_HASH BasicAuthHash
+        add_override APP_USER_GATE_ENABLED UserGateEnabled
+        add_override APP_SUPABASE_PROJECT_REF SupabaseProjectRef
+
+        deploy_stack() {
+          aws cloudformation deploy \
+            --template-file build/app.yaml \
+            --stack-name "${STACK_NAME}" \
+            --s3-bucket "${ARTIFACT_BUCKET}" --s3-prefix templates \
+            --role-arn "${CFN_ROLE_ARN}" \
+            --capabilities CAPABILITY_IAM \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides "${PARAMS[@]}"
+        }
+
+        # 現在配信中の ReleaseId を返す。スタックが無ければ空。それ以外の失敗はビルドを失敗させる
+        # （空と誤認すると、配信中のリリースを消してしまうため）
+        current_release_id() {
+          local result
+          if ! result=$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" \
+            --query "Stacks[0].Parameters[?ParameterKey=='ReleaseId'].ParameterValue" --output text 2>&1); then
+            if [[ "${result}" == *"does not exist"* ]]; then return 0; fi
+            echo "${result}" >&2
+            return 1
+          fi
+          if [ "${result}" != "None" ]; then echo "${result}"; fi
+        }
+
+        # 古いリリースを消す。デプロイ成功後にだけ呼ぶ。
+        # 今回の FRONTEND_ID と、切り戻し用に直前の PREVIOUS_ID は残す（同じ ID でもよい）。
+        # 以前のコミット SHA 形式（releases/<40桁>/）も、この2つ以外なら削除対象になる
+        cleanup_old_releases() {
+          local listing prefix id
+          # AWS CLI が自動でページングする。ページごとの結果が空だと "None" と出るので releases/ で始まる行だけ使う
+          listing=$(aws s3api list-objects-v2 --bucket "${SITE_BUCKET}" --prefix "releases/" --delimiter "/" \
+            --query "CommonPrefixes[].Prefix" --output text)
+          for prefix in $(echo "${listing}" | tr '\t' '\n' | grep '^releases/' || true); do
+            id="${prefix#releases/}"
+            id="${id%/}"
+            if [ -z "${id}" ] || [ "${id}" = "${FRONTEND_ID}" ] || [ "${id}" = "${PREVIOUS_ID}" ]; then continue; fi
+            echo "古いリリースを削除: ${id}"
+            aws s3 rm "s3://${SITE_BUCKET}/releases/${id}/" --recursive --only-show-errors
+          done
+        }
+
+        PREVIOUS_ID=""
+        if aws s3api head-bucket --bucket "${SITE_BUCKET}" 2>/dev/null; then
+          # 更新: 先にファイルを置き、スタックの更新で配信するリリースを切り替える
+          PREVIOUS_ID="$(current_release_id)"
+          if [ "${FRONTEND_SKIP}" != "1" ]; then upload_site; fi
+          deploy_stack
+        else
+          # 初回: バケットはスタックが作る。作成後にファイルを置く
+          deploy_stack
+          if [ "${FRONTEND_SKIP}" != "1" ]; then upload_site; fi
+        fi
+        cleanup_old_releases
+
+      # 6. CloudFront のキャッシュを無効化する
+      # フロントを省いた場合でも、配信中のリリースが変わるなら無効化する。
+      # フロントを省き、かつ配信中のリリースも同じ（PREVIOUS_ID == FRONTEND_ID）なら、配信内容が変わらないので省く
+      - |
+        set -euo pipefail
+        output() {
+          aws cloudformation describe-stacks --stack-name "${STACK_NAME}" \
+            --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text
+        }
+        if [ "${FRONTEND_SKIP:-0}" = "1" ] && [ "${PREVIOUS_ID:-}" = "${FRONTEND_ID:-}" ]; then
+          echo "フロントエンドに変更がないため、CloudFront の無効化を省略"
+        else
+          aws cloudfront create-invalidation --distribution-id "$(output DistributionId)" --paths "/*" \
+            --query Invalidation.Id --output text
+        fi
+        echo "deployed: https://$(output DistributionDomainName)/"
