@@ -36,13 +36,16 @@ _BUILD_COLUMNS = (
 
 
 def _scope(query: Any, filters: StatsFilter, prefix: str = "") -> Any:
-    """リメイク除外・キュー・期間の条件を query に追加する。
+    """リメイク除外・キュー・期間・ランク帯の条件を query に追加する。
 
     prefix は、埋め込んだ matches の列に条件を付けるときに "matches." を渡す。
+    rank_tier は matches・match_participants のどちらにも同じ名前の列がある。
     """
     query = query.eq(f"{prefix}is_remake", False).in_(
         f"{prefix}queue_id", filters.queue_ids
     )
+    if filters.rank_tiers is not None:
+        query = query.in_(f"{prefix}rank_tier", filters.rank_tiers)
     if filters.patch is not None:
         query = query.eq(f"{prefix}patch", filters.patch)
     if filters.since is not None:
@@ -80,7 +83,7 @@ def _patch_key(patch: str) -> tuple[int, int] | None:
 
 
 async def get_latest_patch() -> str | None:
-    """最新パッチを返す。試合がなければ None。
+    """最新パッチを返す。試合がなければ None。ランク帯・キューには依存しない。
 
     パッチは時系列で増えるため、終了日時が最も新しい試合群のパッチを最新とみなす。
     "16.9" と "16.22" は文字列順では逆になるため、DB の並べ替えは使わず、
@@ -168,7 +171,7 @@ async def count_matches(filters: StatsFilter) -> int:
 async def count_bans(champion_id: int, filters: StatsFilter) -> int:
     """チャンピオンが BAN された試合数を返す。
 
-    match_bans を matches と内部結合し、期間・キュー・リメイクは matches 側の列で絞る。
+    match_bans を matches と内部結合し、期間・キュー・ランク帯・リメイクは matches 側の列で絞る。
     """
 
     def _query() -> Any:

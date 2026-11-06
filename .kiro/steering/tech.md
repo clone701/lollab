@@ -47,7 +47,7 @@
 ### デプロイメント（AWS、ap-northeast-1）
 - **CloudFront**: 入口。`/*` は S3 の静的ファイル、`/api/*` は Lambda 関数 URL（どちらも OAC）
 - **CloudFront Function `lollab-gate`**: 第1段階のアクセス制限（許可 IP / ベーシック認証）と URL の書き換え
-- **Lambda**: `lollab-api`（API）、`lollab-backfill`（過去の試合の取得。API から非同期起動）。arm64、512MB
+- **Lambda**: `lollab-api`（API）、`lollab-backfill`（過去の試合の取得。API から非同期起動）、`lollab-crawler`（試合の自動収集。EventBridge Scheduler で30分ごと、256MB）。arm64、512MB（crawler 以外）
 - **SSM Parameter Store**: 秘密情報（`/lollab/*`、SecureString）
 - **CloudFormation**: `infra/bootstrap.yaml`（手動）、`infra/app.yaml`（CodeBuild が更新）
 - **CodeBuild `lollab-deploy`**: `buildspec.yml` でビルドとデプロイ。中身が変わった側だけビルドする
@@ -68,9 +68,9 @@
 - **同時接続数**: 1,000ユーザー対応目標
 
 ### リソース制約
-- **Riot API制限**: Personal キーは 20req/1s・100req/2min。関数ごとに分け合う（`lollab-api` 8:1,50:120、`lollab-backfill` 10:1,45:120。`app.yaml` のパラメータ）
+- **Riot API制限**: Personal キーは 20req/1s・100req/2min。関数ごとに分け合う（`lollab-api` 6:1,30:120、`lollab-backfill` 4:1,20:120、`lollab-crawler` 8:1,45:120。`app.yaml` のパラメータ）
 - **費用**: 商用リリースまで AWS の Always Free の範囲（月の予算上限500円）。VPC・NAT・常時起動のサーバー・WAF・Secrets Manager・KMS のカスタマー管理キーは使わない
-- **Lambda**: `lollab-api` のタイムアウト29秒（CloudFront の待ち時間30秒以内）、`lollab-backfill` 300秒
+- **Lambda**: `lollab-api` のタイムアウト29秒（CloudFront の待ち時間30秒以内）、`lollab-backfill` 300秒、`lollab-crawler` 600秒
 - **CodeBuild**: 無料枠は月100分
 - **CloudFront Functions**: JavaScript runtime 2.0（ES5.1 と一部の ES6 以降のみ。`for...of`・分割代入・スプレッド構文・クラスは使えない）、コード10KB以内
 
@@ -184,7 +184,6 @@ uvicorn main:app --reload
 
 ## 今後の技術導入予定
 
-- クローラー（30分ごとの Lambda）
 - Sentry 等のエラー監視
 - 一般公開時: 独自ドメイン、404 ページ、SEO 対応
 

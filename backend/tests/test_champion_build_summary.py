@@ -23,7 +23,7 @@ def store(monkeypatch: pytest.MonkeyPatch) -> Store:
 
 
 def build(role: str | None = None, period: Period = "all") -> ChampionBuildResponse:
-    return asyncio.run(get_champion_build("Ahri", role, period, "all"))
+    return asyncio.run(get_champion_build("Ahri", role, period, "all", "all"))
 
 
 # --- 試合0件 ---

@@ -9,12 +9,14 @@ from pydantic import BaseModel
 
 
 class StatsFilter(BaseModel):
-    """集計対象の試合の絞り込み条件（期間・キュー）。
+    """集計対象の試合の絞り込み条件（期間・キュー・ランク帯）。
 
     リメイクの除外は条件に含めず、ストアが常に行う。
     """
 
     queue_ids: list[int]
+    # 指定時は rank_tier がこの中の試合・参加者だけを対象にする（None = すべて）
+    rank_tiers: list[str] | None = None
     # 指定時は patch が一致する試合だけを対象にする（最新パッチ）
     patch: str | None = None
     # 指定時は game_end_at がこの日時以降の試合だけを対象にする（直近30日）

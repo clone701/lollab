@@ -30,6 +30,7 @@ export function makeBuildResponse(
     roles: { MIDDLE: 900, BOTTOM: 100 },
     period: 'latest_patch',
     queue: 'all',
+    rank: 'all',
     latest_patch: '16.22',
     summary: {
       games: 1000,

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import {
   PERIOD_OPTIONS,
   QUEUE_OPTIONS,
+  RANK_OPTIONS,
   buildChampionBuildHref,
 } from '@/lib/champion-build';
 import type { BuildMode, BuildQuery } from '@/types/championBuild';
@@ -17,7 +18,7 @@ interface BuildFiltersProps {
   onModeChange: (mode: BuildMode) => void;
 }
 
-// 期間・キューは URL クエリを更新して切り替え、ビルド種別は画面内の状態で切り替える
+// 期間・キュー・ランク帯は URL クエリを更新して切り替え、ビルド種別は画面内の状態で切り替える
 export function BuildFilters({
   championId,
   query,
@@ -41,6 +42,12 @@ export function BuildFilters({
         value={query.queue}
         options={QUEUE_OPTIONS}
         onChange={(queue) => update({ queue })}
+      />
+      <FilterSelect
+        label="ランク帯"
+        value={query.rank}
+        options={RANK_OPTIONS}
+        onChange={(rank) => update({ rank })}
       />
       <ModeToggle mode={mode} onChange={onModeChange} />
     </div>

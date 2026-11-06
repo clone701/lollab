@@ -8,10 +8,13 @@
 
 カウントはプロセス内のメモリで持つ。複数インスタンス・複数ワーカーで動かす場合は
 共有ストアが必要（現状は1プロセス）。
+温存された Lambda のコンテナでは、呼び出しごとにイベントループが変わっても
+カウントは残る（ロックだけをループごとに作り直す）。
 """
 
 import asyncio
 import time
+import weakref
 from collections import deque
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Literal
@@ -30,11 +33,30 @@ class RateLimitExceeded(Exception):
 
 
 class _HostState:
-    """ホストごとの、窓ごとの送信時刻（古い順）と、並行アクセスを守るロック。"""
+    """ホストごとの、窓ごとの送信時刻（古い順）と、並行アクセスを守るロック。
+
+    送信時刻は呼び出し（イベントループ）をまたいで残す。ロックは最初の競合時に
+    そのときのイベントループへ結びつくため、ループごとに作り直す
+    （呼び出しごとに asyncio.run で新しいループを使う Lambda 用）。
+    """
 
     def __init__(self, window_count: int) -> None:
         self.sent: list[deque[float]] = [deque() for _ in range(window_count)]
-        self.lock = asyncio.Lock()
+        self._lock: asyncio.Lock | None = None
+        # ロックを作ったループ。閉じたループを保持しないよう弱参照にする
+        self._lock_loop: weakref.ref[asyncio.AbstractEventLoop] | None = None
+
+    def lock(self) -> asyncio.Lock:
+        """実行中のイベントループ用のロックを返す。ループが変わっていれば作り直す。"""
+        loop = asyncio.get_running_loop()
+        if (
+            self._lock is None
+            or self._lock_loop is None
+            or self._lock_loop() is not loop
+        ):
+            self._lock = asyncio.Lock()
+            self._lock_loop = weakref.ref(loop)
+        return self._lock
 
 
 class RiotRateLimiter:
@@ -66,6 +88,8 @@ class RiotRateLimiter:
         self._clock = clock
         self._sleep = sleep
         self._states: dict[str, _HostState] = {}
+        # 送信を許可した回数の累計（クローラーが1回の起動の送信数を求めるのに使う）
+        self.total_sent = 0
 
     async def acquire(self, host: str, priority: Priority = "interactive") -> None:
         """送信の許可を得て、送信時刻を記録する。
@@ -76,13 +100,14 @@ class RiotRateLimiter:
         """
         state = self._states.setdefault(host, _HostState(len(self._windows)))
         # 待機中も含めてロックを持ち、並行する呼び出しが同じ空きを取り合わないようにする
-        async with state.lock:
+        async with state.lock():
             while True:
                 now = self._clock()
                 wait = self._required_wait(state, host, priority, now)
                 if wait <= 0:
                     for sent in state.sent:
                         sent.append(now)
+                    self.total_sent += 1
                     return
                 await self._sleep(wait)
 

@@ -37,6 +37,7 @@
 | `20261106000200_add_champion_note_runes_id_version.sql` | champion_notes に runes_id_version を追加（ルーン ID 移行の第1段階。フロントエンドのデプロイ前に適用） |
 | `20261106000300_migrate_champion_note_rune_ids.sql` | 保存済みノートのルーン ID を Riot の値に変換し、旧値を champion_notes_runes_backup に退避（第2段階。デプロイ後に適用、再実行可） |
 | `20261105191256_create_worker_leases.sql` | worker_leases の作成（aws-migration の Backfill の同時実行制限用。適用順は他のテーブルと独立） |
+| `20261106064902_add_match_crawler.sql` | crawler_seeds の作成、matches・match_participants に rank_tier を追加、prune_crawler_matches 関数（match-crawler） |
 
 `20240101`〜`20240104` は命名ルール制定前のファイルで、日時は実際の作成日ではない。
 
@@ -192,9 +193,11 @@ ID は Riot（Data Dragon）の値（`runes_id_version = 2`）。`runes_id_versi
 | is_remake | boolean | NOT NULL、既定 false | リメイク（早期降伏）の試合。統計から除外する |
 | detail_version | int | NOT NULL、既定 1 | 試合詳細から取り込んだ項目の版。2 = ルーン全構成・シャード・BAN を含む |
 | timeline_fetched_at | timestamptz | | タイムライン由来の項目を取り込んだ日時。未取得は NULL |
+| rank_tier | text | | クローラーが集めた試合のランク帯（収集元プレイヤーの tier: EMERALD / DIAMOND / MASTER / GRANDMASTER / CHALLENGER）。検索由来の試合は NULL。最初に記録した値を保つ |
 | created_at | timestamptz | NOT NULL、既定 now() | |
 
-- インデックス: `(detail_version)`、`(timeline_fetched_at)`（補完対象の抽出用。部分インデックスで可）
+- インデックス: `(detail_version)`、`(timeline_fetched_at)`（補完対象の抽出用。部分インデックスで可）、`(game_end_at) WHERE rank_tier IS NOT NULL`（上限を超えた試合の削除用）
+- `rank_tier` を持つ行がクローラーの試合。上限（10万試合）の管理は関数 `prune_crawler_matches` で行う（下記）
 
 ### match_bans（試合の BAN）
 
@@ -242,9 +245,10 @@ ID は Riot（Data Dragon）の値（`runes_id_version = 2`）。`runes_id_versi
 | game_end_at | timestamptz | NOT NULL | matches から非正規化 |
 | patch | text | | matches から非正規化 |
 | is_remake | boolean | NOT NULL、既定 false | matches から非正規化 |
+| rank_tier | text | | matches から非正規化（ランク帯の絞り込み用） |
 
 - インデックス: `(puuid, game_end_at DESC)`（サモナーの試合一覧・期間集計）、`(champion_name, team_position, patch)`（チャンピオンビルドの集計）
-- `queue_id`・`game_end_at`・`patch`・`is_remake` は、集計を JOIN なしで行うために持つ
+- `queue_id`・`game_end_at`・`patch`・`is_remake`・`rank_tier` は、集計を JOIN なしで行うために持つ
 - タイムライン由来の列は、取り込み時に Data Dragon のアイテム情報（その試合のパッチ）で計算して保存する。生のイベントは DB に保存せず、ファイルストレージの生データから読む
 - マッチアップ（同じ試合・同じ `team_position`・異なる `team_id`）は自己結合で求める
 
@@ -322,3 +326,23 @@ Backfill で試合詳細の取得に失敗した試合を記録し、再取得�
 - DB: `match_participants` は1行あたり約350バイト（インデックス込み）。1試合で約4KB。Supabase 無料プラン（500MB）では約12万試合が目安
 - ファイルストレージ: 1試合で約50〜100KB（詳細 + タイムライン、gzip 後）。無料プラン（1GB）では約1万〜2万試合が目安
 - 超える場合は有料プランまたは AWS への移行で対応する
+
+### crawler_seeds（クローラーの収集元プレイヤー）
+
+league-v4 のランク一覧から1日1回更新する。サービスロールのみアクセス（RLS 有効、ポリシーなし）。
+
+| カラム | 型 | 制約 | 説明 |
+|---|---|---|---|
+| puuid | text | PK | |
+| region | text | NOT NULL | |
+| tier | text | NOT NULL | EMERALD / DIAMOND / MASTER / GRANDMASTER / CHALLENGER |
+| division | text | | I〜IV。マスター以上は NULL |
+| league_points | int | NOT NULL | |
+| refreshed_at | timestamptz | NOT NULL | ランク一覧で最後に見つかった日時。7日以上前の行は削除する |
+| last_crawled_at | timestamptz | | 最後に試合を収集した日時。未収集は NULL |
+
+- インデックス: `(tier, last_crawled_at NULLS FIRST)`（帯ごとに古い順で選ぶ）、`(refreshed_at)`
+
+### prune_crawler_matches（関数）
+
+`prune_crawler_matches(max_matches int, batch int) RETURNS int`。`rank_tier` を持ち、`summoners` に登録済みのプレイヤーが参加していない試合を数え、`max_matches` を超えた分を `game_end_at` の古い順に最大 `batch` 件削除して、削除した件数を返す。`SECURITY INVOKER`、サービスロールから RPC で呼ぶ。

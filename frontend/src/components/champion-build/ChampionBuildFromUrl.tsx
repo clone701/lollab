@@ -16,6 +16,7 @@ export function ChampionBuildFromUrl({ champion }: ChampionBuildFromUrlProps) {
     role: searchParams.get('role') ?? undefined,
     period: searchParams.get('period') ?? undefined,
     queue: searchParams.get('queue') ?? undefined,
+    rank: searchParams.get('rank') ?? undefined,
   });
   return <ChampionBuildContent champion={champion} query={query} />;
 }

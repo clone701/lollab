@@ -9,6 +9,7 @@ from schemas.champion import (
     ChampionBuildSummary,
     Period,
     QueueFilter,
+    RankFilter,
 )
 from schemas.champion_store import BuildRow, StatsFilter
 from services.champion.build_elements import build_elements
@@ -20,27 +21,42 @@ _QUEUE_IDS: dict[str, list[int]] = {
     "all": [420, 440],
 }
 
+# ランク帯の絞り込み → rank_tier（all は条件なし）
+_RANK_TIERS: dict[str, list[str] | None] = {
+    "all": None,
+    "emerald_plus": ["EMERALD", "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"],
+    "diamond_plus": ["DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"],
+    "master_plus": ["MASTER", "GRANDMASTER", "CHALLENGER"],
+}
+
 # 「直近30日」の日数
 _RECENT_DAYS = 30
 
 
 def make_filters(
-    period: Period, queue: QueueFilter, latest_patch: str | None, now: datetime
+    period: Period,
+    queue: QueueFilter,
+    rank: RankFilter,
+    latest_patch: str | None,
+    now: datetime,
 ) -> StatsFilter | None:
-    """期間・キューから集計対象の絞り込み条件を作る。
+    """期間・キュー・ランク帯から集計対象の絞り込み条件を作る。
 
     最新パッチを指定したのに DB に試合がない（latest_patch が None）場合は、
     条件を作れないため None を返す。条件なしにすると全期間になってしまうため。
     """
     queue_ids = _QUEUE_IDS[queue]
+    rank_tiers = _RANK_TIERS[rank]
     if period == "latest_patch":
         if latest_patch is None:
             return None
-        return StatsFilter(queue_ids=queue_ids, patch=latest_patch)
+        return StatsFilter(
+            queue_ids=queue_ids, rank_tiers=rank_tiers, patch=latest_patch
+        )
     if period == "last_30_days":
         since = now - timedelta(days=_RECENT_DAYS)
-        return StatsFilter(queue_ids=queue_ids, since=since)
-    return StatsFilter(queue_ids=queue_ids)
+        return StatsFilter(queue_ids=queue_ids, rank_tiers=rank_tiers, since=since)
+    return StatsFilter(queue_ids=queue_ids, rank_tiers=rank_tiers)
 
 
 def _most_played_role(roles: dict[str, int]) -> str | None:
@@ -95,15 +111,22 @@ def _summary(
 
 
 async def get_champion_build(
-    champion_name: str, role: str | None, period: Period, queue: QueueFilter
+    champion_name: str,
+    role: str | None,
+    period: Period,
+    queue: QueueFilter,
+    rank: RankFilter,
 ) -> ChampionBuildResponse:
     """チャンピオンのビルド集計を返す。
 
-    role が None の場合は、同じ期間・キューで試合数が最も多いロールを使う。
+    role が None の場合は、同じ期間・キュー・ランク帯で試合数が最も多いロールを使う。
     試合が1件もなければ、roles が空・試合数0の応答を返す（role は指定がなければ None）。
+    最新パッチは、ランク帯で絞る前の全試合から決める。
     """
     latest_patch = await champion_stats_store.get_latest_patch()
-    filters = make_filters(period, queue, latest_patch, datetime.now(timezone.utc))
+    filters = make_filters(
+        period, queue, rank, latest_patch, datetime.now(timezone.utc)
+    )
 
     roles: dict[str, int] = {}
     rows: list[BuildRow] = []
@@ -126,6 +149,7 @@ async def get_champion_build(
         roles=ordered_roles,
         period=period,
         queue=queue,
+        rank=rank,
         latest_patch=latest_patch,
         summary=_summary(rows, role_totals, total_matches, bans),
         **build_elements(rows),

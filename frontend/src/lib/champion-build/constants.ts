@@ -2,11 +2,13 @@ import type {
   BuildMode,
   Period,
   QueueFilter,
+  RankFilter,
   Role,
 } from '@/types/championBuild';
 
 export const DEFAULT_PERIOD: Period = 'latest_patch';
 export const DEFAULT_QUEUE: QueueFilter = 'all';
+export const DEFAULT_RANK: RankFilter = 'all';
 
 export const ROLE_LABELS: Record<Role, string> = {
   TOP: 'トップ',
@@ -26,6 +28,13 @@ export const QUEUE_OPTIONS: { value: QueueFilter; label: string }[] = [
   { value: 'all', label: 'ソロ/デュオ + フレックス' },
   { value: 'solo', label: 'ソロ/デュオ' },
   { value: 'flex', label: 'フレックス' },
+];
+
+export const RANK_OPTIONS: { value: RankFilter; label: string }[] = [
+  { value: 'all', label: 'すべて' },
+  { value: 'emerald_plus', label: 'エメラルド以上' },
+  { value: 'diamond_plus', label: 'ダイヤモンド以上' },
+  { value: 'master_plus', label: 'マスター以上' },
 ];
 
 export const MODE_OPTIONS: { value: BuildMode; label: string }[] = [

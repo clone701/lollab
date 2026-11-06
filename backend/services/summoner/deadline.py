@@ -1,4 +1,4 @@
-"""Backfill の締め切り（Lambda の残り時間）の判定。
+"""Backfill・クローラーの締め切り（Lambda の残り時間）の判定。
 
 締め切りは time.monotonic() の値で表す。None は締め切りなし（ローカル実行）。
 """
@@ -14,6 +14,6 @@ def from_remaining_ms(remaining_ms: int) -> float:
     return time.monotonic() + remaining_ms / 1000
 
 
-def is_near(deadline: float | None) -> bool:
-    """締め切りまで MARGIN_SECONDS を切っているか。"""
-    return deadline is not None and deadline - time.monotonic() < MARGIN_SECONDS
+def is_near(deadline: float | None, margin: float = MARGIN_SECONDS) -> bool:
+    """締め切りまで margin 秒（既定 MARGIN_SECONDS）を切っているか。"""
+    return deadline is not None and deadline - time.monotonic() < margin

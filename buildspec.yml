@@ -110,7 +110,7 @@ phases:
           test ! -e build/lambda/.env
           # 依存が arm64 の Lambda と同じ環境で読み込めることを確認する（このビルド環境も arm64）
           (cd build/lambda && SUPABASE_URL=https://example.supabase.co SUPABASE_KEY=dummy \
-            python -c "import lambda_handlers.api, lambda_handlers.backfill")
+            python -c "import lambda_handlers.api, lambda_handlers.backfill, lambda_handlers.crawler")
           find build/lambda -type d -name __pycache__ -prune -exec rm -rf {} +
           python - <<'PY'
         import os
@@ -156,6 +156,7 @@ phases:
         add_override APP_BASIC_AUTH_HASH BasicAuthHash
         add_override APP_USER_GATE_ENABLED UserGateEnabled
         add_override APP_SUPABASE_PROJECT_REF SupabaseProjectRef
+        add_override APP_CRAWLER_ENABLED CrawlerEnabled
 
         deploy_stack() {
           aws cloudformation deploy \

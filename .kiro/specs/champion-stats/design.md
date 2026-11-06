@@ -2,7 +2,7 @@
 
 ## 概要
 
-`match_participants` に保存済みの参加者成績を、チャンピオン・ロール・集計期間・キューで絞り込み、ビルド要素ごとに選択肢別の試合数・勝利数を集計して返す。
+`match_participants` に保存済みの参加者成績を、チャンピオン・ロール・集計期間・キュー・ランク帯で絞り込み、ビルド要素ごとに選択肢別の試合数・勝利数を集計して返す。
 「最高勝率」と「最多」の切り替えはフロントエンドで行う（API は選択肢ごとの試合数・勝利数を返すだけ）。
 
 使うテーブル: `matches`、`match_participants`、`match_bans`。定義は [database Spec](../database/design.md) を参照。
@@ -13,7 +13,7 @@
 ```mermaid
 graph TB
     Nav["Navbar「チャンピオン」"] --> List["/champion<br/>ChampionSearchPage"]
-    List --> Build["/champion/[championName]?role=&period=&queue=<br/>ChampionBuildPage"]
+    List --> Build["/champion/[championName]?role=&period=&queue=&rank=<br/>ChampionBuildPage"]
     Build -->|GET| Router["api/champion/router.py"]
     Router --> Svc["services/champion/build.py"]
     Svc --> Agg["services/champion/aggregate.py<br/>ビルド要素ごとの集計"]
@@ -27,7 +27,7 @@ graph TB
 stateDiagram-v2
     [*] --> チャンピオン検索
     チャンピオン検索 --> ビルド画面: チャンピオンを選択
-    ビルド画面 --> ビルド画面: ロール・期間・キュー・ビルド種別を切り替え
+    ビルド画面 --> ビルド画面: ロール・期間・キュー・ランク帯・ビルド種別を切り替え
     ビルド画面 --> チャンピオン検索: 戻る
 ```
 
@@ -41,6 +41,7 @@ stateDiagram-v2
 | ロール | `team_position` |
 | 集計期間 | 最新パッチ: `patch` が DB 内の最新パッチ / 直近30日: `game_end_at >= now - 30日` / 全期間: 条件なし |
 | キュー | 420 / 440 / 両方 |
+| ランク帯 | すべて: 条件なし / エメラルド以上: `rank_tier IN (EMERALD, DIAMOND, MASTER, GRANDMASTER, CHALLENGER)` / ダイヤモンド以上: `DIAMOND` 以上 / マスター以上: `MASTER` 以上。`rank_tier` はクローラーの試合だけが持つ（[match-crawler](../match-crawler/design.md)） |
 | 除外 | `is_remake = true` の試合 |
 
 最新パッチは、終了日時が新しい直近50試合のパッチのうち数値として最大のもの（`16.9` < `16.22`）とし、API の応答に含める。DB に試合がなく最新パッチが決まらない場合、`latest_patch` 期間では集計せずに試合数0を返す。
@@ -48,6 +49,7 @@ stateDiagram-v2
 - ピック率・BAN率・全体平均勝率との差は 0〜1 の比率で返す。分母が0なら0
 - BAN 率は `champion_id` で数えるため、`champion_name` から `champion_id` を参加記録で引く。参加記録がないチャンピオンの BAN 率は0
 - 試合総数・ロール全体の勝率・BAN 数は行を取得せず件数だけ数えるクエリで求める
+- ランク帯の条件は、試合総数では `matches.rank_tier`、参加者の集計では `match_participants.rank_tier`、BAN 数では `matches` との内部結合で絞り込む（`match_bans` は `rank_tier` を持たない）
 
 ### 概要の値
 
@@ -55,9 +57,9 @@ stateDiagram-v2
 |---|---|
 | 試合数 | 絞り込み後の参加者行数 |
 | 勝率 | 勝利数 / 試合数 |
-| 全体平均勝率との差 | 勝率 − 同じ期間・キュー・ロールの全参加者の勝率 |
-| ピック率 | 試合数 / 同じ期間・キューの試合総数 |
-| BAN率 | そのチャンピオンが BAN された試合数 / 同じ期間・キューの試合総数（ロールに依存しない） |
+| 全体平均勝率との差 | 勝率 − 同じ期間・キュー・ランク帯・ロールの全参加者の勝率 |
+| ピック率 | 試合数 / 同じ期間・キュー・ランク帯の試合総数 |
+| BAN率 | そのチャンピオンが BAN された試合数 / 同じ期間・キュー・ランク帯の試合総数（ロールに依存しない） |
 
 ### ビルド要素の選択肢の作り方
 
@@ -79,11 +81,12 @@ stateDiagram-v2
 
 | メソッド | パス | 応答 |
 |---|---|---|
-| GET | `/api/champion/{championName}/build?role=&period=&queue=` | `ChampionBuildResponse` |
+| GET | `/api/champion/{championName}/build?role=&period=&queue=&rank=` | `ChampionBuildResponse` |
 
 - `role`: 省略時はそのチャンピオンの試合数が最も多いロール（同数はロール名の昇順）。試合が0件なら応答の `role` は null
 - `period`: `latest_patch`（既定）/ `last_30_days` / `all`
 - `queue`: `all`（既定）/ `solo` / `flex`
+- `rank`: `all`（既定）/ `emerald_plus` / `diamond_plus` / `master_plus`
 - `championName` は英数字のみ（1〜30文字）。不正な値は 422。DB に試合がないチャンピオンは 200 で試合数0を返す
 
 ### スキーマ（schemas/champion.py）
@@ -112,6 +115,7 @@ class ChampionBuildResponse(BaseModel):
     roles: dict[str, int]           # ロール別の試合数（試合数の降順。ロール切り替え用）
     period: str
     queue: str
+    rank: str
     latest_patch: str | None
     summary: ChampionBuildSummary
     skill_priority: BuildElement
@@ -150,7 +154,8 @@ async def count_matches(filters: StatsFilter) -> int
 async def count_bans(champion_id: int, filters: StatsFilter) -> int
 
 # services/champion/build.py
-async def get_champion_build(champion_name: str, role: str | None, period: Period, queue: QueueFilter) -> ChampionBuildResponse
+async def get_champion_build(champion_name: str, role: str | None, period: Period, queue: QueueFilter, rank: RankFilter) -> ChampionBuildResponse
+# StatsFilter に rank_tiers: list[str] | None を足す（None = すべて）
 
 # services/champion/aggregate.py
 def aggregate_element(keys: Iterable[tuple[tuple[int, ...], bool]], limit: int = 10) -> BuildElement
@@ -168,7 +173,7 @@ frontend/src/
 └── components/champion-build/
     ├── ChampionSearchGrid.tsx               # 名前入力 + アイコン一覧（champions.ts の name・reading・id で検索）
     ├── ChampionBuildHeader.tsx              # アイコン・名前・概要の値・ロール切り替え
-    ├── BuildFilters.tsx                     # 期間・キューのプルダウン、最高勝率/最多の切り替え
+    ├── BuildFilters.tsx                     # 期間・キュー・ランク帯のプルダウン、最高勝率/最多の切り替え
     ├── SkillPanel.tsx                       # スキル優先順・15レベルのスキル順
     ├── SpellPanel.tsx
     ├── ItemPanel.tsx                        # 開始アイテム・コアビルド・4〜6番目
@@ -176,7 +181,7 @@ frontend/src/
     └── OptionStat.tsx                       # 勝率・試合数の表示（共通）
 ```
 
-- 状態（ロール・期間・キュー）は URL のクエリで持つ。最高勝率/最多の切り替えは画面内の状態で持つ
+- 状態（ロール・期間・キュー・ランク帯）は URL のクエリで持つ。最高勝率/最多の切り替えは画面内の状態で持つ
 - 4〜6番目のアイテムは上位3件を「OR」で並べる。最多は試合数の多い順、最高勝率は `options` と `best_win_rate` を合わせて勝率の高い順（同率は試合数の多い順）
 - 画像はローカル静的画像（`/images/champion/`、`/images/item/`、`/images/runes/`）を使う。サモナースペル・スキルのアイコンは Data Dragon の CDN から取得する
 - アイコンには勝率と試合数を必ず併記する
@@ -197,7 +202,7 @@ frontend/src/
 |---|---|
 | aggregate.py | プロパティ: 任意の行に対し、各選択肢の試合数の合計 = 要素の games / options は試合数の降順 / best_win_rate は勝率最大（同率は試合数最大） |
 | skill_priority.py | 典型例（Q>E>W など）と、5回に達しないスキルの補い方 |
-| build.py | 期間・キュー・リメイク除外の絞り込み / ロール省略時に最多ロールを選ぶ / 試合数0 |
+| build.py | 期間・キュー・ランク帯・リメイク除外の絞り込み / ロール省略時に最多ロールを選ぶ / 試合数0 |
 | timeline_convert.py（summoner-search-api 側） | スキル順・開始アイテム（取り消し反映）・完成アイテムの順序 |
 | router | 入力検証 422、エラー形式 |
 | フロントエンド | 最高勝率/最多の切り替え、データなし表示、検索の絞り込み（日本語名・読み・英語 ID） |
