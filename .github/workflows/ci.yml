@@ -1,10 +1,12 @@
 name: CI
 
+# 検査は PR（develop・main 向け）で行い、Rulesets で成功を必須にする（ブランチが最新であることも必須）。
+# そのため main への push では検査せず、デプロイだけを行う（PR で検査した内容とマージ後の main は同じ）。
 on:
   pull_request:
     branches: [main, develop]
   push:
-    branches: [main, develop]
+    branches: [main]
   schedule:
     # 毎週月曜日 9:00 (JST) に脆弱性チェック
     - cron: '0 0 * * 1'
@@ -14,6 +16,7 @@ on:
 jobs:
   frontend:
     name: Frontend Checks
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -60,6 +63,7 @@ jobs:
 
   backend:
     name: Backend Checks
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -101,9 +105,8 @@ jobs:
 
   deploy:
     name: Deploy (AWS CodeBuild)
-    # main への push、または main を選んだ手動実行で、テストが成功したときだけ実行する
-    # （PR・develop・定期実行では実行しない。AWS のロールも main からしか引き受けられない）
-    needs: [frontend, backend]
+    # main への push、または main を選んだ手動実行で実行する。検査は PR で済んでいるので待たない
+    # （PR・定期実行では実行しない。AWS のロールも main からしか引き受けられない）
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
