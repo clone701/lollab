@@ -133,8 +133,10 @@ def test_fetch_match_details_propagates_429_with_fetched_matches() -> None:
             asyncio.run(fetch_match_details("JP", ["JP1_1", "JP1_2", "JP1_3"]))
 
     error = exc_info.value
-    assert isinstance(error, httpx.HTTPStatusError)
-    assert error.response.status_code == 429
+    # HTTPStatusError として扱えること（サブクラスであること）は型で確かめる。
+    # isinstance で確かめると、mypy 2.4 以降は型が HTTPStatusError に狭まり fetched を参照できない
+    as_status_error: httpx.HTTPStatusError = error
+    assert as_status_error.response.status_code == 429
     assert [m.match.match_id for m in error.fetched] == ["JP1_1"]
     assert error.failures == []
     assert requested == ["JP1_1", "JP1_2"]
