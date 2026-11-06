@@ -38,7 +38,7 @@ async def _crawl_seeds(
             return "deadline"
         partial = CollectResult()
         try:
-            await collect_seed(region, seed, archive, partial)
+            await collect_seed(region, seed, archive, partial, bundle_key=archive.key)
         except RiotRateLimitError:
             _add(totals, partial)
             return "rate_limited"

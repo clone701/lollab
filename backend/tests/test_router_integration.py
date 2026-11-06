@@ -51,6 +51,7 @@ _URL = "/api/summoner/JP/TestUser/JP1"
 
 mock_detail = SummonerDetail(
     summoner=SummonerData(
+        puuid="puuid-0",
         name="TestUser",
         tagLine="JP1",
         level=100,
@@ -101,6 +102,7 @@ def test_get_summoner_returns_detail() -> None:
     assert response.status_code == 200
     body = response.json()
     assert set(body) == {"summoner", "rankPosition", "matches", "championStats"}
+    assert body["summoner"]["puuid"] == "puuid-0"
     assert body["summoner"]["name"] == "TestUser"
     assert body["summoner"]["rank"]["tier"] == "GOLD"
     assert body["summoner"]["lastUpdatedAt"].startswith("2024-01-01")

@@ -6,6 +6,7 @@ import type {
 } from '@/types/summoner';
 
 export const MOCK_SUMMONER: SummonerData = {
+  puuid: 'mock-puuid',
   name: 'Hide on bush',
   tagLine: 'KR1',
   level: 487,

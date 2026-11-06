@@ -13,6 +13,7 @@ class RankData(BaseModel):
 
 
 class SummonerData(BaseModel):
+    puuid: str
     name: str
     tagLine: str
     level: int

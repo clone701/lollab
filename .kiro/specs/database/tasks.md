@@ -80,3 +80,9 @@
   - `crawler_seeds` の作成（RLS 有効、ポリシーなし）、`matches`・`match_participants` に `rank_tier` を追加、インデックス、関数 `prune_crawler_matches`
   - _要件: 1.1_
 - [x] 12. チェックポイント: ユーザーが SQL Editor でタスク11のファイルを実行する
+
+- [x] 13. 試合詳細用の DDL を作成する（match-detail で使用）
+  - ファイル: `supabase/migrations/<作成時のUTC>_add_match_raw_bundle_key.sql`（design.md のファイル一覧のファイル名も実際の名前に直す）
+  - `matches` に `raw_bundle_key text` を追加（`ADD COLUMN IF NOT EXISTS`、`COMMENT ON`）
+  - _要件: 1.1_
+- [x] 14. チェックポイント: ユーザーが SQL Editor でタスク13のファイルを実行する

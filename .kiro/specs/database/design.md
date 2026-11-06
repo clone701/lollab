@@ -38,6 +38,7 @@
 | `20261106000300_migrate_champion_note_rune_ids.sql` | 保存済みノートのルーン ID を Riot の値に変換し、旧値を champion_notes_runes_backup に退避（第2段階。デプロイ後に適用、再実行可） |
 | `20261105191256_create_worker_leases.sql` | worker_leases の作成（aws-migration の Backfill の同時実行制限用。適用順は他のテーブルと独立） |
 | `20261106064902_add_match_crawler.sql` | crawler_seeds の作成、matches・match_participants に rank_tier を追加、prune_crawler_matches 関数（match-crawler） |
+| `20261106092001_add_match_raw_bundle_key.sql` | matches に raw_bundle_key を追加（match-detail） |
 
 `20240101`〜`20240104` は命名ルール制定前のファイルで、日時は実際の作成日ではない。
 
@@ -194,6 +195,7 @@ ID は Riot（Data Dragon）の値（`runes_id_version = 2`）。`runes_id_versi
 | detail_version | int | NOT NULL、既定 1 | 試合詳細から取り込んだ項目の版。2 = ルーン全構成・シャード・BAN を含む |
 | timeline_fetched_at | timestamptz | | タイムライン由来の項目を取り込んだ日時。未取得は NULL |
 | rank_tier | text | | クローラーが集めた試合のランク帯（収集元プレイヤーの tier: EMERALD / DIAMOND / MASTER / GRANDMASTER / CHALLENGER）。検索由来の試合は NULL。最初に記録した値を保つ |
+| raw_bundle_key | text | | クローラーが保存した生データのまとめファイルのキー（`bundles/crawler/...`）。1試合1ファイルで保存した試合は NULL。試合詳細の表示で使う（match-detail） |
 | created_at | timestamptz | NOT NULL、既定 now() | |
 
 - インデックス: `(detail_version)`、`(timeline_fetched_at)`（補完対象の抽出用。部分インデックスで可）、`(game_end_at) WHERE rank_tier IS NOT NULL`（上限を超えた試合の削除用）

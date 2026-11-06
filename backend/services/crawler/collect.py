@@ -26,11 +26,15 @@ MATCH_COUNT = 20
 INITIAL_LOOKBACK = timedelta(days=3)
 
 
-def _with_tier(fetched: FetchedMatch, tier: str) -> FetchedMatch:
-    """試合と参加者にランク帯を付ける。"""
+def _with_tier(
+    fetched: FetchedMatch, tier: str, bundle_key: str | None
+) -> FetchedMatch:
+    """試合と参加者にランク帯を付け、試合に生データのまとめファイルのキーを付ける。"""
     return fetched.model_copy(
         update={
-            "match": fetched.match.model_copy(update={"rank_tier": tier}),
+            "match": fetched.match.model_copy(
+                update={"rank_tier": tier, "raw_bundle_key": bundle_key}
+            ),
             "participants": [
                 p.model_copy(update={"rank_tier": tier}) for p in fetched.participants
             ],
@@ -42,10 +46,11 @@ async def _store(
     fetched: list[FetchedMatch],
     failures: list[FailedFetch],
     tier: str,
+    bundle_key: str | None,
     result: CollectResult,
 ) -> None:
     """取得できた試合を保存し、失敗を記録して、件数を result に足す。"""
-    await store_result([_with_tier(f, tier) for f in fetched], failures)
+    await store_result([_with_tier(f, tier, bundle_key) for f in fetched], failures)
     result.matches_saved += len(fetched)
     result.matches_failed += len(failures)
 
@@ -81,12 +86,15 @@ async def collect_seed(
     seed: CrawlerSeed,
     archive: RawArchive,
     result: CollectResult | None = None,
+    bundle_key: str | None = None,
 ) -> CollectResult:
     """収集元1人分の試合を集めて保存する。
 
     Args:
         archive: 生データの保管先（クローラーはバンドル）
         result: 件数を足していく結果。渡すと、429 で中断してもそれまでの件数が残る
+        bundle_key: 保存する試合の raw_bundle_key に書く、まとめファイルのキー
+            （None なら書き込まない）
 
     Returns:
         収集結果（result を渡した場合は同じオブジェクト）
@@ -114,9 +122,9 @@ async def collect_seed(
                 region, to_fetch, priority="backfill", archive=archive
             )
         except RiotRateLimitError as e:
-            await _store(e.fetched, e.failures, seed.tier, result)
+            await _store(e.fetched, e.failures, seed.tier, bundle_key, result)
             raise
-        await _store(details.fetched, details.failures, seed.tier, result)
+        await _store(details.fetched, details.failures, seed.tier, bundle_key, result)
         failed = bool(details.failures)
 
     if not failed:

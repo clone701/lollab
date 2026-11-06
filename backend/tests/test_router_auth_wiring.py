@@ -15,11 +15,13 @@ from fastapi.testclient import TestClient
 
 from api.deps import auth
 from tests.champion_helpers import install_champion_store_stub
+from tests.match_helpers import install_match_stubs
 from tests.store_helpers import FakeClient
 from tests.sync_helpers import install_store_stub
 
 install_store_stub()
 install_champion_store_stub()
+install_match_stubs()
 
 # favorites は import 時に Supabase クライアントを作るため、代役を差し込んで読み込む
 _fake_supabase = ModuleType("adapters.supabase")
@@ -28,11 +30,13 @@ with patch.dict(sys.modules, {"adapters.supabase": _fake_supabase}):
     from api.favorites import router as favorites  # noqa: E402
 
 from api.champion.router import router as champion_router  # noqa: E402
+from api.match.router import router as match_router  # noqa: E402
 from api.summoner.router import router as summoner_router  # noqa: E402
 
 _ROUTERS = {
     "summoner": (summoner_router, "/api/summoner/JP/Test/JP1"),
     "champion": (champion_router, "/api/champion/Ahri/build"),
+    "match": (match_router, "/api/match/JP1_1"),
     "favorites": (favorites.router, "/api/favorites"),
 }
 

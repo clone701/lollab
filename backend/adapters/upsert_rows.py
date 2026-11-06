@@ -6,12 +6,12 @@ from typing import Any
 from pydantic import BaseModel
 
 # save_matches の行の組み立て（値があるときだけ書き込む列。
-# タイムライン由来の列は marker で、rank_tier は列ごとに判定する）
+# タイムライン由来の列は marker で、rank_tier・raw_bundle_key は列ごとに判定する）
 MATCH_ROWS: dict[str, Any] = {
     "marker": "timeline_fetched_at",
     "optional": {"timeline_fetched_at"},
     "exclude": {"created_at"},
-    "independent": {"rank_tier"},
+    "independent": {"rank_tier", "raw_bundle_key"},
 }
 PART_ROWS: dict[str, Any] = {
     "marker": "skill_order",
