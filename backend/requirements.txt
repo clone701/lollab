@@ -12,13 +12,13 @@ boto3
 PyJWT[crypto]
 moto[s3,ssm]
 
-# コード品質ツール
-flake8
-black
-mypy
-isort
+# コード品質ツール（バージョンは固定する。新しい版で検査結果が変わり CI が急に失敗するのを防ぐため。上げるときは手元で全体を検査する）
+flake8==7.5.0
+black==26.10.1
+mypy==2.4.1
+isort==9.0.2
 
 # セキュリティツール
-bandit
-safety
-pip-audit
+bandit==1.9.4
+safety==3.8.1
+pip-audit==2.10.1
