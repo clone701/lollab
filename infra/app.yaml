@@ -240,7 +240,8 @@ Resources:
           QueryStringsConfig:
             QueryStringBehavior: none
 
-  # Authorization は転送しない（ベーシック認証と OAC の署名が使うため）
+  # Authorization は転送しない（ベーシック認証と OAC の署名が使うため）。
+  # x-amz-content-sha256 はポリシーに書けない（CloudFront が拒否する）。OAC の署名で CloudFront が扱う
   ApiOriginRequestPolicy:
     Type: AWS::CloudFront::OriginRequestPolicy
     Properties:
@@ -250,7 +251,6 @@ Resources:
           HeaderBehavior: whitelist
           Headers:
             - X-Lollab-Auth
-            - x-amz-content-sha256
         CookiesConfig:
           CookieBehavior: none
         QueryStringsConfig:

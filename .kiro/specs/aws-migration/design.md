@@ -69,7 +69,7 @@ graph TB
 
 | ビヘイビア | オリジン | キャッシュ | 備考 |
 |---|---|---|---|
-| `/api/*` | Lambda 関数 URL（OAC、`AWS_IAM` 認証） | 無効（CachingDisabled） | オリジンリクエストポリシーで `X-Lollab-Auth`・`x-amz-content-sha256`・クエリを転送。`Authorization` は転送しない |
+| `/api/*` | Lambda 関数 URL（OAC、`AWS_IAM` 認証） | 無効（CachingDisabled） | オリジンリクエストポリシーで `X-Lollab-Auth`・クエリを転送。`Authorization` は転送しない。`x-amz-content-sha256` はポリシーに書けず（CloudFront が拒否）、OAC の署名で CloudFront が扱う |
 | `/_next/static/*` | S3（OAC） | 1年 | ファイル名にハッシュが付くため長期キャッシュ |
 | `/*`（既定） | S3（OAC）、オリジンパス `/releases/{commit}` | 短め（5分） | |
 
