@@ -128,7 +128,8 @@ phases:
         fi
 
       # 4. gate.js を埋め込んだテンプレートを作る
-      - node infra/scripts/render-app-template.mjs infra/app.yaml infra/functions/gate.js build/app.yaml
+      #    （バックエンドを省いたときは build/ が無いので作る）
+      - mkdir -p build && node infra/scripts/render-app-template.mjs infra/app.yaml infra/functions/gate.js build/app.yaml
 
       # 5. 配置とスタックの更新。失敗するとスタックは自動で元に戻り、CloudFront は前のリリースを参照したまま
       - |
