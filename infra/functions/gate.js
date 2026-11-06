@@ -4,6 +4,8 @@
 // 下の3つの設定値は、デプロイ時に infra/scripts/render-app-template.mjs が
 // app.yaml のパラメータ（GateEnabled / AllowedCidrs / BasicAuthHash）に置き換える。
 // 関数コードは 10KB 以内。Fn::Sub に渡すため、ドル記号と波括弧の並びをコードに書かない。
+// runtime 2.0 は ES5.1 と一部の ES6 以降だけに対応する。for...of・分割代入・スプレッド構文・クラスは使えない
+// （Node のテストは通っても、CloudFront では SyntaxError になり全リクエストが 503 になる）。
 const GATE_ENABLED = '__GATE_ENABLED__';
 const ALLOWED_CIDRS = '__ALLOWED_CIDRS__';
 const BASIC_AUTH_SHA256 = '__BASIC_AUTH_SHA256__';
@@ -14,7 +16,8 @@ function parseIPv4(text) {
   const parts = text.split('.');
   if (parts.length !== 4) return null;
   const bytes = [];
-  for (const part of parts) {
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
     if (!/^\d{1,3}$/.test(part) || Number(part) > 255) return null;
     bytes.push(Number(part));
   }
@@ -40,7 +43,8 @@ function parseIPv6(input) {
   if (halves.length === 2 ? fill < 1 : fill !== 0) return null;
   const groups = head.concat(new Array(halves.length === 2 ? fill : 0).fill('0'), rest);
   const bytes = [];
-  for (const group of groups) {
+  for (let i = 0; i < groups.length; i++) {
+    const group = groups[i];
     if (!/^[0-9a-fA-F]{1,4}$/.test(group)) return null;
     const value = parseInt(group, 16);
     bytes.push(value >> 8, value & 255);

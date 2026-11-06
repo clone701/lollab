@@ -39,6 +39,15 @@ describe('設定値のプレースホルダー', () => {
     assert.ok(Buffer.byteLength(SOURCE) < 8000, '10KB の上限に対して値の分の余裕を残す');
   });
 
+  it('CloudFront Functions（runtime 2.0）が対応しない構文を使わない', () => {
+    const code = SOURCE.replace(/^\s*\/\/.*$/gm, '');
+    assert.ok(!/\bfor\s*\([^)]*\bof\b/.test(code), 'for...of');
+    assert.ok(!/\.\.\.\s*[A-Za-z_[(]/.test(code.replace(/function\s*\w*\s*\([^)]*\)/g, '')), 'スプレッド構文');
+    assert.ok(!/\b(const|let|var)\s*[[{]/.test(code), '分割代入');
+    assert.ok(!/\bclass\s+\w/.test(code), 'class');
+    assert.ok(!/\?\.|\?\?/.test(code), 'オプショナルチェーン・Null 合体');
+  });
+
   it('置き換えないままでは全員拒否する', () => {
     const handler = load({
       enabled: '__GATE_ENABLED__',
