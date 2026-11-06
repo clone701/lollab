@@ -248,6 +248,11 @@ Resources:
                 Resource:
                   - !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AppStackName}/*
                   - !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AppStackName}
+              # aws cloudformation deploy が既存スタックの更新時に呼ぶ（読み取りのみ。リソースの指定に対応しない）
+              - Sid: ReadTemplateSummary
+                Effect: Allow
+                Action: cloudformation:GetTemplateSummary
+                Resource: '*'
               - Sid: PassStackRole
                 Effect: Allow
                 Action: iam:PassRole
