@@ -183,7 +183,9 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
+# ビルドの出力先だけを除外する（どこにでも一致する build/ だと frontend の components/**/build/ も除外されるため）
+/build/
+/backend/build/
 develop-eggs/
 dist/
 downloads/
