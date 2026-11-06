@@ -61,14 +61,14 @@
   - [x] 0.2 請求設定で「無料利用枠の使用アラート」を有効にする
     - _要件: 9.2_
 
-- [ ] 4. 初回の準備（ユーザーの手作業。po が手順を用意する）
-  - [ ] 4.1 IAM Identity Center のユーザー作成（ルートユーザーの MFA は登録済み）
+- [x] 4. 初回の準備（ユーザーの手作業。po が手順を用意する）
+  - [x] 4.1 IAM Identity Center のユーザー作成（ルートユーザーの MFA は登録済み）
     - _要件: 8.4_
-  - [ ] 4.2 `bootstrap.yaml` のデプロイ、CodeConnections の GitHub 連携、SSM パラメータの登録、ベーシック認証のパスワードとハッシュの作成
+  - [x] 4.2 `bootstrap.yaml` のデプロイ、CodeConnections の GitHub 連携、SSM パラメータの登録、ベーシック認証のパスワードとハッシュの作成
     - _要件: 6.1_
-  - [ ] 4.3 database Spec のタスク（`worker_leases`）のマイグレーションを本番 DB に適用
-  - [ ] 4.4 フロントエンドの anon キー（旧形式の JWT）を publishable キー（`sb_publishable_...`）に置き換える（ローカルの `.env.local`・Vercel・CodeBuild の環境変数）。旧形式のキーは Supabase が2026年末までに廃止予定のため、移行と関係なく早めに行う
-  - [ ] 4.5 SSM に `/lollab/supabase_jwt_secret` を登録する（HS256 の検証用。Supabase を非対称鍵に移行したら削除する）
+  - [x] 4.3 database Spec のタスク（`worker_leases`）のマイグレーションを本番 DB に適用
+  - [x] 4.4 フロントエンドの anon キー（旧形式の JWT）を publishable キー（`sb_publishable_...`）に置き換える（ローカルの `.env.local`・Vercel・CodeBuild の環境変数）。旧形式のキーは Supabase が2026年末までに廃止予定のため、移行と関係なく早めに行う
+  - [x] 4.5 SSM に `/lollab/supabase_jwt_secret` を登録する（HS256 の検証用。Supabase を非対称鍵に移行したら削除する）
     - _要件: 5.5_
 
 - [ ] 5. 初回デプロイと確認
