@@ -8,6 +8,8 @@ on:
   schedule:
     # 毎週月曜日 9:00 (JST) に脆弱性チェック
     - cron: '0 0 * * 1'
+  # Actions タブの「Run workflow」から手動で実行する（main を選ぶとデプロイまで行う）
+  workflow_dispatch:
 
 jobs:
   frontend:
@@ -99,9 +101,10 @@ jobs:
 
   deploy:
     name: Deploy (AWS CodeBuild)
-    # main への push でテストが成功したときだけ実行する（PR・develop・定期実行では実行しない）
+    # main への push、または main を選んだ手動実行で、テストが成功したときだけ実行する
+    # （PR・develop・定期実行では実行しない。AWS のロールも main からしか引き受けられない）
     needs: [frontend, backend]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # 同時に1つだけ実行し、実行中のデプロイは中断しない

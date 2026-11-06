@@ -75,17 +75,17 @@
   - [x] 5.1 `main` へのマージで初回デプロイし、CloudFront の URL で全画面を確認する（ゲート有効・許可外 IP・許可外メール・ゲート無効）
     - _要件: 1.2, 5.1〜5.6, 10.1_
   - [x] 5.2 Supabase Auth のリダイレクト URL に CloudFront の URL を追加
-  - [ ] 5.3 `migrate_raw_to_s3.py` で生データを移す
+  - [x] 5.3 `migrate_raw_to_s3.py` で生データを移す
     - _要件: 4.2_
   - [ ] 5.4 1回目の請求見込み（Cost Explorer）が0円であることを確認する
     - _要件: 9.1_
 
 - [ ] 6. 切り替えと後片付け
-  - [ ] 6.1 Vercel・Render を停止し、数日後に削除。Supabase Auth のリダイレクト URL から Vercel の URL を消す
+  - [ ] 6.1 Vercel・Render のリソースを完全に削除する（プロジェクト・サービス・GitHub 連携）。Supabase Auth の Site URL を CloudFront の URL にし、リダイレクト URL から Vercel の URL を消す。Google の OAuth クライアントからも Vercel の URL を消す
     - _要件: 10.2_
-  - [ ] 6.2 `docs/architecture.md`（構成図、CI/CD 図、デプロイ・秘密情報・アクセス制限の手順、コスト方針）を作成
+  - [x] 6.2 `docs/architecture.md`（構成図、CI/CD 図、デプロイ・秘密情報・アクセス制限の手順、コスト方針）を作成
     - _要件: 10.4_
-  - [ ] 6.3 `tech.md`・`structure.md` と各 Spec の Vercel・Render の記述を更新（`infra/`・`lambda_handlers/` を structure に追加）
+  - [x] 6.3 `tech.md`・`structure.md` と各 Spec の Vercel・Render の記述を更新（`infra/`・`lambda_handlers/` を structure に追加）
     - _要件: 10.3_
   - [ ] 6.4 本 Spec（`.kiro/specs/aws-migration/`）を削除
     - _要件: 10.4_

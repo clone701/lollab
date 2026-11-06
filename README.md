@@ -6,35 +6,33 @@ League of Legendsプレイヤー向けの戦略ノート管理アプリケーシ
 
 ```
 lollab/
-  frontend/   ← Next.js (Vercel)
-  backend/    ← FastAPI (Render)
-    ├── main.py
-    ├── requirements.txt
-    └── (他: app/ など)
+  frontend/   ← Next.js（静的書き出し → S3 + CloudFront）
+  backend/    ← FastAPI（AWS Lambda）
+  infra/      ← CloudFormation テンプレートと CloudFront Function
+  supabase/   ← DB マイグレーション
   docs/       ← ドキュメント
 ```
 
+構成図・デプロイ・運用手順は [docs/architecture.md](docs/architecture.md) を参照。
+
 ## 開発ワークフロー
-
-詳細は [docs/git-workflow.md](docs/git-workflow.md) を参照
-
-### クイックスタート
 
 ```bash
 # 新機能開発
-git checkout develop
-git checkout -b feature/my-feature
+git switch develop
+git pull
+git switch -c feature/my-feature
 
 # 開発後、PR作成
-git push origin feature/my-feature
-# GitHub で feature/my-feature → develop のPRを作成
+git push -u origin feature/my-feature
+# GitHub で feature/my-feature → develop のPRを作成（マージ後にブランチは自動で削除される）
 
 # リリース（developが安定したら）
-# GitHub で develop → main のPRを作成
+# GitHub で develop → main のPRを作成（マージで AWS に自動デプロイ）
 ```
 
 ## ブランチ
 
-- `main`: 本番環境（自動デプロイ）
+- `main`: 本番環境（マージで AWS に自動デプロイ）
 - `develop`: 統合ブランチ
-- `feature/*`: 機能開発ブランチ
+- `feature/*`・`fix/*`・`chore/*`: 作業ブランチ
