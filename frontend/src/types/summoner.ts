@@ -31,6 +31,7 @@ export interface RankPositionData {
 }
 
 export interface SummonerData {
+  puuid: string;
   name: string;
   tagLine: string;
   level: number;

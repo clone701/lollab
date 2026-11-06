@@ -1,23 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { Region } from '@/types/summoner';
+import { buildSearchHref, parseSearchParams } from '@/lib/summoner-search';
 import SearchPage from './SearchPage';
 import SearchResultPage from './SearchResultPage';
 
+// 検索条件は URL のクエリ（region・q）で持つ。静的書き出しのため、ブラウザでクエリを読む
 export default function SearchPageContainer() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchRegion, setSearchRegion] = useState<Region>('JP');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const current = parseSearchParams(
+    searchParams.get('region'),
+    searchParams.get('q')
+  );
 
+  // クエリを更新する（push なので、ブラウザの戻るで前のサモナーに戻れる）。空の検索は検索画面に戻す
   function handleSearch(query: string, region: Region) {
-    setSearchQuery(query);
-    setSearchRegion(region);
+    router.push(query ? buildSearchHref(region, query) : '/');
   }
 
-  return searchQuery ? (
+  return current ? (
     <SearchResultPage
-      query={searchQuery}
-      region={searchRegion}
+      query={current.query}
+      region={current.region}
       onSearch={handleSearch}
     />
   ) : (

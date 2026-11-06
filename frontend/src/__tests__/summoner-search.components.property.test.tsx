@@ -29,6 +29,7 @@ const rankDataArb = (): fc.Arbitrary<RankData> =>
 
 const summonerDataArb = (): fc.Arbitrary<SummonerData> =>
   fc.record({
+    puuid: fc.string({ minLength: 1, maxLength: 30 }),
     name: fc.string({ minLength: 1, maxLength: 30 }),
     tagLine: fc.string({ minLength: 1, maxLength: 10 }),
     level: fc.integer({ min: 1, max: 9999 }),
@@ -142,7 +143,9 @@ describe('Property 7: MatchCard は全フィールドを表示し、勝敗に応
   it('任意の MatchData に対して全フィールドと勝敗ラベルが正しく表示される', () => {
     fc.assert(
       fc.property(matchDataArb(), (match) => {
-        const { unmount } = render(<MatchCard match={match} />);
+        const { unmount } = render(
+          <MatchCard match={match} puuid="p" region="JP" />
+        );
         const text = document.body.textContent ?? '';
         // チャンピオン名はalt属性で確認
         const imgEl = document.body.querySelector(

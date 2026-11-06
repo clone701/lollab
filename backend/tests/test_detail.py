@@ -132,6 +132,7 @@ def test_build_detail_maps_summoner_and_rank() -> None:
     detail, _, _ = _build(_record())
 
     summoner = detail.summoner
+    assert summoner.puuid == "puuid-0"
     assert summoner.name == "TestUser"
     assert summoner.tagLine == "JP1"
     assert summoner.level == 100
