@@ -1,7 +1,8 @@
 """試合の生データ（Riot API のレスポンス）の保管。
 
-Supabase Storage の非公開バケット riot-raw に gzip 圧縮して保存する。
-AWS 移行時は S3 に差し替える。同期 API のため asyncio.to_thread で呼び出す。
+RAW_BUCKET が設定されていれば S3、未設定（ローカル）なら Supabase Storage の
+非公開バケット riot-raw に、gzip 圧縮して保存する。パスはどちらも同じ。
+同期 API のため asyncio.to_thread で呼び出す。
 """
 
 import asyncio
@@ -9,6 +10,8 @@ import gzip
 import json
 import logging
 from typing import Any
+
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -31,14 +34,45 @@ def _bucket() -> Any:
     return supabase.storage.from_(BUCKET_NAME)
 
 
+_s3_client: Any | None = None
+
+
+def _s3_bucket_name() -> str:
+    """保存先の S3 バケット名。未設定なら空文字（Supabase Storage を使う）。"""
+    return settings.raw_bucket
+
+
+def _s3() -> Any:
+    global _s3_client
+    if _s3_client is None:
+        import boto3
+
+        _s3_client = boto3.client("s3")
+    return _s3_client
+
+
 def _upload(path: str, payload: dict[str, Any]) -> None:
     data = gzip.compress(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
+    s3_bucket = _s3_bucket_name()
+    if s3_bucket:
+        _s3().put_object(
+            Bucket=s3_bucket, Key=path, Body=data, ContentType="application/gzip"
+        )
+        return
     _bucket().upload(path, data, {"content-type": "application/gzip", "upsert": "true"})
+
+
+def _read(path: str) -> bytes:
+    s3_bucket = _s3_bucket_name()
+    if s3_bucket:
+        body = _s3().get_object(Bucket=s3_bucket, Key=path)["Body"]
+        return body.read()  # type: ignore[no-any-return]
+    return _bucket().download(path)  # type: ignore[no-any-return]
 
 
 def _download(path: str) -> dict[str, Any] | None:
     try:
-        data = _bucket().download(path)
+        data = _read(path)
         return json.loads(gzip.decompress(data))  # type: ignore[no-any-return]
     except Exception:
         # 未保存（ファイルなし）を含め、読み出せない場合は None にする

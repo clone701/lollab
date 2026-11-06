@@ -22,3 +22,20 @@ jest.mock('@/lib/supabase/client', () => ({
     })),
   })),
 }));
+
+// apiFetch はセッションのトークンを取得する。テストでは未ログイン（トークンなし）を既定にする
+jest.mock('@/lib/api/getAccessToken', () => ({
+  getAccessToken: jest.fn().mockResolvedValue(null),
+}));
+
+// jsdom にない Web Crypto と TextEncoder を Node のもので補う（apiFetch の SHA-256 用）
+const { webcrypto } = require('crypto');
+const { TextEncoder: NodeTextEncoder } = require('util');
+if (!globalThis.crypto?.subtle) {
+  Object.defineProperty(globalThis.crypto, 'subtle', {
+    value: webcrypto.subtle,
+  });
+}
+if (typeof globalThis.TextEncoder === 'undefined') {
+  globalThis.TextEncoder = NodeTextEncoder;
+}

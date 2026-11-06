@@ -10,6 +10,7 @@ from datetime import datetime
 
 from adapters import summoner_store
 from schemas.summoner_store import BackfillState
+from services.summoner import deadline as deadline_check
 from services.summoner import riot_fetch
 from services.summoner.backfill_page import process_page
 from services.summoner.enrich import run_enrichment
@@ -20,21 +21,24 @@ logger = logging.getLogger(__name__)
 _PAGE_SIZE = 100
 
 
-async def run_backfill(region: str, puuid: str) -> None:
+async def run_backfill(region: str, puuid: str, deadline: float | None = None) -> None:
     """未保存の対象試合を新しい側・古い側の順に取得する。
+
+    deadline（time.monotonic() の値）があれば、残りが30秒を切った時点で、ページの
+    区切りで終了する。カーソルは保存済みのページまで進んでいる（次回は続きから取得する）。
 
     例外は外に出さず、ログに記録して終了する。429 を受けたら、
     取得できた試合を保存し、カーソルを進めずに終了する（次回は続きから取得する）。
     """
     try:
-        await _run(region, puuid)
+        await _run(region, puuid, deadline)
     except riot_fetch.RiotRateLimitError:
         logger.warning("Backfill をレート制限により中断しました: puuid=%s", puuid)
     except Exception:
         logger.error("Backfill に失敗しました: puuid=%s", puuid, exc_info=True)
 
 
-async def _run(region: str, puuid: str) -> None:
+async def _run(region: str, puuid: str, deadline: float | None) -> None:
     if not await summoner_store.try_start_backfill(puuid, region):
         logger.info("Backfill は実行中または直近に開始済みです: puuid=%s", puuid)
         return
@@ -49,13 +53,23 @@ async def _run(region: str, puuid: str) -> None:
         backfill_completed=record.backfill_completed,
     )
     if state.synced_until is not None:
-        state, all_passed = await _fill_newer(region, puuid, state)
+        state, all_passed = await _fill_newer(region, puuid, state, deadline)
         if not all_passed:
             return
-    if not state.backfill_completed and not await _fill_older(region, puuid, state):
+    if not state.backfill_completed and not await _fill_older(
+        region, puuid, state, deadline
+    ):
         return
     # 補完は全サモナー共通。取得に失敗した試合が残っている間は進めない
-    await run_enrichment()
+    await run_enrichment(deadline)
+
+
+def _out_of_time(puuid: str, deadline: float | None) -> bool:
+    """締め切りが近ければログを残して True を返す。"""
+    if not deadline_check.is_near(deadline):
+        return False
+    logger.info("Backfill: 残り時間が少ないため終了します: puuid=%s", puuid)
+    return True
 
 
 async def _page_end_times(ids: list[str]) -> list[datetime]:
@@ -64,7 +78,7 @@ async def _page_end_times(ids: list[str]) -> list[datetime]:
 
 
 async def _fill_newer(
-    region: str, puuid: str, state: BackfillState
+    region: str, puuid: str, state: BackfillState, deadline: float | None
 ) -> tuple[BackfillState, bool]:
     """フェーズA: synced_until 以降の隙間を埋め、synced_until を最新に更新する。
 
@@ -77,6 +91,8 @@ async def _fill_newer(
     newest: datetime | None = None
     offset = 0
     while True:
+        if _out_of_time(puuid, deadline):
+            return state, False
         ids = await riot_fetch.fetch_ranked_match_ids(
             region,
             puuid,
@@ -101,7 +117,9 @@ async def _fill_newer(
     return updated, True
 
 
-async def _fill_older(region: str, puuid: str, state: BackfillState) -> bool:
+async def _fill_older(
+    region: str, puuid: str, state: BackfillState, deadline: float | None
+) -> bool:
     """フェーズB: backfill_cursor から過去へさかのぼり、1ページごとにカーソルを進める。
 
     カーソルは、ページの先頭から「最初の通過済みでない試合」の直前までの
@@ -113,6 +131,8 @@ async def _fill_older(region: str, puuid: str, state: BackfillState) -> bool:
     """
     cursor = state.backfill_cursor
     while True:
+        if _out_of_time(puuid, deadline):
+            return False
         ids = await riot_fetch.fetch_ranked_match_ids(
             region,
             puuid,

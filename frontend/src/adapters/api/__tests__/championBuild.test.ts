@@ -1,3 +1,4 @@
+import { ApiAuthError } from '@/lib/api';
 import { fetchChampionBuild } from '..';
 
 const mockFetch = jest.fn();
@@ -66,6 +67,18 @@ describe('fetchChampionBuild', () => {
     await expect(
       fetchChampionBuild('Ahri', { period: 'all', queue: 'all' })
     ).rejects.toThrow('APIエラー: 502');
+  });
+
+  it('403 は ApiAuthError のまま detail をメッセージにする', async () => {
+    mockFetch.mockResolvedValue(
+      jsonResponse(403, { detail: 'このアカウントでは利用できません' })
+    );
+    const promise = fetchChampionBuild('Ahri', { period: 'all', queue: 'all' });
+    await expect(promise).rejects.toBeInstanceOf(ApiAuthError);
+    await expect(promise).rejects.toMatchObject({
+      status: 403,
+      message: 'このアカウントでは利用できません',
+    });
   });
 
   it('接続できない場合は接続エラーのメッセージにする', async () => {

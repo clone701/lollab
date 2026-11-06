@@ -32,6 +32,12 @@ class FakeBucket:
         return self.files[path]
 
 
+@pytest.fixture(autouse=True)
+def supabase_storage(monkeypatch: pytest.MonkeyPatch) -> None:
+    """RAW_BUCKET が設定されていても、このファイルは Supabase Storage の経路を検証する。"""
+    monkeypatch.setattr(raw_store, "_s3_bucket_name", lambda: "")
+
+
 @pytest.fixture
 def bucket(monkeypatch: pytest.MonkeyPatch) -> FakeBucket:
     fake = FakeBucket()

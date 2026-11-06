@@ -25,6 +25,7 @@ sys.modules.setdefault("adapters", MagicMock())
 sys.modules.setdefault("adapters.riot_api", MagicMock())
 install_store_stub()
 
+from api.deps.auth import require_allowed_user  # noqa: E402
 from api.summoner.router import router  # noqa: E402
 from schemas.summoner import (  # noqa: E402
     ChampionStatData,
@@ -37,11 +38,13 @@ from schemas.summoner import (  # noqa: E402
 
 app = FastAPI()
 app.include_router(router)
+# 認証は test_auth_dependency.py で検証する。ここでは判定を通す
+app.dependency_overrides[require_allowed_user] = lambda: None
 client = TestClient(app)
 
 _SEARCH = "api.summoner.router.search_summoner"
 _UPDATE = "api.summoner.router.update_summoner"
-_BACKFILL = "api.summoner.router.run_backfill"
+_BACKFILL = "services.summoner.backfill_dispatch.run_backfill"
 _URL = "/api/summoner/JP/TestUser/JP1"
 
 # --- テスト用モックデータ ---

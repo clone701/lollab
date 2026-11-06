@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -96,3 +96,45 @@ jobs:
       - name: Dependency audit (Safety)
         run: safety check --json || true
         continue-on-error: true
+
+  deploy:
+    name: Deploy (AWS CodeBuild)
+    # main への push でテストが成功したときだけ実行する（PR・develop・定期実行では実行しない）
+    needs: [frontend, backend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # 同時に1つだけ実行し、実行中のデプロイは中断しない
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Run CodeBuild and wait for completion
+        run: |
+          set -euo pipefail
+          build_id=$(aws codebuild start-build \
+            --project-name lollab-deploy \
+            --source-version "$GITHUB_SHA" \
+            --query build.id --output text)
+          echo "CodeBuild: $build_id"
+          while true; do
+            sleep 15
+            read -r status phase <<< "$(aws codebuild batch-get-builds --ids "$build_id" \
+              --query 'builds[0].[buildStatus,currentPhase]' --output text)"
+            echo "status=$status phase=$phase"
+            [ "$status" = "IN_PROGRESS" ] || break
+          done
+          if [ "$status" != "SUCCEEDED" ]; then
+            echo "::error::CodeBuild が $status で終了しました（$build_id）。CloudWatch Logs の /aws/codebuild/lollab-deploy を確認してください"
+            exit 1
+          fi

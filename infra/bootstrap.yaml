@@ -1,0 +1,413 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: LoL Lab の初回準備（GitHub OIDC、デプロイ用ロール、成果物バケット、CodeBuild）。手動で1回デプロイする
+
+# デプロイ: aws cloudformation deploy --template-file infra/bootstrap.yaml --stack-name lollab-bootstrap \
+#   --capabilities CAPABILITY_NAMED_IAM --parameter-overrides CodeConnectionArn=... NextPublicSupabaseUrl=... ...
+# 手順の詳細は docs/architecture.md（移行完了後に作成）に置く。
+
+Parameters:
+  GitHubRepository:
+    Type: String
+    Description: デプロイ元のリポジトリ（owner/name）
+    AllowedPattern: '^[0-9A-Za-z._-]+/[0-9A-Za-z._-]+$'
+    Default: clone701/lollab
+  GitHubBranch:
+    Type: String
+    Description: デプロイを許可するブランチ
+    AllowedPattern: '^[0-9A-Za-z._/-]+$'
+    Default: main
+  CodeConnectionArn:
+    Type: String
+    Description: GitHub への CodeConnections の接続 ARN（コンソールで作成し、承認済みであること）
+    AllowedPattern: '^arn:aws:codeconnections:[a-z0-9-]+:[0-9]{12}:connection/[0-9a-f-]+$'
+  AppStackName:
+    Type: String
+    Description: buildspec.yml がデプロイするアプリのスタック名
+    AllowedPattern: '^[A-Za-z][A-Za-z0-9-]*$'
+    Default: lollab-app
+  NextPublicSupabaseUrl:
+    Type: String
+    Description: フロントエンドの NEXT_PUBLIC_SUPABASE_URL（公開される値）
+    AllowedPattern: '^https://[0-9A-Za-z.-]+$'
+  NextPublicSupabaseAnonKey:
+    Type: String
+    Description: フロントエンドの NEXT_PUBLIC_SUPABASE_ANON_KEY（publishable キー。公開される値。secret キーは入れない）
+    AllowedPattern: '^[0-9A-Za-z_.-]+$'
+  NextPublicAuthGateEnabled:
+    Type: String
+    Description: フロントエンドの NEXT_PUBLIC_AUTH_GATE_ENABLED（ログイン画面の強制。ビルド時に決まる）
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+  # 以下は app.yaml のパラメータの上書き。「-」は上書きせず、スタックの現在値（初回は既定値）を使う
+  AppGateEnabled:
+    Type: String
+    Description: app.yaml の GateEnabled
+    AllowedValues: ['-', 'true', 'false']
+    Default: '-'
+  AppAllowedCidrs:
+    Type: String
+    Description: app.yaml の AllowedCidrs（許可する IP の CIDR、カンマ区切り）
+    AllowedPattern: '^(-|[0-9A-Fa-f:.,/ ]+)$'
+    Default: '-'
+  AppBasicAuthHash:
+    Type: String
+    Description: app.yaml の BasicAuthHash（SHA-256、16進）
+    AllowedPattern: '^(-|[0-9a-f]{64})$'
+    Default: '-'
+  AppUserGateEnabled:
+    Type: String
+    Description: app.yaml の UserGateEnabled
+    AllowedValues: ['-', 'true', 'false']
+    Default: '-'
+  AppSupabaseProjectRef:
+    Type: String
+    Description: app.yaml の SupabaseProjectRef
+    AllowedPattern: '^(-|[0-9a-z]+)$'
+    Default: '-'
+
+Resources:
+  # ---------------------------------------------------------------- GitHub OIDC
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+
+  GitHubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lollab-github-actions
+      Description: Starts the lollab-deploy CodeBuild project from GitHub Actions
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !GetAtt GitHubOidcProvider.Arn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepository}:ref:refs/heads/${GitHubBranch}
+      Policies:
+        - PolicyName: start-deploy-build
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [codebuild:StartBuild, codebuild:BatchGetBuilds]
+                Resource: !GetAtt DeployProject.Arn
+
+  # ---------------------------------------------------------------- 成果物バケット
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub lollab-artifacts-${AWS::AccountId}-${AWS::Region}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-artifacts
+            Status: Enabled
+            ExpirationInDays: 30
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+
+  ArtifactBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ArtifactBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !GetAtt ArtifactBucket.Arn
+              - !Sub ${ArtifactBucket.Arn}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+
+  # ---------------------------------------------------------------- CodeBuild
+  DeployLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/codebuild/lollab-deploy
+      RetentionInDays: 14
+
+  DeployProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: lollab-deploy
+      Description: フロントエンドのビルド、Lambda の ZIP、app.yaml の更新、CloudFront の無効化
+      ServiceRole: !GetAtt DeployRole.Arn
+      TimeoutInMinutes: 20
+      QueuedTimeoutInMinutes: 30
+      Source:
+        Type: GITHUB
+        Location: !Sub https://github.com/${GitHubRepository}.git
+        BuildSpec: buildspec.yml
+        Auth:
+          Type: CODECONNECTIONS
+          Resource: !Ref CodeConnectionArn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: ARM_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux-aarch64-standard:3.0
+        ImagePullCredentialsType: CODEBUILD
+        PrivilegedMode: false
+        EnvironmentVariables:
+          - { Name: STACK_NAME, Type: PLAINTEXT, Value: !Ref AppStackName }
+          - { Name: ARTIFACT_BUCKET, Type: PLAINTEXT, Value: !Ref ArtifactBucket }
+          - { Name: SITE_BUCKET, Type: PLAINTEXT, Value: !Sub 'lollab-site-${AWS::AccountId}-${AWS::Region}' }
+          - { Name: CFN_ROLE_ARN, Type: PLAINTEXT, Value: !GetAtt AppStackRole.Arn }
+          # フロントエンドの公開設定（ビルド時に埋め込まれる。秘密情報は入れない）
+          - { Name: NEXT_PUBLIC_SUPABASE_URL, Type: PLAINTEXT, Value: !Ref NextPublicSupabaseUrl }
+          - { Name: NEXT_PUBLIC_SUPABASE_ANON_KEY, Type: PLAINTEXT, Value: !Ref NextPublicSupabaseAnonKey }
+          - { Name: NEXT_PUBLIC_AUTH_GATE_ENABLED, Type: PLAINTEXT, Value: !Ref NextPublicAuthGateEnabled }
+          # app.yaml のパラメータの上書き（「-」は上書きしない）
+          - { Name: APP_GATE_ENABLED, Type: PLAINTEXT, Value: !Ref AppGateEnabled }
+          - { Name: APP_ALLOWED_CIDRS, Type: PLAINTEXT, Value: !Ref AppAllowedCidrs }
+          - { Name: APP_BASIC_AUTH_HASH, Type: PLAINTEXT, Value: !Ref AppBasicAuthHash }
+          - { Name: APP_USER_GATE_ENABLED, Type: PLAINTEXT, Value: !Ref AppUserGateEnabled }
+          - { Name: APP_SUPABASE_PROJECT_REF, Type: PLAINTEXT, Value: !Ref AppSupabaseProjectRef }
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: !Ref DeployLogGroup
+
+  # CodeBuild のロール: ビルド、成果物とサイトの配置、スタックの更新依頼、CloudFront の無効化だけ
+  DeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lollab-codebuild-deploy
+      Description: Service role of the lollab-deploy CodeBuild project
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      Policies:
+        - PolicyName: lollab-deploy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: WriteLogs
+                Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !GetAtt DeployLogGroup.Arn
+              - Sid: UseGitHubConnection
+                Effect: Allow
+                Action:
+                  - codeconnections:GetConnection
+                  - codeconnections:GetConnectionToken
+                  - codeconnections:UseConnection
+                Resource: !Ref CodeConnectionArn
+              - Sid: ArtifactObjects
+                Effect: Allow
+                Action: [s3:GetObject, s3:PutObject]
+                Resource: !Sub ${ArtifactBucket.Arn}/*
+              - Sid: SiteObjects
+                Effect: Allow
+                Action: [s3:GetObject, s3:PutObject, s3:DeleteObject]
+                Resource: !Sub arn:${AWS::Partition}:s3:::lollab-site-${AWS::AccountId}-${AWS::Region}/releases/*
+              - Sid: ListBuckets
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource:
+                  - !GetAtt ArtifactBucket.Arn
+                  - !Sub arn:${AWS::Partition}:s3:::lollab-site-${AWS::AccountId}-${AWS::Region}
+              - Sid: UpdateAppStack
+                Effect: Allow
+                Action:
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackEvents
+                Resource:
+                  - !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AppStackName}/*
+                  - !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AppStackName}
+              # aws cloudformation deploy が既存スタックの更新時に呼ぶ（読み取りのみ。リソースの指定に対応しない）
+              - Sid: ReadTemplateSummary
+                Effect: Allow
+                Action: cloudformation:GetTemplateSummary
+                Resource: '*'
+              - Sid: PassStackRole
+                Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt AppStackRole.Arn
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: cloudformation.amazonaws.com
+              - Sid: InvalidateCloudFront
+                Effect: Allow
+                Action: cloudfront:CreateInvalidation
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*
+
+  # app.yaml のリソースを作る・更新する CloudFormation のサービスロール。
+  # CodeBuild のロール自体には、これらのリソースを直接作る権限を持たせない
+  AppStackRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lollab-cloudformation-app
+      Description: CloudFormation service role for the lollab-app stack
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      Policies:
+        - PolicyName: lollab-app-resources
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: Buckets
+                Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                  - s3:DeleteBucket
+                  - s3:ListBucket
+                  - s3:GetBucket*
+                  - s3:PutBucket*
+                  - s3:DeleteBucketPolicy
+                  - s3:GetEncryptionConfiguration
+                  - s3:PutEncryptionConfiguration
+                  - s3:GetLifecycleConfiguration
+                  - s3:PutLifecycleConfiguration
+                Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::lollab-site-${AWS::AccountId}-${AWS::Region}
+                  - !Sub arn:${AWS::Partition}:s3:::lollab-raw-${AWS::AccountId}-${AWS::Region}
+              - Sid: ReadLambdaCode
+                Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub ${ArtifactBucket.Arn}/lambda/*
+              - Sid: CloudFront
+                Effect: Allow
+                Action:
+                  - cloudfront:CreateDistribution
+                  - cloudfront:UpdateDistribution
+                  - cloudfront:DeleteDistribution
+                  - cloudfront:GetDistribution
+                  - cloudfront:GetDistributionConfig
+                  - cloudfront:CreateOriginAccessControl
+                  - cloudfront:UpdateOriginAccessControl
+                  - cloudfront:DeleteOriginAccessControl
+                  - cloudfront:GetOriginAccessControl
+                  - cloudfront:CreateCachePolicy
+                  - cloudfront:UpdateCachePolicy
+                  - cloudfront:DeleteCachePolicy
+                  - cloudfront:GetCachePolicy
+                  - cloudfront:CreateOriginRequestPolicy
+                  - cloudfront:UpdateOriginRequestPolicy
+                  - cloudfront:DeleteOriginRequestPolicy
+                  - cloudfront:GetOriginRequestPolicy
+                  - cloudfront:CreateFunction
+                  - cloudfront:UpdateFunction
+                  - cloudfront:DeleteFunction
+                  - cloudfront:DescribeFunction
+                  - cloudfront:GetFunction
+                  - cloudfront:PublishFunction
+                  - cloudfront:TagResource
+                  - cloudfront:UntagResource
+                  - cloudfront:ListTagsForResource
+                Resource: '*'
+              - Sid: Lambda
+                Effect: Allow
+                Action:
+                  - lambda:CreateFunction
+                  - lambda:DeleteFunction
+                  - lambda:GetFunction
+                  - lambda:GetFunctionConfiguration
+                  - lambda:GetFunctionCodeSigningConfig
+                  - lambda:UpdateFunctionCode
+                  - lambda:UpdateFunctionConfiguration
+                  - lambda:AddPermission
+                  - lambda:RemovePermission
+                  - lambda:GetPolicy
+                  - lambda:CreateFunctionUrlConfig
+                  - lambda:UpdateFunctionUrlConfig
+                  - lambda:DeleteFunctionUrlConfig
+                  - lambda:GetFunctionUrlConfig
+                  - lambda:PutFunctionEventInvokeConfig
+                  - lambda:UpdateFunctionEventInvokeConfig
+                  - lambda:DeleteFunctionEventInvokeConfig
+                  - lambda:GetFunctionEventInvokeConfig
+                  - lambda:ListTags
+                  - lambda:TagResource
+                  - lambda:UntagResource
+                Resource: !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:lollab-*
+              - Sid: LambdaRoles
+                Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:GetRole
+                  - iam:UpdateRole
+                  - iam:UpdateAssumeRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:GetRolePolicy
+                  - iam:ListRolePolicies
+                  - iam:ListAttachedRolePolicies
+                  - iam:TagRole
+                  - iam:UntagRole
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${AppStackName}-*
+              - Sid: PassLambdaRoles
+                Effect: Allow
+                Action: iam:PassRole
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${AppStackName}-*
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: lambda.amazonaws.com
+              - Sid: LogGroups
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:DeleteLogGroup
+                  - logs:PutRetentionPolicy
+                  - logs:DeleteRetentionPolicy
+                  - logs:TagResource
+                  - logs:UntagResource
+                  - logs:ListTagsForResource
+                Resource: !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/lollab-*
+              - Sid: DescribeLogGroups
+                Effect: Allow
+                Action: logs:DescribeLogGroups
+                Resource: '*'
+
+Outputs:
+  GitHubActionsRoleArn:
+    Description: GitHub の Variables に設定するロール ARN（AWS_DEPLOY_ROLE_ARN）
+    Value: !GetAtt GitHubActionsRole.Arn
+  DeployProjectName:
+    Value: !Ref DeployProject
+  ArtifactBucketName:
+    Value: !Ref ArtifactBucket
+  AppStackRoleArn:
+    Value: !GetAtt AppStackRole.Arn

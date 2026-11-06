@@ -3,14 +3,15 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
+from api.deps.auth import require_allowed_user
 from schemas.champion import ChampionBuildResponse, Period, QueueFilter, Role
 from services.champion.build import get_champion_build
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/champion")
+router = APIRouter(prefix="/api/champion", dependencies=[Depends(require_allowed_user)])
 
 
 @router.get("/{championName}/build")
