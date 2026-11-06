@@ -116,9 +116,17 @@ Resources:
               SSEAlgorithm: AES256
       LifecycleConfiguration:
         Rules:
-          - Id: expire-artifacts
+          # 期限削除は templates/（aws cloudformation deploy がアップロードするテンプレート）だけにする。
+          # lambda/ の ZIP を期限で消すと、バックエンドを30日以上変えないとき、配信中の ZIP が消えて Lambda を更新できなくなる。
+          # また、変更を含むデプロイが失敗した際のロールバック先（直前の ZIP）が消えていると UPDATE_ROLLBACK_FAILED になる。
+          # lambda/ の古い ZIP は、buildspec.yml が今回と直前以外を削除する
+          - Id: expire-templates
             Status: Enabled
+            Prefix: templates/
             ExpirationInDays: 30
+          # 未完了のマルチパートアップロードはバケット全体で破棄する
+          - Id: abort-incomplete-multipart-upload
+            Status: Enabled
             AbortIncompleteMultipartUpload:
               DaysAfterInitiation: 7
 
@@ -226,6 +234,11 @@ Resources:
                 Effect: Allow
                 Action: [s3:GetObject, s3:PutObject]
                 Resource: !Sub ${ArtifactBucket.Arn}/*
+              # 古い Lambda の ZIP を消すため（buildspec.yml の cleanup_old_lambda_zips）。削除は lambda/ 配下だけに限る
+              - Sid: ArtifactLambdaDelete
+                Effect: Allow
+                Action: s3:DeleteObject
+                Resource: !Sub ${ArtifactBucket.Arn}/lambda/*
               - Sid: SiteObjects
                 Effect: Allow
                 Action: [s3:GetObject, s3:PutObject, s3:DeleteObject]

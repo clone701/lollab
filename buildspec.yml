@@ -168,12 +168,12 @@ phases:
             --parameter-overrides "${PARAMS[@]}"
         }
 
-        # 現在配信中の ReleaseId を返す。スタックが無ければ空。それ以外の失敗はビルドを失敗させる
-        # （空と誤認すると、配信中のリリースを消してしまうため）
-        current_release_id() {
+        # 更新前のスタックのパラメータ値（$1 はパラメータ名）を返す。スタックが無ければ空。
+        # それ以外の失敗はビルドを失敗させる（空と誤認すると、配信中のリリースや ZIP を消してしまうため）
+        stack_parameter() {
           local result
           if ! result=$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" \
-            --query "Stacks[0].Parameters[?ParameterKey=='ReleaseId'].ParameterValue" --output text 2>&1); then
+            --query "Stacks[0].Parameters[?ParameterKey=='$1'].ParameterValue" --output text 2>&1); then
             if [[ "${result}" == *"does not exist"* ]]; then return 0; fi
             echo "${result}" >&2
             return 1
@@ -198,10 +198,28 @@ phases:
           done
         }
 
+        # 古い Lambda の ZIP を消す。デプロイ成功後にだけ呼ぶ。
+        # 今回の ZIP（lambda/${BACKEND_ID}.zip）と、ロールバック先になる直前の ZIP（PREVIOUS_CODE_KEY）は残す。
+        # 以前のコミット SHA 形式（lambda/<40桁>.zip）も、この2つ以外なら削除対象になる
+        cleanup_old_lambda_zips() {
+          local listing key
+          # AWS CLI が自動でページングする。ページごとの結果が空だと "None" と出るので lambda/ で始まる行だけ使う
+          listing=$(aws s3api list-objects-v2 --bucket "${ARTIFACT_BUCKET}" --prefix "lambda/" \
+            --query "Contents[].Key" --output text)
+          for key in $(echo "${listing}" | tr '\t' '\n' | grep '^lambda/' || true); do
+            if [ "${key}" = "lambda/${BACKEND_ID}.zip" ] || [ "${key}" = "${PREVIOUS_CODE_KEY}" ]; then continue; fi
+            echo "古い Lambda の ZIP を削除: ${key}"
+            aws s3 rm "s3://${ARTIFACT_BUCKET}/${key}" --only-show-errors
+          done
+        }
+
         PREVIOUS_ID=""
+        PREVIOUS_CODE_KEY=""
         if aws s3api head-bucket --bucket "${SITE_BUCKET}" 2>/dev/null; then
           # 更新: 先にファイルを置き、スタックの更新で配信するリリースを切り替える
-          PREVIOUS_ID="$(current_release_id)"
+          # 更新前の値は deploy_stack より前に取得する
+          PREVIOUS_ID="$(stack_parameter ReleaseId)"
+          PREVIOUS_CODE_KEY="$(stack_parameter LambdaCodeKey)"
           if [ "${FRONTEND_SKIP}" != "1" ]; then upload_site; fi
           deploy_stack
         else
@@ -210,6 +228,7 @@ phases:
           if [ "${FRONTEND_SKIP}" != "1" ]; then upload_site; fi
         fi
         cleanup_old_releases
+        cleanup_old_lambda_zips
 
       # 6. CloudFront のキャッシュを無効化する
       # フロントを省いた場合でも、配信中のリリースが変わるなら無効化する。

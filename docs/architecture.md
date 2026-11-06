@@ -176,4 +176,4 @@ aws codebuild start-build --profile lollab --region ap-northeast-1 --project-nam
 - 使わないもの: VPC・NAT Gateway・常時起動のサーバー・Provisioned Concurrency・AWS WAF・Secrets Manager・CloudFront KeyValueStore・KMS のカスタマー管理キー・CloudFront の標準ログ
 - 通知: AWS Budgets（`lollab-zero-spend` は1セントでも費用が出たら、`My Monthly Cost Budget` は月 $1）と、請求設定の「無料利用枠の使用アラート」
 - 主な無料枠: Lambda（月100万リクエスト・40万 GB 秒）、CloudFront（月1TB・1,000万リクエスト）、CodeBuild（月100分）、CloudWatch Logs（5GB）。S3 は無料枠の対象外の部分があるが、保存量が小さい間は数円以内
-- ログの保存は14日。S3 `lollab-site` は CodeBuild が今回と直前のリリース以外を消す。成果物バケットは30日で自動削除
+- ログの保存は14日。S3 `lollab-site` は CodeBuild が今回と直前のリリース以外を消す。成果物バケットの Lambda の ZIP（`lambda/`）は CodeBuild が今回と直前以外を消し、テンプレート（`templates/`）は30日で自動削除
