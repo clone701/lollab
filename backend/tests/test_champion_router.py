@@ -14,11 +14,14 @@ from tests.champion_helpers import install_champion_store_stub
 install_champion_store_stub()
 
 from api.champion.router import router  # noqa: E402
+from api.deps.auth import require_allowed_user  # noqa: E402
 from schemas.champion import ChampionBuildResponse, ChampionBuildSummary  # noqa: E402
 from services.champion.build_elements import build_elements  # noqa: E402
 
 app = FastAPI()
 app.include_router(router)
+# 認証は test_auth_dependency.py で検証する。ここでは判定を通す
+app.dependency_overrides[require_allowed_user] = lambda: None
 client = TestClient(app, raise_server_exceptions=False)
 
 _SERVICE = "api.champion.router.get_champion_build"

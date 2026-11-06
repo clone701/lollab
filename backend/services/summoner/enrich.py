@@ -18,6 +18,7 @@ from datetime import datetime
 from adapters import enrich_store, failed_match_store
 from schemas.riot_fetch import FailedFetch
 from schemas.summoner_store import EnrichTarget
+from services.summoner import deadline as deadline_check
 from services.summoner import riot_fetch
 from services.summoner.backfill_page import store_result
 from services.summoner.region import region_of_match_id
@@ -62,14 +63,19 @@ async def has_pending_targets() -> bool:
         await pages.aclose()
 
 
-async def run_enrichment() -> None:
+async def run_enrichment(deadline: float | None = None) -> None:
     """補完対象の試合を古い順に取得して保存する。
+
+    deadline（time.monotonic() の値）の残りが30秒を切ったら、ページの区切りで終了する。
 
     Raises:
         RiotRateLimitError: 429 または Backfill の予約枠に達した。取得済みの試合の
             保存と失敗の記録を済ませてから送出する。
     """
     async for page in _pending_pages():
+        if deadline_check.is_near(deadline):
+            logger.info("補完: 残り時間が少ないため終了します")
+            return
         await _enrich_page(page)
 
 

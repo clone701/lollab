@@ -3,6 +3,7 @@ import { Noto_Sans_JP } from 'next/font/google';
 import { Providers } from './providers';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { AuthGate } from '@/components/auth';
 import './globals.css';
 
 const notoSansJP = Noto_Sans_JP({
@@ -28,9 +29,11 @@ export default function RootLayout({
     <html lang="ja" className={notoSansJP.variable}>
       <body className={notoSansJP.className}>
         <Providers>
-          <Navbar />
-          <main className="mx-auto max-w-6xl px-4">{children}</main>
-          <Footer />
+          <AuthGate>
+            <Navbar />
+            <main className="mx-auto max-w-6xl px-4">{children}</main>
+            <Footer />
+          </AuthGate>
         </Providers>
       </body>
     </html>

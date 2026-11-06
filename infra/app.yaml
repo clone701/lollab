@@ -1,0 +1,511 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: LoL Lab アプリ（S3 site/raw、CloudFront、ゲート関数、Lambda 2つ）。buildspec.yml がデプロイする
+
+# このテンプレートは FunctionCode の行（__GATE_FUNCTION_CODE__）を buildspec が
+# infra/scripts/render-app-template.mjs で gate.js に置き換えてからデプロイする。
+# そのままデプロイしてはいけない。
+
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        # ゲートのパラメータは、レンダリング前のテンプレートでは FunctionCode から参照されていない
+        - W2001
+
+Parameters:
+  ReleaseId:
+    Type: String
+    Description: フロントエンドのリリース（コミット）。site バケットの releases/{ReleaseId}/ を配信する
+    AllowedPattern: '^[0-9A-Za-z._-]{1,64}$'
+  ArtifactBucket:
+    Type: String
+    Description: Lambda の ZIP を置いた成果物バケット（bootstrap.yaml の出力）
+  LambdaCodeKey:
+    Type: String
+    Description: 成果物バケット内の Lambda の ZIP のキー
+  GateEnabled:
+    Type: String
+    Description: アクセスゲート（第1段階）の有効／無効。一般公開時だけ false にする
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+  AllowedCidrs:
+    Type: String
+    Description: ゲートを通す IP の CIDR（IPv4・IPv6、カンマ区切り）。空なら IP では通さない
+    AllowedPattern: '^[0-9A-Fa-f:.,/ ]*$'
+    Default: ''
+  BasicAuthHash:
+    Type: String
+    Description: Authorization ヘッダー値全体（Basic xxxx）の SHA-256（16進、小文字）。空ならベーシック認証は使わない
+    AllowedPattern: '^([0-9a-f]{64})?$'
+    Default: ''
+  UserGateEnabled:
+    Type: String
+    Description: ユーザー制限（第2段階、許可メール）の有効／無効。審査期間中・一般公開時は false
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+  ApiRateLimits:
+    Type: String
+    Description: lollab-api の Riot API レート制限（回数:秒 のカンマ区切り）
+    AllowedPattern: '^[0-9]+:[0-9.]+(,[0-9]+:[0-9.]+)*$'
+    Default: '8:1,50:120'
+  BackfillRateLimits:
+    Type: String
+    Description: lollab-backfill の Riot API レート制限。ApiRateLimits との合計をキーの上限以内にする
+    AllowedPattern: '^[0-9]+:[0-9.]+(,[0-9]+:[0-9.]+)*$'
+    Default: '10:1,45:120'
+  SupabaseProjectRef:
+    Type: String
+    Description: JWKS の URL を作る Supabase のプロジェクト参照。空なら SSM の supabase_url から作る
+    AllowedPattern: '^[0-9a-z]*$'
+    Default: ''
+
+Conditions:
+  HasSupabaseProjectRef: !Not [!Equals [!Ref SupabaseProjectRef, '']]
+
+Resources:
+  # ---------------------------------------------------------------- S3
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub lollab-site-${AWS::AccountId}-${AWS::Region}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          # 古いリリースは期限では消さない（配信中のファイルが消えるため）。デプロイ成功後に buildspec.yml が消す
+          - Id: abort-incomplete-uploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${SiteBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${Distribution}
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !GetAtt SiteBucket.Arn
+              - !Sub ${SiteBucket.Arn}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+
+  RawBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub lollab-raw-${AWS::AccountId}-${AWS::Region}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  RawBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref RawBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !GetAtt RawBucket.Arn
+              - !Sub ${RawBucket.Arn}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+
+  # ---------------------------------------------------------------- CloudFront Functions
+  GateFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: lollab-gate
+      AutoPublish: true
+      FunctionCode: __GATE_FUNCTION_CODE__
+      FunctionConfig:
+        Comment: アクセスゲート（許可 IP / ベーシック認証）と静的書き出しの URL 書き換え
+        Runtime: cloudfront-js-2.0
+
+  # 静的ページ（既定のビヘイビア）が S3 から 403/404 を受けたら /404.html へ移す。
+  # ディストリビューションの CustomErrorResponses は /api/* にも掛かり、API の 403/404
+  # （許可外のメール、サモナー未発見など）を潰すため使わない。
+  NotFoundFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: lollab-not-found
+      AutoPublish: true
+      FunctionCode: |
+        function handler(event) {
+          var response = event.response;
+          var missing = response.statusCode === 403 || response.statusCode === 404;
+          if (missing && event.request.uri !== '/404.html') {
+            return {
+              statusCode: 302,
+              statusDescription: 'Found',
+              headers: {
+                location: { value: '/404.html' },
+                'cache-control': { value: 'no-store' }
+              }
+            };
+          }
+          return response;
+        }
+      FunctionConfig:
+        Comment: 存在しないページを /404.html へ移す
+        Runtime: cloudfront-js-2.0
+
+  # ---------------------------------------------------------------- CloudFront
+  SiteOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub lollab-site-${AWS::StackName}
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  ApiOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub lollab-api-${AWS::StackName}
+        OriginAccessControlOriginType: lambda
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  StaticCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub lollab-static-1y-${AWS::StackName}
+        MinTTL: 0
+        DefaultTTL: 31536000
+        MaxTTL: 31536000
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingGzip: true
+          EnableAcceptEncodingBrotli: true
+          HeadersConfig:
+            HeaderBehavior: none
+          CookiesConfig:
+            CookieBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: none
+
+  PageCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub lollab-pages-5m-${AWS::StackName}
+        MinTTL: 0
+        DefaultTTL: 300
+        MaxTTL: 300
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingGzip: true
+          EnableAcceptEncodingBrotli: true
+          HeadersConfig:
+            HeaderBehavior: none
+          CookiesConfig:
+            CookieBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: none
+
+  # Authorization は転送しない（ベーシック認証と OAC の署名が使うため）
+  ApiOriginRequestPolicy:
+    Type: AWS::CloudFront::OriginRequestPolicy
+    Properties:
+      OriginRequestPolicyConfig:
+        Name: !Sub lollab-api-${AWS::StackName}
+        HeadersConfig:
+          HeaderBehavior: whitelist
+          Headers:
+            - X-Lollab-Auth
+            - x-amz-content-sha256
+        CookiesConfig:
+          CookieBehavior: none
+        QueryStringsConfig:
+          QueryStringBehavior: all
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: LoL Lab
+        PriceClass: PriceClass_200
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        Origins:
+          - Id: site
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            OriginPath: !Sub /releases/${ReleaseId}
+            OriginAccessControlId: !GetAtt SiteOriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+          - Id: api
+            DomainName: !Select [2, !Split ['/', !GetAtt ApiFunctionUrl.FunctionUrl]]
+            OriginAccessControlId: !GetAtt ApiOriginAccessControl.Id
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols: [TLSv1.2]
+              OriginReadTimeout: 30
+        DefaultCacheBehavior:
+          TargetOriginId: site
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          CachePolicyId: !Ref PageCachePolicy
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt GateFunction.FunctionMetadata.FunctionARN
+            - EventType: viewer-response
+              FunctionARN: !GetAtt NotFoundFunction.FunctionMetadata.FunctionARN
+        CacheBehaviors:
+          - PathPattern: /api/*
+            TargetOriginId: api
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
+            CachedMethods: [GET, HEAD]
+            Compress: false
+            # マネージドの CachingDisabled
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            OriginRequestPolicyId: !Ref ApiOriginRequestPolicy
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt GateFunction.FunctionMetadata.FunctionARN
+          - PathPattern: /_next/static/*
+            TargetOriginId: site
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: !Ref StaticCachePolicy
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt GateFunction.FunctionMetadata.FunctionARN
+
+  # ---------------------------------------------------------------- ログ
+  ApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/lollab-api
+      RetentionInDays: 14
+
+  BackfillLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/lollab-backfill
+      RetentionInDays: 14
+
+  # ---------------------------------------------------------------- IAM（Lambda の実行ロール）
+  ApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Execution role of lollab-api
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: lollab-api
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: WriteLogs
+                Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !GetAtt ApiLogGroup.Arn
+              - Sid: ReadParameters
+                Effect: Allow
+                Action: ssm:GetParametersByPath
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/lollab
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/lollab/*
+              - Sid: DecryptParameters
+                Effect: Allow
+                Action: kms:Decrypt
+                Resource: !Sub arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/*
+                Condition:
+                  StringEquals:
+                    kms:ViaService: !Sub ssm.${AWS::Region}.amazonaws.com
+              - Sid: RawObjects
+                Effect: Allow
+                Action: [s3:GetObject, s3:PutObject]
+                Resource: !Sub ${RawBucket.Arn}/*
+              - Sid: StartBackfill
+                Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt BackfillFunction.Arn
+
+  BackfillRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Execution role of lollab-backfill
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: lollab-backfill
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: WriteLogs
+                Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !GetAtt BackfillLogGroup.Arn
+              # GetParametersByPath はパス単位でしか判定できず配下を全部読めてしまうため、
+              # 名前を指定する GetParameters（SSM_PARAMETER_NAMES）で必要な 3 つだけを許可する。
+              # allowed_emails と supabase_jwt_secret は読ませない（api だけが使う）
+              - Sid: ReadParameters
+                Effect: Allow
+                Action: ssm:GetParameters
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/lollab/riot_api_key
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/lollab/supabase_key
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/lollab/supabase_url
+              - Sid: DecryptParameters
+                Effect: Allow
+                Action: kms:Decrypt
+                Resource: !Sub arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/*
+                Condition:
+                  StringEquals:
+                    kms:ViaService: !Sub ssm.${AWS::Region}.amazonaws.com
+              - Sid: RawObjects
+                Effect: Allow
+                Action: [s3:GetObject, s3:PutObject]
+                Resource: !Sub ${RawBucket.Arn}/*
+
+  # ---------------------------------------------------------------- Lambda
+  ApiFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: lollab-api
+      Description: FastAPI（Mangum）。CloudFront の /api/* から関数 URL（OAC）で呼ばれる
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: lambda_handlers.api.handler
+      MemorySize: 512
+      Timeout: 29
+      Role: !GetAtt ApiRole.Arn
+      Code:
+        S3Bucket: !Ref ArtifactBucket
+        S3Key: !Ref LambdaCodeKey
+      LoggingConfig:
+        LogGroup: !Ref ApiLogGroup
+      Environment:
+        Variables:
+          SSM_PARAMETER_PATH: /lollab/
+          RIOT_RATE_LIMITS: !Ref ApiRateLimits
+          RIOT_BACKFILL_RESERVE_RATIO: '0'
+          USER_GATE_ENABLED: !Ref UserGateEnabled
+          BACKFILL_MODE: lambda
+          BACKFILL_FUNCTION_NAME: !Ref BackfillFunction
+          RAW_BUCKET: !Ref RawBucket
+          SUPABASE_PROJECT_REF: !If [HasSupabaseProjectRef, !Ref SupabaseProjectRef, !Ref AWS::NoValue]
+
+  # 関数 URL は持たない。lollab-api からの非同期起動だけで動く
+  BackfillFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: lollab-backfill
+      Description: 過去の試合の取得。lollab-api から非同期で起動される
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: lambda_handlers.backfill.handler
+      MemorySize: 512
+      Timeout: 300
+      Role: !GetAtt BackfillRole.Arn
+      Code:
+        S3Bucket: !Ref ArtifactBucket
+        S3Key: !Ref LambdaCodeKey
+      LoggingConfig:
+        LogGroup: !Ref BackfillLogGroup
+      Environment:
+        Variables:
+          SSM_PARAMETER_PATH: /lollab/
+          SSM_PARAMETER_NAMES: riot_api_key,supabase_key,supabase_url
+          RIOT_RATE_LIMITS: !Ref BackfillRateLimits
+          RIOT_BACKFILL_RESERVE_RATIO: '0'
+          RAW_BUCKET: !Ref RawBucket
+
+  BackfillEventInvokeConfig:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref BackfillFunction
+      Qualifier: $LATEST
+      MaximumRetryAttempts: 0
+
+  ApiFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt ApiFunction.Arn
+      AuthType: AWS_IAM
+
+  # CloudFront（このディストリビューション）からの呼び出しだけを許可する
+  ApiInvokeUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ApiFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: cloudfront.amazonaws.com
+      SourceArn: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${Distribution}
+      FunctionUrlAuthType: AWS_IAM
+
+  ApiInvokeFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ApiFunction
+      Action: lambda:InvokeFunction
+      Principal: cloudfront.amazonaws.com
+      SourceArn: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${Distribution}
+      InvokedViaFunctionUrl: true
+
+Outputs:
+  DistributionDomainName:
+    Description: CloudFront のドメイン名（アクセス先）
+    Value: !GetAtt Distribution.DomainName
+  DistributionId:
+    Description: CloudFront のディストリビューション ID（無効化に使う）
+    Value: !Ref Distribution
+  SiteBucketName:
+    Value: !Ref SiteBucket
+  RawBucketName:
+    Value: !Ref RawBucket

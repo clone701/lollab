@@ -21,7 +21,8 @@ describe('lib/api/summoner', () => {
     await fetchSummonerDetail('JP', 'あ b', 'JP1');
     const [url, init] = mockFetch.mock.calls[0];
     expect(url).toMatch(/\/api\/summoner\/JP\/%E3%81%82%20b\/JP1$/);
-    expect(init).toBeUndefined();
+    expect(init.method).toBeUndefined();
+    expect(new Headers(init.headers).has('x-amz-content-sha256')).toBe(false);
   });
 
   it('updateSummoner は POST .../update を呼ぶ', async () => {
@@ -29,7 +30,11 @@ describe('lib/api/summoner', () => {
     await updateSummoner('KR', 'name', 'KR1');
     const [url, init] = mockFetch.mock.calls[0];
     expect(url).toMatch(/\/api\/summoner\/KR\/name\/KR1\/update$/);
-    expect(init).toEqual({ method: 'POST' });
+    expect(init.method).toBe('POST');
+    // 本文のない POST は空文字の SHA-256 を付ける
+    expect(new Headers(init.headers).get('x-amz-content-sha256')).toBe(
+      'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+    );
   });
 
   it('エラー時は detail をメッセージにする', async () => {
