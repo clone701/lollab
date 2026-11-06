@@ -421,21 +421,7 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 
 ### 環境変数
 
-**開発環境** (`.env.local`):
-```bash
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=development-secret
-GOOGLE_CLIENT_ID=your-dev-client-id
-GOOGLE_CLIENT_SECRET=your-dev-client-secret
-```
-
-**本番環境** (Render):
-```bash
-NEXTAUTH_URL=https://lollab.onrender.com
-NEXTAUTH_SECRET=production-secret
-GOOGLE_CLIENT_ID=your-prod-client-id
-GOOGLE_CLIENT_SECRET=your-prod-client-secret
-```
+認証は Supabase Auth（Google）に移行済み。環境変数は steering の `tech.md`、本番の設定は `docs/architecture.md` を参照。
 
 ### ビルド設定
 
