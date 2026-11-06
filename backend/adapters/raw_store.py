@@ -7,9 +7,10 @@ RAW_BUCKET が設定されていれば S3、未設定（ローカル）なら Su
 
 import asyncio
 import gzip
+import io
 import json
 import logging
-from typing import Any, Protocol
+from typing import IO, Any, Protocol, cast
 
 from config import settings
 
@@ -73,6 +74,18 @@ def _read(path: str) -> bytes:
         body = _s3().get_object(Bucket=s3_bucket, Key=path)["Body"]
         return body.read()  # type: ignore[no-any-return]
     return _bucket().download(path)  # type: ignore[no-any-return]
+
+
+def open_stream(path: str) -> IO[bytes]:
+    """保管先のファイルを、順に読めるストリームで開く（同期。呼び出し側が close する）。
+
+    S3 は応答の本文をそのまま返し、全体を読み込まない。
+    Supabase Storage（ローカル）はダウンロードしたバイト列を包んで返す。
+    """
+    s3_bucket = _s3_bucket_name()
+    if s3_bucket:
+        return cast(IO[bytes], _s3().get_object(Bucket=s3_bucket, Key=path)["Body"])
+    return io.BytesIO(_bucket().download(path))
 
 
 def _download(path: str) -> dict[str, Any] | None:

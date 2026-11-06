@@ -56,7 +56,8 @@ class MatchRecord(BaseModel):
 
     timeline_fetched_at が None のときは、保存時にその列を書き込まない
     （詳細の取り直しで、取り込み済みのタイムラインの記録を消さないため）。
-    rank_tier（クローラーが付けるランク帯）も同じ扱い。
+    rank_tier（クローラーが付けるランク帯）と raw_bundle_key（クローラーの
+    生データのまとめファイルのキー）も同じ扱い。
     """
 
     match_id: str
@@ -70,6 +71,7 @@ class MatchRecord(BaseModel):
     detail_version: int = 1
     timeline_fetched_at: datetime | None = None
     rank_tier: str | None = None
+    raw_bundle_key: str | None = None
     created_at: datetime | None = None
 
 

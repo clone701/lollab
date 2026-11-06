@@ -57,6 +57,7 @@ async def build_detail(record: SummonerRecord) -> SummonerDetail:
 def _to_summoner_data(record: SummonerRecord) -> SummonerData:
     """summoners の行から SummonerData を作る。"""
     return SummonerData(
+        puuid=record.puuid,
         name=record.game_name,
         tagLine=record.tag_line,
         level=record.level,

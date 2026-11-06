@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from adapters import riot_api
 from api.champion.router import router as champion_router
 from api.favorites.router import router as favorites_router
+from api.match.router import router as match_router
 from api.summoner.router import router as summoner_router
 from config import settings
 
@@ -33,6 +34,7 @@ app.add_middleware(
 app.include_router(summoner_router)
 app.include_router(champion_router)
 app.include_router(favorites_router)
+app.include_router(match_router)
 
 
 @app.get("/")
