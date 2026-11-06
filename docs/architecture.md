@@ -70,8 +70,9 @@ graph TB
 
 ```mermaid
 graph LR
-    Dev["PR / push"] --> GHA["GitHub Actions: ci.yml<br/>lint・型・テスト"]
-    GHA -->|"main への push、または main の手動実行"| Assume["OIDC で lollab-github-actions を引き受け"]
+    PR["PR（develop・main 向け）"] --> GHA["GitHub Actions: ci.yml<br/>lint・型・テスト（成功が必須）"]
+    GHA -->|マージ| Main["main への push、または main の手動実行"]
+    Main --> Assume["OIDC で lollab-github-actions を引き受け"]
     Assume --> CB["CodeBuild: lollab-deploy"]
     CB --> Ids["中身のハッシュで FRONTEND_ID / BACKEND_ID を決める"]
     Ids -->|未配置なら| B1["next build → S3: lollab-site/releases/{FRONTEND_ID}/"]
@@ -85,7 +86,8 @@ graph LR
 - **ID の決め方**: `FRONTEND_ID` は `frontend/` の中身・`NEXT_PUBLIC_*`・`buildspec.yml` から、`BACKEND_ID` は ZIP に入れる `backend/` の中身・`buildspec.yml` から作る。同じ ID の成果物が S3 にあれば、その側のビルドと配置を省く。変更のない側はスタックの更新も起きない
 - **所要時間の目安**: 両方ビルドで約3分半、片方だけで1〜2分、変更なしで約30秒。CodeBuild の無料枠は月100分（arm1.small）
 - **失敗時**: スタックの更新に失敗すると CloudFormation が自動で元に戻し、CloudFront は前のリリースを配信したまま
-- **手動実行**: GitHub の「Actions」→「CI」→「Run workflow」で `main` を選ぶとデプロイまで行う。AWS のロールは `main` からしか引き受けられない
+- **検査とデプロイの分担**: 検査は PR の時点だけで行う。GitHub の Rulesets（`protect-long-lived`）で `main`・`develop` に「PR 必須」「`Frontend Checks`・`Backend Checks` の成功必須」「ブランチが最新であること必須」「force push 禁止」を設定しているので、マージ後の `main` は検査済みの内容と同じになる。`main` への push ではデプロイだけを行う
+- **手動実行**: GitHub の「Actions」→「CI」→「Run workflow」で `main` を選ぶと、検査と並行してデプロイを行う。AWS のロールは `main` からしか引き受けられない
 - CodeBuild を直接起動することもできる（ブランチの動作確認用。push 済みのコミットが必要）
 
 ```powershell
