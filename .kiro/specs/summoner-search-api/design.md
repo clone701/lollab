@@ -187,7 +187,7 @@ Backfill のフェーズ2の後に「補完フェーズ」を追加する。対�
 - それより長い窓の上限に達したら、検索・更新では待たずに `RiotRateLimitError` を送出する（ルーターで 429「レート制限に達しました。しばらく待ってから再試行してください」）
 - Backfill は送信前に最も長い窓の残り回数を確認し、`上限 × RIOT_BACKFILL_RESERVE_RATIO` 未満なら `RiotRateLimitError` で終了する（429 と同じ扱い。カーソルは保存済みページまで）
 - 設定値の形式が不正な場合は起動時にエラーにする
-- **Production キーへの切り替え手順**: SSM の `/lollab/riot_api_key` を Production キーにし、`infra/app.yaml` の `ApiRateLimits`・`BackfillRateLimits` を合計が `500:10,30000:600` 以内になるように変えてデプロイする（手順は `docs/architecture.md`）
+- **Production キーへの切り替え手順**: SSM の `/lollab/riot_api_key` を Production キーにし、スタック `lollab-app` のパラメータ `ApiRateLimits`・`BackfillRateLimits`・`CrawlerRateLimits` を合計が `500:10,30000:600` 以内になるように更新する（コード変更なし。手順は `docs/architecture.md`）
 - Riot の数え方（固定ウィンドウ）と自前の数え方（スライディングウィンドウ）のずれで 429 が返ることがあるため、上限は余裕を持たせた値にする
 - `interactive` のリクエストが Riot から 429 を受け、`Retry-After` ヘッダーが2秒以内の場合は、その秒数待って1回だけ再送する。それ以外（ヘッダーなし・2秒超・再送後も429・`backfill`）は再送しない
 - `riot_api.get()` に `priority: Literal["interactive", "backfill"]` を渡し、既定は `interactive`。Backfill から呼ぶ riot_fetch の関数は `backfill` を渡す
