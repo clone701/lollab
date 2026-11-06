@@ -54,7 +54,7 @@ graph TB
 - `/champion/[championName]`: `generateStaticParams` で `champions.ts` の全 ID を事前生成する（`dynamicParams = false`）。クエリ（`role`・`period`・`queue`）は静的書き出しではサーバーで読めないため、`ChampionBuildFromUrl`（`useSearchParams` を `Suspense` で囲む）がブラウザで読む。統計はこれまでどおりブラウザで API から取得する
 - `app/auth/callback/route.ts`（サーバー処理）を削除し、`app/auth/callback/page.tsx`（クライアント）でブラウザ用 Supabase クライアントの `exchangeCodeForSession(code)` を呼んでトップへ遷移する
 - API の呼び出し先: `NEXT_PUBLIC_BACKEND_URL` の既定を空文字（同じオリジン）にし、パスは `/api/...` のまま。ローカル開発は `http://localhost:8000` を設定する
-- 404: `app/not-found.tsx` を `404.html` として出力し、CloudFront Function で転送する（下記「エラー応答」）
+- 404: `app/not-found.tsx` を `404.html` として出力する（CloudFront での返し方は下記「エラー応答」）
 
 ### ログインと許可ユーザー
 
@@ -73,7 +73,9 @@ graph TB
 | `/_next/static/*` | S3（OAC） | 1年 | ファイル名にハッシュが付くため長期キャッシュ |
 | `/*`（既定） | S3（OAC）、オリジンパス `/releases/{commit}` | 短め（5分） | |
 
-- エラー応答: 既定のビヘイビアの viewer-response 関数 `NotFoundFunction` が、S3 の 403・404 を `/404.html` へ 302 で転送する。ディストリビューションの CustomErrorResponses は `/api/*` の 403・404（許可外のメール、サモナー未発見）まで置き換えるため使わない。404 ページがステータス 200 になる点は一般公開時（SEO 対応）に見直す
+- エラー応答: 当面は設定しない。存在しない URL は S3 のエラー（403、XML）がそのまま返る。一般公開時（SEO 対応）に作り直す
+  - ディストリビューションの CustomErrorResponses は `/api/*` の 403・404（許可外のメール、サモナー未発見）まで置き換えるため使えない
+  - viewer-response の CloudFront Function は、オリジンが 400 以上を返すと実行されないため使えない
 - 価格クラス: `PriceClass_200`（日本を含む）。ログは標準ログを使わない（料金と量を抑える）
 
 ### アクセスゲート（CloudFront Function `lollab-gate`、viewer-request、全ビヘイビア）

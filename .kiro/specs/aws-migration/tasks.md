@@ -72,9 +72,9 @@
     - _要件: 5.5_
 
 - [ ] 5. 初回デプロイと確認
-  - [ ] 5.1 `main` へのマージで初回デプロイし、CloudFront の URL で全画面を確認する（ゲート有効・許可外 IP・許可外メール・ゲート無効）
+  - [x] 5.1 `main` へのマージで初回デプロイし、CloudFront の URL で全画面を確認する（ゲート有効・許可外 IP・許可外メール・ゲート無効）
     - _要件: 1.2, 5.1〜5.6, 10.1_
-  - [ ] 5.2 Supabase Auth のリダイレクト URL に CloudFront の URL を追加
+  - [x] 5.2 Supabase Auth のリダイレクト URL に CloudFront の URL を追加
   - [ ] 5.3 `migrate_raw_to_s3.py` で生データを移す
     - _要件: 4.2_
   - [ ] 5.4 1回目の請求見込み（Cost Explorer）が0円であることを確認する

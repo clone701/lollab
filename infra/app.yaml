@@ -157,33 +157,9 @@ Resources:
         Comment: アクセスゲート（許可 IP / ベーシック認証）と静的書き出しの URL 書き換え
         Runtime: cloudfront-js-2.0
 
-  # 静的ページ（既定のビヘイビア）が S3 から 403/404 を受けたら /404.html へ移す。
-  # ディストリビューションの CustomErrorResponses は /api/* にも掛かり、API の 403/404
-  # （許可外のメール、サモナー未発見など）を潰すため使わない。
-  NotFoundFunction:
-    Type: AWS::CloudFront::Function
-    Properties:
-      Name: lollab-not-found
-      AutoPublish: true
-      FunctionCode: |
-        function handler(event) {
-          var response = event.response;
-          var missing = response.statusCode === 403 || response.statusCode === 404;
-          if (missing && event.request.uri !== '/404.html') {
-            return {
-              statusCode: 302,
-              statusDescription: 'Found',
-              headers: {
-                location: { value: '/404.html' },
-                'cache-control': { value: 'no-store' }
-              }
-            };
-          }
-          return response;
-        }
-      FunctionConfig:
-        Comment: 存在しないページを /404.html へ移す
-        Runtime: cloudfront-js-2.0
+  # 存在しない URL は当面 S3 のエラー（403）をそのまま返す（一般公開時に作り直す）。
+  # CustomErrorResponses は /api/* の 403/404 まで置き換え、viewer-response の関数は
+  # オリジンが 400 以上を返すと実行されないため、どちらも使えない。
 
   # ---------------------------------------------------------------- CloudFront
   SiteOriginAccessControl:
@@ -289,8 +265,6 @@ Resources:
           FunctionAssociations:
             - EventType: viewer-request
               FunctionARN: !GetAtt GateFunction.FunctionMetadata.FunctionARN
-            - EventType: viewer-response
-              FunctionARN: !GetAtt NotFoundFunction.FunctionMetadata.FunctionARN
         CacheBehaviors:
           - PathPattern: /api/*
             TargetOriginId: api
