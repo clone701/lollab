@@ -35,13 +35,16 @@ phases:
       - node --test infra/functions/gate.test.mjs
 
       # 2. フロントエンド（NEXT_PUBLIC_* は環境変数から。NEXT_PUBLIC_BACKEND_URL は未設定＝同じオリジン）
+      # 同じフェーズのコマンドは1つのシェルで動き cd が次のコマンドに残るため、サブシェルで実行する
       - |
         set -euo pipefail
-        cd frontend
-        npm ci
-        npm run build
-        test -f out/index.html
-        test -f out/404.html
+        (
+          cd frontend
+          npm ci
+          npm run build
+          test -f out/index.html
+          test -f out/404.html
+        )
 
       # 3. バックエンドを arm64 の Lambda 用 ZIP にする。テスト・開発用ツールと .env は含めない
       - |
