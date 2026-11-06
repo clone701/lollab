@@ -39,6 +39,14 @@
 
 ## Git 規約
 
-- ブランチ: `develop` から `feature/*`（機能）、`fix/*`（バグ修正）を作成。`hotfix/*` は `main` から作成
-- マージ: `feature/*`・`fix/*` → `develop` → `main` を PR 経由で行う。`main` への直接 push 禁止
+- ブランチ: `develop` から `feature/*`（機能）、`fix/*`（バグ修正）、`docs/*`・`chore/*` を作成。急ぎの修正（`hotfix/*`）も `develop` から作成する
+- マージ: 作業ブランチ → `develop` → `main` を PR 経由で行う。`main`・`develop` への直接 push 禁止（Rulesets で PR 必須・CI 成功必須。`main` への push ではテストせずデプロイだけが動くため、`develop` を経由しないとテストされないコードがデプロイされる）
 - コミットメッセージ: `<type>(<scope>): <日本語の要約>`。type は feat / fix / docs / style / refactor / perf / test / chore
+
+## PR と Issue（GitHub CLI `gh`）
+
+- **AI は PR をマージしてはいけない**（`gh pr merge`、GitHub API でのマージ、`main`・`develop` への直接 push を含む）。マージは必ずユーザーが行う
+- PR の作成（`gh pr create`）は、ユーザーの承認を得てから行う。本文は日本語で、変更点・確認結果を書き、関係する Issue があれば `Closes #番号` を入れる
+- タスクの管理は GitHub Issues で行う。後回しにする作業は Issue にし、着手・完了時に Issue のチェックリストを更新する。Issue を閉じるのは、作業の完了をユーザーが確認してから
+- Issue・PR の本文にキー・トークン・パスワードなどの秘密情報を書かない（公開リポジトリのため誰でも読める）
+- `gh` が PATH にない場合は、PowerShell で `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')` を実行してから使う
