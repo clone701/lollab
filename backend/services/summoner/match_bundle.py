@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from adapters import raw_store
+from adapters.raw_store import RawArchive
 from adapters.riot_rate_limiter import Priority
 from schemas.riot_fetch import FetchedMatch
 from services.summoner import item_catalog
@@ -34,7 +35,11 @@ async def _archive(saving: Awaitable[None], match_id: str, kind: str) -> None:
 
 
 async def _get_detail(
-    host: str, match_id: str, priority: Priority, reuse_raw: bool
+    host: str,
+    match_id: str,
+    priority: Priority,
+    reuse_raw: bool,
+    archive: RawArchive,
 ) -> dict[str, Any]:
     """試合詳細を返す。reuse_raw なら、保管済みの生データがあればそれを使う。"""
     if reuse_raw:
@@ -44,7 +49,7 @@ async def _get_detail(
     detail: dict[str, Any] = await get_riot(
         host, f"/lol/match/v5/matches/{match_id}", priority=priority
     )
-    await _archive(raw_store.save_detail(match_id, detail), match_id, "detail")
+    await _archive(archive.save_detail(match_id, detail), match_id, "detail")
     return detail
 
 
@@ -82,6 +87,7 @@ async def fetch_match(
     priority: Priority,
     *,
     reuse_raw_detail: bool = False,
+    archive: RawArchive | None = None,
 ) -> tuple[FetchedMatch, RiotRateLimitError | None]:
     """試合詳細とタイムラインを取得して変換する。
 
@@ -91,6 +97,7 @@ async def fetch_match(
         priority: レート制限の優先度
         reuse_raw_detail: True なら試合詳細を保管済みの生データから読む
             （タイムラインだけ取り直すとき。なければ Riot API から取得する）
+        archive: 生データの保管先。None なら1試合1ファイル（既定）
 
     Returns:
         (変換結果, タイムライン取得中に受けた 429)。429 のときは変換結果に
@@ -101,7 +108,8 @@ async def fetch_match(
         RiotRateLimitError: 試合詳細の取得で 429 を受けた
         Exception: 試合詳細の取得・変換に失敗した（429 以外）
     """
-    detail = await _get_detail(host, match_id, priority, reuse_raw_detail)
+    archive = archive or raw_store.PerMatchArchive()
+    detail = await _get_detail(host, match_id, priority, reuse_raw_detail, archive)
     fetched = convert_match(detail)
     try:
         path = f"/lol/match/v5/matches/{match_id}/timeline"
@@ -115,7 +123,7 @@ async def fetch_match(
             None,
         )
 
-    await _archive(raw_store.save_timeline(match_id, timeline), match_id, "timeline")
+    await _archive(archive.save_timeline(match_id, timeline), match_id, "timeline")
     try:
         return await _attach_timeline(fetched, detail, timeline), None
     except Exception as e:

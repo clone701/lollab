@@ -6,6 +6,7 @@ import { champions } from '@/lib/data/champions';
 import {
   DEFAULT_PERIOD,
   DEFAULT_QUEUE,
+  DEFAULT_RANK,
   buildChampionBuildHref,
   filterChampions,
 } from '@/lib/champion-build';
@@ -22,6 +23,7 @@ export function ChampionSearchGrid() {
       buildChampionBuildHref(championId, {
         period: DEFAULT_PERIOD,
         queue: DEFAULT_QUEUE,
+        rank: DEFAULT_RANK,
       })
     );
   };

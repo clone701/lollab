@@ -56,6 +56,7 @@ class MatchRecord(BaseModel):
 
     timeline_fetched_at が None のときは、保存時にその列を書き込まない
     （詳細の取り直しで、取り込み済みのタイムラインの記録を消さないため）。
+    rank_tier（クローラーが付けるランク帯）も同じ扱い。
     """
 
     match_id: str
@@ -68,6 +69,7 @@ class MatchRecord(BaseModel):
     is_remake: bool = False
     detail_version: int = 1
     timeline_fetched_at: datetime | None = None
+    rank_tier: str | None = None
     created_at: datetime | None = None
 
 
@@ -116,6 +118,8 @@ class ParticipantRecord(BaseModel):
     game_end_at: datetime
     patch: str | None = None
     is_remake: bool = False
+    # クローラーが付けるランク帯。None のときは書き込まない（既存の値を消さない）
+    rank_tier: str | None = None
 
 
 class ParticipationRecord(ParticipantRecord):

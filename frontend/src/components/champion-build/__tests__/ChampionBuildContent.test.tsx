@@ -13,7 +13,11 @@ jest.mock('next/navigation', () => ({
 jest.mock('@/adapters/api', () => ({ fetchChampionBuild: jest.fn() }));
 
 const mockFetch = fetchChampionBuild as jest.Mock;
-const DEFAULT_QUERY: BuildQuery = { period: 'latest_patch', queue: 'all' };
+const DEFAULT_QUERY: BuildQuery = {
+  period: 'latest_patch',
+  queue: 'all',
+  rank: 'all',
+};
 
 async function renderContent(
   championId = 'Ahri',
@@ -146,7 +150,7 @@ describe('ChampionBuildContent', () => {
 
     it('期間が最新パッチ以外ならパッチ番号を表示しない', async () => {
       mockFetch.mockResolvedValue(makeBuildResponse({ period: 'all' }));
-      await renderContent('Ahri', { period: 'all', queue: 'all' });
+      await renderContent('Ahri', { period: 'all', queue: 'all', rank: 'all' });
       expect(screen.queryByText(/パッチ 16/)).not.toBeInTheDocument();
     });
 
@@ -204,15 +208,21 @@ describe('ChampionBuildContent', () => {
   });
 
   describe('URL クエリ', () => {
-    it('role・period・queue を API 呼び出しに渡す', async () => {
+    it('role・period・queue・rank を API 呼び出しに渡す', async () => {
       await renderContent('Ahri', {
         role: 'MIDDLE',
         period: 'last_30_days',
         queue: 'solo',
+        rank: 'master_plus',
       });
       expect(mockFetch).toHaveBeenCalledWith(
         'Ahri',
-        { role: 'MIDDLE', period: 'last_30_days', queue: 'solo' },
+        {
+          role: 'MIDDLE',
+          period: 'last_30_days',
+          queue: 'solo',
+          rank: 'master_plus',
+        },
         expect.anything()
       );
     });
@@ -222,9 +232,11 @@ describe('ChampionBuildContent', () => {
         role: 'MIDDLE',
         period: 'last_30_days',
         queue: 'flex',
+        rank: 'emerald_plus',
       });
       expect(screen.getByLabelText('期間')).toHaveValue('last_30_days');
       expect(screen.getByLabelText('キュー')).toHaveValue('flex');
+      expect(screen.getByLabelText('ランク帯')).toHaveValue('emerald_plus');
     });
 
     it('期間を変えると URL クエリを更新する（ロール・キューは維持）', async () => {
@@ -232,6 +244,7 @@ describe('ChampionBuildContent', () => {
         role: 'MIDDLE',
         period: 'latest_patch',
         queue: 'solo',
+        rank: 'all',
       });
       await userEvent.selectOptions(screen.getByLabelText('期間'), 'all');
       expect(mockReplace).toHaveBeenCalledWith(
@@ -243,6 +256,62 @@ describe('ChampionBuildContent', () => {
       await renderContent();
       await userEvent.selectOptions(screen.getByLabelText('キュー'), 'flex');
       expect(mockReplace).toHaveBeenCalledWith('/champion/Ahri?queue=flex');
+    });
+
+    it('ランク帯のプルダウンは4つの選択肢を持つ', async () => {
+      await renderContent();
+      const select = screen.getByLabelText('ランク帯');
+      expect(
+        within(select)
+          .getAllByRole('option')
+          .map((o) => o.textContent)
+      ).toEqual([
+        'すべて',
+        'エメラルド以上',
+        'ダイヤモンド以上',
+        'マスター以上',
+      ]);
+      expect(select).toHaveValue('all');
+    });
+
+    it('ランク帯を変えると URL クエリを更新する（他の条件は維持）', async () => {
+      await renderContent('Ahri', {
+        role: 'MIDDLE',
+        period: 'all',
+        queue: 'solo',
+        rank: 'all',
+      });
+      await userEvent.selectOptions(
+        screen.getByLabelText('ランク帯'),
+        'diamond_plus'
+      );
+      expect(mockReplace).toHaveBeenCalledWith(
+        '/champion/Ahri?role=MIDDLE&period=all&queue=solo&rank=diamond_plus'
+      );
+    });
+
+    it('ランク帯を「すべて」に戻すと rank をクエリから外す', async () => {
+      await renderContent('Ahri', { ...DEFAULT_QUERY, rank: 'master_plus' });
+      await userEvent.selectOptions(screen.getByLabelText('ランク帯'), 'all');
+      expect(mockReplace).toHaveBeenCalledWith('/champion/Ahri');
+    });
+
+    it('ランク帯が変わると取得し直す', async () => {
+      const champion = getChampionById('Ahri')!;
+      const { rerender } = render(
+        <ChampionBuildContent champion={champion} query={DEFAULT_QUERY} />
+      );
+      await screen.findByText(/集計対象/);
+      rerender(
+        <ChampionBuildContent
+          champion={champion}
+          query={{ ...DEFAULT_QUERY, rank: 'emerald_plus' }}
+        />
+      );
+      await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
+      expect(mockFetch.mock.calls[1][1]).toMatchObject({
+        rank: 'emerald_plus',
+      });
     });
 
     it('条件が変わると取得し直し、その間は読み込み中を表示する', async () => {

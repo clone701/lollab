@@ -32,13 +32,24 @@ function renderWithQuery(query: string): unknown {
 }
 
 describe('ChampionBuildFromUrl', () => {
-  it('URL のクエリ（role・period・queue）をビルドの条件にする', () => {
-    const query = renderWithQuery('role=MIDDLE&period=all&queue=solo');
-    expect(query).toEqual({ role: 'MIDDLE', period: 'all', queue: 'solo' });
+  it('URL のクエリ（role・period・queue・rank）をビルドの条件にする', () => {
+    const query = renderWithQuery(
+      'role=MIDDLE&period=all&queue=solo&rank=diamond_plus'
+    );
+    expect(query).toEqual({
+      role: 'MIDDLE',
+      period: 'all',
+      queue: 'solo',
+      rank: 'diamond_plus',
+    });
   });
 
   it('クエリがなければ既定の条件にする', () => {
     const query = renderWithQuery('');
-    expect(query).toEqual({ period: 'latest_patch', queue: 'all' });
+    expect(query).toEqual({
+      period: 'latest_patch',
+      queue: 'all',
+      rank: 'all',
+    });
   });
 });

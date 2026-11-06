@@ -12,6 +12,8 @@ graph TB
         Site[("S3: lollab-site<br/>releases/{FRONTEND_ID}/")]
         Api["Lambda: lollab-api<br/>FastAPI + Mangum（関数 URL / OAC）<br/>第2段階: 許可メール"]
         Bf["Lambda: lollab-backfill<br/>過去の試合の取得（非同期起動のみ）"]
+        Sch["EventBridge Scheduler<br/>30分ごと"]
+        Cr["Lambda: lollab-crawler<br/>高ランク帯の試合の収集"]
         Raw[("S3: lollab-raw<br/>試合の生データ")]
         Ssm["SSM Parameter Store<br/>/lollab/*"]
         Logs["CloudWatch Logs（14日）"]
@@ -36,6 +38,13 @@ graph TB
     Bf -.起動時に読む.-> Ssm
     Api --> Logs
     Bf --> Logs
+    Sch --> Cr
+    Cr --> Supa
+    Cr --> Riot
+    Cr --> DD
+    Cr -->|"1回の起動分をまとめて保存"| Raw
+    Cr -.起動時に読む.-> Ssm
+    Cr --> Logs
     User -->|"ログイン、ノート・お気に入り（publishable キー + RLS）"| Supa
 ```
 
@@ -86,7 +95,8 @@ graph LR
 - **ID の決め方**: `FRONTEND_ID` は `frontend/` の中身・`NEXT_PUBLIC_*`・`buildspec.yml` から、`BACKEND_ID` は ZIP に入れる `backend/` の中身・`buildspec.yml` から作る。同じ ID の成果物が S3 にあれば、その側のビルドと配置を省く。変更のない側はスタックの更新も起きない
 - **所要時間の目安**: 両方ビルドで約3分半、片方だけで1〜2分、変更なしで約30秒。CodeBuild の無料枠は月100分（arm1.small）
 - **失敗時**: スタックの更新に失敗すると CloudFormation が自動で元に戻し、CloudFront は前のリリースを配信したまま
-- **検査とデプロイの分担**: 検査は PR の時点だけで行う。GitHub の Rulesets（`protect-long-lived`）で `main`・`develop` に「PR 必須」「`Frontend Checks`・`Backend Checks` の成功必須」「ブランチが最新であること必須」「force push 禁止」を設定しているので、マージ後の `main` は検査済みの内容と同じになる。`main` への push ではデプロイだけを行う
+- **検査とデプロイの分担**: 検査は PR の時点だけで行う。GitHub の Rulesets（`protect-long-lived`）で `main`・`develop` に「PR 必須」「`Frontend Checks`・`Backend Checks` の成功必須」「force push 禁止」「削除禁止」を設定している。PR の検査はマージ後の状態（`refs/pull/<番号>/merge`）に対して行われ、`main` に入るのは `develop` からの PR だけなので、マージ後の `main` は検査済みの内容と同じになる。`main` への push ではデプロイだけを行う
+  - 「ブランチが最新であること必須（Require branches to be up to date）」は設定しない。PR のマージで `main` にできるマージコミットが `develop` に入らないため、`develop` → `main` の PR が常に古い扱いになり、`develop` への直接の更新は「PR 必須」で拒否されてマージできなくなる
 - **手動実行**: GitHub の「Actions」→「CI」→「Run workflow」で `main` を選ぶと、検査と並行してデプロイを行う。AWS のロールは `main` からしか引き受けられない
 - CodeBuild を直接起動することもできる（ブランチの動作確認用。push 済みのコミットが必要）
 
@@ -141,7 +151,7 @@ aws codebuild start-build --profile lollab --region ap-northeast-1 --project-nam
      --query "Stacks[0].Parameters[?ParameterKey=='LambdaCodeKey'].ParameterValue" --output text
    $bucket = aws cloudformation describe-stacks --profile lollab --region ap-northeast-1 --stack-name lollab-bootstrap `
      --query "Stacks[0].Outputs[?OutputKey=='ArtifactBucketName'].OutputValue" --output text
-   foreach ($fn in 'lollab-api','lollab-backfill') {
+   foreach ($fn in 'lollab-api','lollab-backfill','lollab-crawler') {
      aws lambda update-function-code --profile lollab --region ap-northeast-1 --function-name $fn --s3-bucket $bucket --s3-key $key | Out-Null
    }
    ```
@@ -149,7 +159,7 @@ aws codebuild start-build --profile lollab --region ap-northeast-1 --project-nam
 ### Riot の Production キーに切り替える
 
 1. SSM の `/lollab/riot_api_key` を Production キーにする
-2. `infra/app.yaml` のパラメータ `ApiRateLimits`・`BackfillRateLimits` の既定値を、合計がキーの上限以内になるように変えて `main` にマージする（Personal キーの上限は `20:1,100:120`、Production キーは `500:10,30000:600`）
+2. `infra/app.yaml` のパラメータ `ApiRateLimits`・`BackfillRateLimits`・`CrawlerRateLimits` の既定値を、合計がキーの上限以内になるように変えて `main` にマージする（Personal キーの上限は `20:1,100:120`、Production キーは `500:10,30000:600`）
 
 ### ローカル開発
 
@@ -157,6 +167,14 @@ aws codebuild start-build --profile lollab --region ap-northeast-1 --project-nam
 - `backend/.env`: `SUPABASE_URL`、`SUPABASE_KEY`（secret キー）、`RIOT_API_KEY`、`CORS_ORIGINS=["http://localhost:3000"]`。`SSM_PARAMETER_PATH` は設定しない（`.env` を使う）
 - 起動: `frontend` で `npm run dev`、`backend` で `uvicorn main:app --reload`
 - ローカルでは Backfill は同じプロセスで動き（`BACKFILL_MODE=inline`）、生データは `RAW_BUCKET` が無ければ Supabase Storage に保存される
+
+### クローラー（試合の自動収集）
+
+- `lollab-crawler` を EventBridge Scheduler が30分ごとに起動する。JP のエメラルド以上のプレイヤーの直近のソロランクの試合を集め、ランク帯（`rank_tier`）を付けて保存する。仕様は `.kiro/specs/match-crawler/`
+- 結果は起動ごとに1行の JSON で CloudWatch Logs の `/aws/lambda/lollab-crawler` に出る（`stop_reason`・`matches_saved`・`riot_requests` など）
+- Riot API の上限は関数ごとに分け合う（`lollab-api` 6:1,30:120、`lollab-backfill` 4:1,20:120、`lollab-crawler` 8:1,45:120。`app.yaml` のパラメータ）
+- 停止・再開: bootstrap のパラメータ `AppCrawlerEnabled=DISABLED`（再開は `ENABLED`）で bootstrap を更新し、CodeBuild を起動する。停止中は起動されない
+- DB に残すクローラーの試合は直近10万件（検索済みサモナーが参加した試合は除く）。超えた分は起動ごとに古い順に削除される
 
 ### DB のマイグレーション
 

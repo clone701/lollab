@@ -76,6 +76,7 @@ class FakeRiot:
         self.id_calls: list[dict[str, Any]] = []
         self.detail_calls: list[list[str]] = []
         self.detail_priorities: list[str] = []
+        self.archives: list[Any] = []
         self.served = 0
 
     async def fetch_account_by_riot_id(self, *args: Any) -> AccountInfo:
@@ -123,6 +124,7 @@ class FakeRiot:
         start_time: datetime | None = None,
         end_time: datetime | None = None,
         priority: str = "interactive",
+        queue: int | None = None,
     ) -> list[str]:
         self.calls.append("match_ids")
         self.id_calls.append(
@@ -132,6 +134,7 @@ class FakeRiot:
                 "start_time": start_time,
                 "end_time": end_time,
                 "priority": priority,
+                "queue": queue,
             }
         )
         if self.ids_error:
@@ -150,8 +153,10 @@ class FakeRiot:
         match_ids: list[str],
         priority: str = "interactive",
         timeline_only_ids: frozenset[str] = frozenset(),
+        archive: Any = None,
     ) -> MatchDetailsResult:
         self.calls.append("match_details")
+        self.archives.append(archive)
         self.detail_calls.append(list(match_ids))
         self.timeline_only_calls.append(timeline_only_ids)
         self.detail_priorities.append(priority)
@@ -190,6 +195,9 @@ class FakeRiot:
                 )
             )
             self.served += 1
+            if archive is not None:
+                await archive.save_detail(match_id, {"matchId": match_id})
+                await archive.save_timeline(match_id, {"matchId": match_id})
         return MatchDetailsResult(fetched=fetched, failures=failures)
 
     @property

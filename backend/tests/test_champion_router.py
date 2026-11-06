@@ -35,6 +35,7 @@ def _response() -> ChampionBuildResponse:
         roles={},
         period="latest_patch",
         queue="all",
+        rank="all",
         latest_patch=None,
         summary=ChampionBuildSummary(
             games=0, wins=0, win_rate_delta=0.0, pick_rate=0.0, ban_rate=0.0
@@ -48,19 +49,24 @@ def test_defaults_are_passed_to_service() -> None:
         response = client.get(_URL)
 
     assert response.status_code == 200
-    service.assert_awaited_once_with("LeeSin", None, "latest_patch", "all")
+    service.assert_awaited_once_with("LeeSin", None, "latest_patch", "all", "all")
     body = response.json()
     assert body["champion_name"] == "LeeSin"
+    assert body["rank"] == "all"
     assert body["role"] is None
     assert body["runes"] == {"games": 0, "options": [], "best_win_rate": None}
 
 
 def test_query_parameters_are_passed_to_service() -> None:
     with patch(_SERVICE, AsyncMock(return_value=_response())) as service:
-        response = client.get(f"{_URL}?role=UTILITY&period=last_30_days&queue=flex")
+        response = client.get(
+            f"{_URL}?role=UTILITY&period=last_30_days&queue=flex&rank=diamond_plus"
+        )
 
     assert response.status_code == 200
-    service.assert_awaited_once_with("LeeSin", "UTILITY", "last_30_days", "flex")
+    service.assert_awaited_once_with(
+        "LeeSin", "UTILITY", "last_30_days", "flex", "diamond_plus"
+    )
 
 
 @pytest.mark.parametrize(
@@ -75,6 +81,9 @@ def test_query_parameters_are_passed_to_service() -> None:
         f"{_URL}?role=",
         f"{_URL}?period=week",
         f"{_URL}?queue=aram",
+        f"{_URL}?rank=gold_plus",
+        f"{_URL}?rank=",
+        f"{_URL}?rank=ALL",
     ],
 )
 def test_invalid_input_returns_422_with_detail(path: str) -> None:

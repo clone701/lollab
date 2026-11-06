@@ -3,6 +3,11 @@
 export type Role = 'TOP' | 'JUNGLE' | 'MIDDLE' | 'BOTTOM' | 'UTILITY';
 export type Period = 'latest_patch' | 'last_30_days' | 'all';
 export type QueueFilter = 'all' | 'solo' | 'flex';
+export type RankFilter =
+  | 'all'
+  | 'emerald_plus'
+  | 'diamond_plus'
+  | 'master_plus';
 
 /** 最高勝率 / 最多の切り替え（画面内の状態） */
 export type BuildMode = 'best_win_rate' | 'most_games';
@@ -36,6 +41,7 @@ export interface ChampionBuildResponse {
   roles: Record<string, number>;
   period: string;
   queue: string;
+  rank: string;
   latest_patch: string | null;
   summary: ChampionBuildSummary;
   skill_priority: BuildElement;
@@ -55,4 +61,5 @@ export interface BuildQuery {
   role?: Role;
   period: Period;
   queue: QueueFilter;
+  rank: RankFilter;
 }
