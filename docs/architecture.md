@@ -156,10 +156,18 @@ aws codebuild start-build --profile lollab --region ap-northeast-1 --project-nam
    }
    ```
 
-### Riot の Production キーに切り替える
+### Riot API のレート制限を変える（Production キーへの切り替えなど）
 
-1. SSM の `/lollab/riot_api_key` を Production キーにする
-2. `infra/app.yaml` のパラメータ `ApiRateLimits`・`BackfillRateLimits`・`CrawlerRateLimits` の既定値を、合計がキーの上限以内になるように変えて `main` にマージする（Personal キーの上限は `20:1,100:120`、Production キーは `500:10,30000:600`）
+レート制限は `app.yaml` のパラメータ `ApiRateLimits`・`BackfillRateLimits`・`CrawlerRateLimits`（「回数:秒」のカンマ区切り）で決まる。3つの合計がキーの上限以内になるようにする（Personal キーは `20:1,100:120`、Production キーは `500:10,30000:600`）。
+
+> **注意**: `app.yaml` のパラメータの既定値が使われるのは、スタックを最初に作るとき（または新しいパラメータを足したとき）だけ。CodeBuild の更新は、指定しないパラメータに前回の値を使うため、既定値を変えてマージしても今のスタックには反映されない。値はスタックのパラメータで変える。
+
+1. Production キーに切り替える場合は、SSM の `/lollab/riot_api_key` を新しいキーにする（上の「秘密情報を変える」）
+2. CloudFormation → スタック `lollab-app` →「更新」→「既存テンプレートを使用」
+3. パラメータの画面で、変えるレート制限だけを書き換える（ほかの値は触らない）
+4. IAM ロールは `lollab-cloudformation-app` のまま、IAM リソースの作成の承認にチェックを入れて「送信」
+5. `UPDATE_COMPLETE` になれば反映済み（Lambda の環境変数が変わり、次の起動から使われる）。以後の CodeBuild のデプロイでもこの値が使われる
+6. `app.yaml` の既定値も同じ値に直しておく（スタックを作り直したときに同じ値になるように）
 
 ### ローカル開発
 
@@ -195,5 +203,5 @@ aws codebuild start-build --profile lollab --region ap-northeast-1 --project-nam
 - 商用リリースまで AWS の Always Free の範囲で動かす（月の予算上限は500円）
 - 使わないもの: VPC・NAT Gateway・常時起動のサーバー・Provisioned Concurrency・AWS WAF・Secrets Manager・CloudFront KeyValueStore・KMS のカスタマー管理キー・CloudFront の標準ログ
 - 通知: AWS Budgets（`lollab-zero-spend` は1セントでも費用が出たら、`My Monthly Cost Budget` は月 $1）と、請求設定の「無料利用枠の使用アラート」
-- 主な無料枠: Lambda（月100万リクエスト・40万 GB 秒）、CloudFront（月1TB・1,000万リクエスト）、CodeBuild（月100分）、CloudWatch Logs（5GB）。S3 は無料枠の対象外の部分があるが、保存量が小さい間は数円以内
+- 主な無料枠: Lambda（月100万リクエスト・40万 GB 秒）、CloudFront（月1TB・1,000万リクエスト）、CodeBuild（月100分）、CloudWatch Logs（5GB）。S3 は無料枠の対象外の部分があり、クローラーの生データ（1試合約70KB、まとめた束で保存）が10万試合分たまると約7GB・月約25円になる（予算内として受け入れている。期限での削除はしていない）
 - ログの保存は14日。S3 `lollab-site` は CodeBuild が今回と直前のリリース以外を消す。成果物バケットの Lambda の ZIP（`lambda/`）は CodeBuild が今回と直前以外を消し、テンプレート（`templates/`）は30日で自動削除
