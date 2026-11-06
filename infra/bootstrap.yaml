@@ -228,7 +228,7 @@ Resources:
                 Resource: !Sub ${ArtifactBucket.Arn}/*
               - Sid: SiteObjects
                 Effect: Allow
-                Action: [s3:PutObject, s3:DeleteObject]
+                Action: [s3:GetObject, s3:PutObject, s3:DeleteObject]
                 Resource: !Sub arn:${AWS::Partition}:s3:::lollab-site-${AWS::AccountId}-${AWS::Region}/releases/*
               - Sid: ListBuckets
                 Effect: Allow
