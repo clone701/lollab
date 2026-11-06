@@ -25,6 +25,7 @@ from urllib.parse import quote
 import httpx
 
 from adapters import riot_api
+from adapters.raw_store import RawArchive
 from adapters.riot_rate_limiter import Priority, RateLimitExceeded
 from schemas.riot_fetch import (
     AccountInfo,
@@ -151,6 +152,7 @@ async def fetch_ranked_match_ids(
     start_time: datetime | None = None,
     end_time: datetime | None = None,
     priority: Priority = "interactive",
+    queue: int | None = None,
 ) -> list[str]:
     """ランク戦の試合ID一覧を新しい順に取得する。
 
@@ -162,6 +164,7 @@ async def fetch_ranked_match_ids(
         start_time: この日時以降に終了した試合のみ（タイムゾーン付き）
         end_time: この日時以前に終了した試合のみ（タイムゾーン付き）
         priority: レート制限の優先度（Backfill は "backfill"）
+        queue: キューID（例: 420 = ソロ/デュオ）。指定時のみ queue パラメータを付ける
 
     Raises:
         ValueError: count が 1〜100 の範囲外
@@ -176,6 +179,8 @@ async def fetch_ranked_match_ids(
         params["startTime"] = int(start_time.timestamp())
     if end_time is not None:
         params["endTime"] = int(end_time.timestamp())
+    if queue is not None:
+        params["queue"] = queue
 
     path = f"/lol/match/v5/matches/by-puuid/{quote(puuid, safe='')}/ids"
     ids = await get_riot(get_regional(region), path, params, priority)
@@ -187,6 +192,7 @@ async def fetch_match_details(
     match_ids: list[str],
     priority: Priority = "interactive",
     timeline_only_ids: frozenset[str] = frozenset(),
+    archive: RawArchive | None = None,
 ) -> MatchDetailsResult:
     """試合（詳細 + タイムライン）を並列取得し、保存用レコードに変換する。
 
@@ -195,6 +201,7 @@ async def fetch_match_details(
     タイムラインだけの失敗は fetched に残り、FetchedMatch.timeline_error に入る。
     fetched は match_ids の順。
     timeline_only_ids の試合は、試合詳細を保管済みの生データから読む（補完用）。
+    archive は生データの保管先（None なら1試合1ファイル）。
 
     Raises:
         RiotRateLimitError: 429 または送信前のレート制限。取得済みの試合は fetched
@@ -220,6 +227,7 @@ async def fetch_match_details(
                     match_id,
                     priority,
                     reuse_raw_detail=match_id in timeline_only_ids,
+                    archive=archive,
                 )
             except RiotRateLimitError as e:
                 limit = e

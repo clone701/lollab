@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: LoL Lab アプリ（S3 site/raw、CloudFront、ゲート関数、Lambda 2つ）。buildspec.yml がデプロイする
+Description: LoL Lab アプリ（S3 site/raw、CloudFront、ゲート関数、Lambda 3つ、クローラーのスケジュール）。buildspec.yml がデプロイする
 
 # このテンプレートは FunctionCode の行（__GATE_FUNCTION_CODE__）を buildspec が
 # infra/scripts/render-app-template.mjs で gate.js に置き換えてからデプロイする。
@@ -45,14 +45,24 @@ Parameters:
     Default: 'true'
   ApiRateLimits:
     Type: String
-    Description: lollab-api の Riot API レート制限（回数:秒 のカンマ区切り）
+    Description: lollab-api の Riot API レート制限（回数:秒 のカンマ区切り）。ApiRateLimits・BackfillRateLimits・CrawlerRateLimits の合計をキーの上限（20:1、100:120）以内にする
     AllowedPattern: '^[0-9]+:[0-9.]+(,[0-9]+:[0-9.]+)*$'
-    Default: '8:1,50:120'
+    Default: '6:1,30:120'
   BackfillRateLimits:
     Type: String
-    Description: lollab-backfill の Riot API レート制限。ApiRateLimits との合計をキーの上限以内にする
+    Description: lollab-backfill の Riot API レート制限。3つの関数の合計をキーの上限以内にする
     AllowedPattern: '^[0-9]+:[0-9.]+(,[0-9]+:[0-9.]+)*$'
-    Default: '10:1,45:120'
+    Default: '4:1,20:120'
+  CrawlerRateLimits:
+    Type: String
+    Description: lollab-crawler の Riot API レート制限。3つの関数の合計をキーの上限以内にする
+    AllowedPattern: '^[0-9]+:[0-9.]+(,[0-9]+:[0-9.]+)*$'
+    Default: '8:1,45:120'
+  CrawlerEnabled:
+    Type: String
+    Description: 試合の自動収集（lollab-crawler の30分ごとの起動）の有効／無効。DISABLED で停止する
+    AllowedValues: ['ENABLED', 'DISABLED']
+    Default: 'ENABLED'
   SupabaseProjectRef:
     Type: String
     Description: JWKS の URL を作る Supabase のプロジェクト参照。空なら SSM の supabase_url から作る
@@ -302,6 +312,12 @@ Resources:
       LogGroupName: /aws/lambda/lollab-backfill
       RetentionInDays: 14
 
+  CrawlerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/lollab-crawler
+      RetentionInDays: 14
+
   # ---------------------------------------------------------------- IAM（Lambda の実行ロール）
   ApiRole:
     Type: AWS::IAM::Role
@@ -387,6 +403,72 @@ Resources:
                 Action: [s3:GetObject, s3:PutObject]
                 Resource: !Sub ${RawBucket.Arn}/*
 
+  CrawlerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Execution role of lollab-crawler
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: lollab-crawler
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: WriteLogs
+                Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !GetAtt CrawlerLogGroup.Arn
+              # BackfillRole と同じく、名前を指定する GetParameters で必要な 3 つだけを許可する
+              - Sid: ReadParameters
+                Effect: Allow
+                Action: ssm:GetParameters
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/lollab/riot_api_key
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/lollab/supabase_key
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/lollab/supabase_url
+              - Sid: DecryptParameters
+                Effect: Allow
+                Action: kms:Decrypt
+                Resource: !Sub arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/*
+                Condition:
+                  StringEquals:
+                    kms:ViaService: !Sub ssm.${AWS::Region}.amazonaws.com
+              # 生データのバンドル（bundles/crawler/...）の書き込みだけ。読み取りはしない
+              - Sid: WriteBundles
+                Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub ${RawBucket.Arn}/bundles/*
+
+  # EventBridge Scheduler が lollab-crawler を起動するためのロール
+  CrawlerScheduleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Lets EventBridge Scheduler invoke lollab-crawler
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      Policies:
+        - PolicyName: invoke-crawler
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: InvokeCrawler
+                Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt CrawlerFunction.Arn
+
   # ---------------------------------------------------------------- Lambda
   ApiFunction:
     Type: AWS::Lambda::Function
@@ -446,6 +528,60 @@ Resources:
       FunctionName: !Ref BackfillFunction
       Qualifier: $LATEST
       MaximumRetryAttempts: 0
+
+  # 関数 URL は持たない。EventBridge Scheduler が30分ごとに起動する。
+  # 前回の起動が実行中なら、DB のリース（riot-crawler）で何もせず終了する
+  CrawlerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: lollab-crawler
+      Description: 試合の自動収集。EventBridge Scheduler が30分ごとに起動する
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: lambda_handlers.crawler.handler
+      MemorySize: 256
+      Timeout: 600
+      Role: !GetAtt CrawlerRole.Arn
+      Code:
+        S3Bucket: !Ref ArtifactBucket
+        S3Key: !Ref LambdaCodeKey
+      LoggingConfig:
+        LogGroup: !Ref CrawlerLogGroup
+      Environment:
+        Variables:
+          SSM_PARAMETER_PATH: /lollab/
+          SSM_PARAMETER_NAMES: riot_api_key,supabase_key,supabase_url
+          RIOT_RATE_LIMITS: !Ref CrawlerRateLimits
+          # 2分の窓が埋まっても止めず、空くまで待つ
+          RIOT_RATE_LIMIT_MAX_WAIT_SECONDS: '130'
+          RIOT_BACKFILL_RESERVE_RATIO: '0'
+          RAW_BUCKET: !Ref RawBucket
+
+  # Scheduler は Lambda を非同期で起動する。関数がエラーで終わると、Lambda が既定で2回再試行する
+  # （Scheduler の RetryPolicy は起動 API の失敗にだけ効き、これは止められない）。
+  # 失敗後の再実行は次の30分後の起動に任せるため、再試行を0にする
+  CrawlerEventInvokeConfig:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref CrawlerFunction
+      Qualifier: $LATEST
+      MaximumRetryAttempts: 0
+
+  CrawlerSchedule:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: lollab-crawler
+      Description: lollab-crawler を30分ごとに起動する。停止は CrawlerEnabled=DISABLED
+      ScheduleExpression: rate(30 minutes)
+      FlexibleTimeWindow:
+        Mode: 'OFF'
+      State: !Ref CrawlerEnabled
+      Target:
+        Arn: !GetAtt CrawlerFunction.Arn
+        RoleArn: !GetAtt CrawlerScheduleRole.Arn
+        # 失敗しても再実行しない（次の起動が続きから行う）
+        RetryPolicy:
+          MaximumRetryAttempts: 0
 
   ApiFunctionUrl:
     Type: AWS::Lambda::Url

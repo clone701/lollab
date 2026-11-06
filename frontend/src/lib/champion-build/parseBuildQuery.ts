@@ -2,13 +2,16 @@ import type {
   BuildQuery,
   Period,
   QueueFilter,
+  RankFilter,
   Role,
 } from '@/types/championBuild';
 import {
   DEFAULT_PERIOD,
   DEFAULT_QUEUE,
+  DEFAULT_RANK,
   PERIOD_OPTIONS,
   QUEUE_OPTIONS,
+  RANK_OPTIONS,
   ROLE_LABELS,
 } from './constants';
 
@@ -23,10 +26,12 @@ export function parseBuildQuery(raw: {
   role?: RawValue;
   period?: RawValue;
   queue?: RawValue;
+  rank?: RawValue;
 }): BuildQuery {
   const role = first(raw.role);
   const period = first(raw.period);
   const queue = first(raw.queue);
+  const rank = first(raw.rank);
   return {
     role:
       role && Object.keys(ROLE_LABELS).includes(role)
@@ -38,5 +43,8 @@ export function parseBuildQuery(raw: {
     queue: QUEUE_OPTIONS.some((o) => o.value === queue)
       ? (queue as QueueFilter)
       : DEFAULT_QUEUE,
+    rank: RANK_OPTIONS.some((o) => o.value === rank)
+      ? (rank as RankFilter)
+      : DEFAULT_RANK,
   };
 }

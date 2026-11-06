@@ -5,15 +5,18 @@ from typing import Any
 
 from pydantic import BaseModel
 
-# save_matches の行の組み立て（タイムライン由来の列は値があるときだけ書き込む）
+# save_matches の行の組み立て（値があるときだけ書き込む列。
+# タイムライン由来の列は marker で、rank_tier は列ごとに判定する）
 MATCH_ROWS: dict[str, Any] = {
     "marker": "timeline_fetched_at",
     "optional": {"timeline_fetched_at"},
     "exclude": {"created_at"},
+    "independent": {"rank_tier"},
 }
 PART_ROWS: dict[str, Any] = {
     "marker": "skill_order",
     "optional": {"skill_order", "starting_items", "completed_items"},
+    "independent": {"rank_tier"},
 }
 
 
@@ -23,23 +26,24 @@ def dump_rows(
     marker: str,
     optional: set[str],
     exclude: set[str] | None = None,
+    independent: set[str] | None = None,
 ) -> list[list[dict[str, Any]]]:
     """モデルを upsert 用の行にし、列の揃ったグループに分けて返す。
 
-    marker の値が None のモデルは、optional の列を除いた別グループにする。
+    marker の値が None のモデルは、optional の列を除く。independent の列は、
+    その列の値が None のモデルだけ除く。
     PostgREST の一括 upsert は列を揃える必要があり、None の列を含めると
     既存の値を NULL で上書きしてしまうため、その列自体を書き込まない。
-    空のグループは返さない。
+    グループは除く列が少ない順（全列を持つグループが先頭）で、空のグループは返さない。
     """
     skip = exclude or set()
-    full = [m.model_dump(mode="json", exclude=skip) for m in models if _has(m, marker)]
-    partial = [
-        m.model_dump(mode="json", exclude=skip | optional)
-        for m in models
-        if not _has(m, marker)
-    ]
-    return [rows for rows in (full, partial) if rows]
-
-
-def _has(model: BaseModel, field: str) -> bool:
-    return getattr(model, field) is not None
+    groups: dict[frozenset[str], list[dict[str, Any]]] = {}
+    for model in models:
+        omitted = set(skip)
+        if getattr(model, marker) is None:
+            omitted |= optional
+        omitted |= {c for c in independent or () if getattr(model, c) is None}
+        row = model.model_dump(mode="json", exclude=omitted)
+        groups.setdefault(frozenset(omitted), []).append(row)
+    ordered = sorted(groups.items(), key=lambda item: len(item[0]))
+    return [rows for _, rows in ordered]

@@ -9,7 +9,7 @@ import asyncio
 import gzip
 import json
 import logging
-from typing import Any
+from typing import Any, Protocol
 
 from config import settings
 
@@ -53,6 +53,11 @@ def _s3() -> Any:
 
 def _upload(path: str, payload: dict[str, Any]) -> None:
     data = gzip.compress(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
+    _put(path, data)
+
+
+def _put(path: str, data: bytes) -> None:
+    """圧縮済みのデータを保管先（S3 または Supabase Storage）に1回書き込む。"""
     s3_bucket = _s3_bucket_name()
     if s3_bucket:
         _s3().put_object(
@@ -90,6 +95,11 @@ async def save_timeline(match_id: str, payload: dict[str, Any]) -> None:
     await asyncio.to_thread(_upload, timeline_path(match_id), payload)
 
 
+async def put_gzip(path: str, data: bytes) -> None:
+    """gzip 済みのデータを path に保存する（同じパスは上書き）。失敗時は例外を送出する。"""
+    await asyncio.to_thread(_put, path, data)
+
+
 async def load_detail(match_id: str) -> dict[str, Any] | None:
     """保存済みの試合詳細を返す。未保存・読み出し失敗は None。"""
     return await asyncio.to_thread(_download, detail_path(match_id))
@@ -98,3 +108,21 @@ async def load_detail(match_id: str) -> dict[str, Any] | None:
 async def load_timeline(match_id: str) -> dict[str, Any] | None:
     """保存済みのタイムラインを返す。未保存・読み出し失敗は None。"""
     return await asyncio.to_thread(_download, timeline_path(match_id))
+
+
+class RawArchive(Protocol):
+    """生データの保管先。試合の取得処理（match_bundle）が受け取る。"""
+
+    async def save_detail(self, match_id: str, payload: dict[str, Any]) -> None: ...
+
+    async def save_timeline(self, match_id: str, payload: dict[str, Any]) -> None: ...
+
+
+class PerMatchArchive:
+    """既定の保管先: 1試合1ファイル（matches/{match_id}/…）。検索・Backfill が使う。"""
+
+    async def save_detail(self, match_id: str, payload: dict[str, Any]) -> None:
+        await save_detail(match_id, payload)
+
+    async def save_timeline(self, match_id: str, payload: dict[str, Any]) -> None:
+        await save_timeline(match_id, payload)

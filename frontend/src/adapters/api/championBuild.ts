@@ -6,6 +6,7 @@ function buildPath(championName: string, query: BuildQuery): string {
   const params = new URLSearchParams({
     period: query.period,
     queue: query.queue,
+    rank: query.rank,
   });
   if (query.role) params.set('role', query.role);
   const name = encodeURIComponent(championName);

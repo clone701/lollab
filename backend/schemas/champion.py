@@ -10,6 +10,7 @@ from pydantic import BaseModel
 Role = Literal["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"]
 Period = Literal["latest_patch", "last_30_days", "all"]
 QueueFilter = Literal["all", "solo", "flex"]
+RankFilter = Literal["all", "emerald_plus", "diamond_plus", "master_plus"]
 
 
 class BuildOption(BaseModel):
@@ -52,6 +53,7 @@ class ChampionBuildResponse(BaseModel):
     roles: dict[str, int]
     period: str
     queue: str
+    rank: str
     latest_patch: str | None
     summary: ChampionBuildSummary
     skill_priority: BuildElement

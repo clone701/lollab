@@ -64,6 +64,11 @@ Parameters:
     Description: app.yaml の SupabaseProjectRef
     AllowedPattern: '^(-|[0-9a-z]+)$'
     Default: '-'
+  AppCrawlerEnabled:
+    Type: String
+    Description: app.yaml の CrawlerEnabled（試合の自動収集。DISABLED で停止）
+    AllowedValues: ['-', 'ENABLED', 'DISABLED']
+    Default: '-'
 
 Resources:
   # ---------------------------------------------------------------- GitHub OIDC
@@ -193,6 +198,7 @@ Resources:
           - { Name: APP_BASIC_AUTH_HASH, Type: PLAINTEXT, Value: !Ref AppBasicAuthHash }
           - { Name: APP_USER_GATE_ENABLED, Type: PLAINTEXT, Value: !Ref AppUserGateEnabled }
           - { Name: APP_SUPABASE_PROJECT_REF, Type: PLAINTEXT, Value: !Ref AppSupabaseProjectRef }
+          - { Name: APP_CRAWLER_ENABLED, Type: PLAINTEXT, Value: !Ref AppCrawlerEnabled }
       LogsConfig:
         CloudWatchLogs:
           Status: ENABLED
@@ -398,6 +404,25 @@ Resources:
                 Condition:
                   StringEquals:
                     iam:PassedToService: lambda.amazonaws.com
+              # EventBridge Scheduler に渡せるロールも、このアプリのロールだけに限る
+              - Sid: PassSchedulerRoles
+                Effect: Allow
+                Action: iam:PassRole
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${AppStackName}-*
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: scheduler.amazonaws.com
+              - Sid: Schedules
+                Effect: Allow
+                Action:
+                  - scheduler:CreateSchedule
+                  - scheduler:UpdateSchedule
+                  - scheduler:DeleteSchedule
+                  - scheduler:GetSchedule
+                  - scheduler:TagResource
+                  - scheduler:UntagResource
+                  - scheduler:ListTagsForResource
+                Resource: !Sub arn:${AWS::Partition}:scheduler:${AWS::Region}:${AWS::AccountId}:schedule/default/lollab-*
               - Sid: LogGroups
                 Effect: Allow
                 Action:

@@ -74,3 +74,9 @@
   - _要件: 1.1_
 
 - [x] 10. チェックポイント: ユーザーが SQL Editor でタスク9のファイルを実行する
+
+- [x] 11. クローラー用の DDL を作成する（match-crawler で使用）
+  - ファイル: `supabase/migrations/<作成時のUTC>_add_match_crawler.sql`（design.md のファイル一覧のファイル名も実際の名前に直す）
+  - `crawler_seeds` の作成（RLS 有効、ポリシーなし）、`matches`・`match_participants` に `rank_tier` を追加、インデックス、関数 `prune_crawler_matches`
+  - _要件: 1.1_
+- [x] 12. チェックポイント: ユーザーが SQL Editor でタスク11のファイルを実行する

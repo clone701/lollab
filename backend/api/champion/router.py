@@ -6,7 +6,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from api.deps.auth import require_allowed_user
-from schemas.champion import ChampionBuildResponse, Period, QueueFilter, Role
+from schemas.champion import (
+    ChampionBuildResponse,
+    Period,
+    QueueFilter,
+    RankFilter,
+    Role,
+)
 from services.champion.build import get_champion_build
 
 logger = logging.getLogger(__name__)
@@ -22,6 +28,7 @@ async def get_build(
     role: Annotated[Role | None, Query()] = None,
     period: Annotated[Period, Query()] = "latest_patch",
     queue: Annotated[QueueFilter, Query()] = "all",
+    rank: Annotated[RankFilter, Query()] = "all",
 ) -> ChampionBuildResponse:
     """チャンピオンのロール別ビルド（選択肢ごとの試合数・勝利数）を返す。
 
@@ -30,12 +37,13 @@ async def get_build(
         role: TOP / JUNGLE / MIDDLE / BOTTOM / UTILITY。省略時は試合数が最も多いロール
         period: latest_patch（既定）/ last_30_days / all
         queue: all（既定）/ solo / flex
+        rank: all（既定）/ emerald_plus / diamond_plus / master_plus
 
     Raises:
         HTTPException: 422（入力不正。FastAPI が返す）、500（サーバーエラー）
     """
     try:
-        return await get_champion_build(championName, role, period, queue)
+        return await get_champion_build(championName, role, period, queue, rank)
     except Exception:
         # DB 例外などの詳細はログにだけ残し、応答には含めない
         logger.error(
