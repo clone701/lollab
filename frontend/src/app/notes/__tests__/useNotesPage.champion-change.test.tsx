@@ -25,6 +25,12 @@ jest.mock('@/lib/contexts/AuthContext', () => ({
   }),
 }));
 
+// URL のクエリを読む・書くため、next/navigation をモックする
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 jest.mock('@/lib/hooks/useToast', () => ({
   __esModule: true,
   default: () => ({

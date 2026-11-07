@@ -32,6 +32,8 @@ export interface NotesPageContentProps {
   onDeleteCancel: () => void;
   onEditSave: () => void;
   onEditCancel: () => void;
+  /** マイピックの編集画面に未保存の変更があるかが変わったとき */
+  onPickDirtyChange: (isDirty: boolean) => void;
 }
 
 export interface MatchupTabContentProps {

@@ -39,6 +39,7 @@
 | `20261105191256_create_worker_leases.sql` | worker_leases の作成（aws-migration の Backfill の同時実行制限用。適用順は他のテーブルと独立） |
 | `20261106064902_add_match_crawler.sql` | crawler_seeds の作成、matches・match_participants に rank_tier を追加、prune_crawler_matches 関数（match-crawler） |
 | `20261106092001_add_match_raw_bundle_key.sql` | matches に raw_bundle_key を追加（match-detail） |
+| `20261107105042_create_pick_sheets.sql` | pick_sheets・pick_sheet_entries の作成と RLS（my-pick） |
 
 `20240101`〜`20240104` は命名ルール制定前のファイルで、日時は実際の作成日ではない。
 
@@ -348,3 +349,29 @@ league-v4 のランク一覧から1日1回更新する。サービスロール�
 ### prune_crawler_matches（関数）
 
 `prune_crawler_matches(max_matches int, batch int) RETURNS int`。`rank_tier` を持ち、`summoners` に登録済みのプレイヤーが参加していない試合を数え、`max_matches` を超えた分を `game_end_at` の古い順に最大 `batch` 件削除して、削除した件数を返す。`SECURITY INVOKER`、サービスロールから RPC で呼ぶ。
+
+### pick_sheets（マイピック表）
+
+| カラム | 型 | 制約 | 説明 |
+|---|---|---|---|
+| id | bigserial | PK | |
+| user_id | uuid | NOT NULL、既定 `auth.uid()`、FK → auth.users ON DELETE CASCADE | |
+| name | text | NOT NULL、CHECK 1〜50文字 | |
+| lane | text | NOT NULL、CHECK TOP / JUNGLE / MIDDLE / BOTTOM / UTILITY | |
+| created_at, updated_at | timestamptz | NOT NULL、既定 now() | updated_at はトリガーで自動更新（general_notes と同じ関数を使う） |
+
+- インデックス: `(user_id, updated_at DESC)`
+- RLS: SELECT / INSERT / UPDATE / DELETE とも本人のみ（`auth.uid() = user_id`）
+
+### pick_sheet_entries（マイピックのピック）
+
+相手チャンピオン1体につき1行。
+
+| カラム | 型 | 制約 | 説明 |
+|---|---|---|---|
+| sheet_id | bigint | PK、FK → pick_sheets ON DELETE CASCADE | |
+| enemy_champion_id | text | PK | 例: `Ahri`（champion_notes と同じ id） |
+| user_id | uuid | NOT NULL、既定 `auth.uid()`、FK → auth.users ON DELETE CASCADE | RLS の判定用（表の持ち主と同じ） |
+| pick_champion_ids | text[] | NOT NULL、CHECK 要素数 1〜10 | 自分のピック（順番どおり。重複なしはアプリ層で検証） |
+
+- RLS: SELECT / UPDATE / DELETE は本人のみ。INSERT は本人で、かつ `sheet_id` の表の持ち主が本人であること（他人の表にピックを足せないようにする）
