@@ -45,6 +45,9 @@ async function pickInto(enemy: string, n: number, pick: string) {
   await userEvent.click(within(dialog).getByRole('button', { name: pick }));
 }
 
+// 全チャンピオン（約170行）を描画し、操作のたびに再描画するため、CI の遅い環境では既定の5秒を超える
+jest.setTimeout(30000);
+
 describe('PickSheetEditor: 編集', () => {
   beforeEach(() => {
     jest.mocked(getPickSheet).mockResolvedValue(makeDetail());
