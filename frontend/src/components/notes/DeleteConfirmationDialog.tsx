@@ -2,12 +2,15 @@ interface DeleteConfirmationDialogProps {
   isOpen: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  /** 見出し。省略時はノートの削除確認 */
+  title?: string;
 }
 
 export default function DeleteConfirmationDialog({
   isOpen,
   onConfirm,
   onCancel,
+  title = 'このノートを削除しますか？',
 }: DeleteConfirmationDialogProps) {
   if (!isOpen) return null;
 
@@ -29,7 +32,7 @@ export default function DeleteConfirmationDialog({
       >
         {/* メッセージ */}
         <h2 id="dialog-title" className="text-xl font-bold text-fg mb-2">
-          このノートを削除しますか？
+          {title}
         </h2>
 
         {/* 警告 */}

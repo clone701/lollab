@@ -1,7 +1,7 @@
 'use client';
 
 import TabNavigation from '@/components/notes/TabNavigation';
-import TabContentPlaceholder from '@/components/notes/TabContentPlaceholder';
+import { MyPickTabContent } from '@/components/my-pick';
 import Toast from '@/components/ui/Toast';
 import { MatchupTabContent } from './MatchupTabContent';
 import { GeneralNoteTabContent } from './GeneralNoteTabContent';
@@ -58,12 +58,10 @@ export function NotesPageContent(p: NotesPageContentProps) {
               <GeneralNoteTabContent />
             </div>
           )}
-          {p.activeTab !== 'matchup' && p.activeTab !== 'general' && (
-            <TabContentPlaceholder
-              tab={p.activeTab}
-              myChampionId={p.myChampionId}
-              enemyChampionId={p.enemyChampionId}
-            />
+          {p.activeTab === 'mypick' && (
+            <div className="p-6 max-w-5xl mx-auto">
+              <MyPickTabContent onDirtyChange={p.onPickDirtyChange} />
+            </div>
           )}
         </div>
       </div>

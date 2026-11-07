@@ -86,3 +86,9 @@
   - `matches` に `raw_bundle_key text` を追加（`ADD COLUMN IF NOT EXISTS`、`COMMENT ON`）
   - _要件: 1.1_
 - [x] 14. チェックポイント: ユーザーが SQL Editor でタスク13のファイルを実行する
+
+- [x] 15. マイピック用の DDL を作成する（my-pick で使用）
+  - ファイル: `supabase/migrations/20261107105042_create_pick_sheets.sql`
+  - `pick_sheets`・`pick_sheet_entries` の作成、RLS（本人のみ。ピックの INSERT・UPDATE は表の持ち主も確認）、updated_at のトリガー
+  - _要件: 1.1_
+- [x] 16. チェックポイント: ユーザーが SQL Editor でタスク15のファイルを実行する

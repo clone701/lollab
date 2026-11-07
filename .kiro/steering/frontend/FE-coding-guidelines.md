@@ -25,10 +25,23 @@ fileMatchPattern: 'frontend/**/*'
 
 ## Public API パターン
 - サブディレクトリには必ず `index.ts` を置き、外部からは `index.ts` 経由のみ参照
+- adapter も1ファイル1関数にし、テーブル単位のディレクトリ（例: `adapters/supabase/pickSheets/`）にまとめる
 - `index.ts` 内部の import は相対パス（`./`）を使用
 
 ## コンポーネント
 - デフォルトはServer Components。hooks/ブラウザAPI使用時のみ `'use client'`
+
+## 画面の状態と URL
+- 共有・再訪問・他画面からのリンクで開く状態（タブ・選択中のチャンピオン・検索中のサモナーなど）は URL のクエリで持つ
+- 静的書き出し（`output: 'export'`）のため、クエリは `useSearchParams` を `Suspense` で囲んで読む。不正な値は無視して既定値にする
+- URL の組み立て・読み取りは `lib/` の純粋関数にする（例: `lib/notes` の `buildNotesHref`・`parseNotesParams`）
+- 更新は、画面の移動として戻れるべきもの（別のサモナーの検索）は `router.push`、同じ画面内の切り替え（タブ・選択）は `router.replace`
+
+## 未保存の変更
+- 編集画面で未保存の変更があるとき、キャンセル・タブの切り替えは `window.confirm` で確認し、リロード・タブを閉じるのは `beforeunload` で確認する
+
+## チャンピオンの並び順
+- 画面に並べるチャンピオンの一覧は、日本語の読みの五十音順にする（`champions.ts` は英語の ID 順のため、そのまま並べない）
 
 ## セマンティックHTML
 - `<div onClick>` 禁止 → `<button>` を使用
