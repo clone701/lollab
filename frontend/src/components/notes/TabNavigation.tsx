@@ -8,9 +8,10 @@
 'use client';
 
 import React from 'react';
+import type { NoteTab } from '@/lib/notes';
 
-/** タブの種類 */
-export type TabType = 'matchup' | 'general';
+/** タブの種類（URL のクエリ tab と同じ値） */
+export type TabType = NoteTab;
 
 interface TabNavigationProps {
   /** アクティブなタブ */
@@ -28,12 +29,13 @@ interface Tab {
 const tabs: Tab[] = [
   { id: 'matchup', label: '対策ノート' },
   { id: 'general', label: '汎用ノート' },
+  { id: 'mypick', label: 'マイピック' },
 ];
 
 /**
  * タブナビゲーション
  *
- * 3つのタブ（新規ノート作成・汎用ノート・チャンピオン対策ノート）を表示し、
+ * 3つのタブ（対策ノート・汎用ノート・マイピック）を表示し、
  * アクティブなタブを下線と黒色で強調表示する
  */
 const TabNavigation: React.FC<TabNavigationProps> = React.memo(
