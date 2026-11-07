@@ -15,7 +15,7 @@ export function TeamComparison({ teams }: TeamComparisonProps) {
   return (
     <section
       aria-label="チームの比較"
-      className="flex flex-col gap-3 rounded-lg bg-surface-2 p-3"
+      className="flex flex-col gap-1.5 rounded-lg bg-surface-2 px-3 py-2"
     >
       <div className="flex justify-between text-xs font-semibold">
         <span className="text-accent">ブルー</span>

@@ -1,21 +1,18 @@
-import Image from 'next/image';
+import { BuildIcon } from '@/components/champion-build';
+import { toChampionId } from '@/lib/match-detail';
 
 interface MatchChampionIconProps {
   championName: string;
 }
 
-// チャンピオンアイコン
+// チャンピオンアイコン（Riot の名前を画像の ID に直す。ウーコンなど名前が違うもの用）
 export function MatchChampionIcon({ championName }: MatchChampionIconProps) {
   return (
-    <div className="w-10 h-10 rounded-full bg-surface-2 overflow-hidden flex-shrink-0">
-      <Image
-        src={`/images/champion/${championName}.png`}
-        alt={championName}
-        width={40}
-        height={40}
-        className="object-cover"
-        onError={() => {}}
-      />
-    </div>
+    <BuildIcon
+      src={`/images/champion/${toChampionId(championName)}.png`}
+      label={championName}
+      size={48}
+      className="rounded-full bg-surface-2"
+    />
   );
 }

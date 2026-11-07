@@ -48,6 +48,8 @@ export interface ParticipantDetail {
   damage_taken: number;
   wards_placed: number;
   wards_killed: number;
+  /** コントロールワードの購入数 */
+  control_wards_bought: number;
   cs: number;
   gold_earned: number;
   /** item0〜6（0 は空き） */

@@ -20,7 +20,7 @@ export function SpellRuneCell({ participant: p }: SpellRuneCellProps) {
             key={id}
             src={icon?.src ?? null}
             label={icon?.name ?? `スペル${id}`}
-            size={20}
+            size={16}
           />
         ))}
       </div>
@@ -30,7 +30,7 @@ export function SpellRuneCell({ participant: p }: SpellRuneCellProps) {
             key={id}
             src={icon?.src ?? null}
             label={icon?.name ?? `ルーン${id}`}
-            size={20}
+            size={16}
             className="rounded-full bg-canvas"
           />
         ))}

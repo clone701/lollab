@@ -4,14 +4,18 @@ from datetime import datetime, timezone
 
 from adapters import summoner_store
 from schemas.summoner import (
-    MatchData,
     RankData,
     RankPositionData,
     SummonerData,
     SummonerDetail,
 )
-from schemas.summoner_store import ParticipationRecord, SummonerRecord
-from services.summoner.champion_stats import aggregate_champion_stats
+from schemas.summoner_store import SummonerRecord
+from services.summoner.champion_stats import aggregate_champion_stats_by_queue
+from services.summoner.match_card import build_match_cards
+from services.summoner.stats_period import (
+    resolve_stats_start,
+    resolve_stats_year,
+)
 
 # 試合履歴に含める最大件数
 _RECENT_MATCH_LIMIT = 20
@@ -33,24 +37,22 @@ async def build_detail(record: SummonerRecord) -> SummonerDetail:
     recent = await summoner_store.get_recent_participations(
         record.puuid, _RECENT_MATCH_LIMIT
     )
-    matches = [_to_match_data(p, now) for p in recent]
+    matches = await build_match_cards(recent, now)
 
-    # 現行シーズンの期間で集計する。未登録なら全期間
+    # 今のランクの年の始まりから現在まで集計する。現行シーズンが未登録なら全期間
     season = await summoner_store.get_current_season()
-    start = season.start_at if season else None
-    end = season.end_at if season else None
-    season_participations = await summoner_store.get_participations_between(
-        record.puuid, start, end
+    start = await resolve_stats_start(season)
+    participations = await summoner_store.get_participations_between(
+        record.puuid, start, None
     )
-    champion_stats = aggregate_champion_stats(
-        [_to_match_data(p, now) for p in season_participations]
-    )
+    champion_stats = aggregate_champion_stats_by_queue(participations)
 
     return SummonerDetail(
         summoner=_to_summoner_data(record),
         rankPosition=_to_rank_position(record),
         matches=matches,
         championStats=champion_stats,
+        championStatsYear=resolve_stats_year(season),
     )
 
 
@@ -85,22 +87,4 @@ def _to_rank_position(record: SummonerRecord) -> RankPositionData | None:
         position=record.rank_position or 0,
         totalPlayers=record.rank_total or 0,
         topPercent=record.rank_top_percent,
-    )
-
-
-def _to_match_data(p: ParticipationRecord, now: datetime) -> MatchData:
-    """参加記録を MatchData に変換する。timeAgoSeconds は now との差で求める。"""
-    time_ago = int((now - p.game_end_at).total_seconds())
-    return MatchData(
-        matchId=p.match_id,
-        isWin=p.win,
-        gameMode=p.game_mode,
-        championName=p.champion_name,
-        kills=p.kills,
-        deaths=p.deaths,
-        assists=p.assists,
-        cs=p.cs,
-        gameDurationSeconds=p.game_duration,
-        itemIds=p.item_ids,
-        timeAgoSeconds=max(time_ago, 0),
     )

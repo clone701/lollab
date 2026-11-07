@@ -7,12 +7,12 @@ interface CsCellProps {
   durationSeconds: number;
 }
 
-// CS と分あたりの CS
+// CS（上）と分あたりの CS（下）
 export function CsCell({ participant: p, durationSeconds }: CsCellProps) {
   return (
-    <div className="flex flex-col">
-      <span className="text-sm text-fg">{p.cs}</span>
-      <span className="text-xs text-fg-muted">
+    <div className="flex flex-col items-center">
+      <span className="text-sm leading-4 text-fg">{p.cs}</span>
+      <span className="text-xs leading-4 text-fg-muted">
         {formatCsPerMinute(p.cs, durationSeconds)}/分
       </span>
     </div>

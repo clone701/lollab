@@ -71,6 +71,8 @@ def load_store(filename: str = "summoner_store.py") -> ModuleType:
 
 
 store = load_store()
+# 他のテストが sys.modules["adapters"] を差し替える前（最初の import 時）に読み込む
+season_store = load_store("season_store.py")
 
 
 def use(monkeypatch: pytest.MonkeyPatch, client: FakeClient) -> None:

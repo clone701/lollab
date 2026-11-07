@@ -31,7 +31,7 @@ export default function RootLayout({
         <Providers>
           <AuthGate>
             <Navbar />
-            <main className="mx-auto max-w-6xl px-4">{children}</main>
+            <main className="mx-auto max-w-7xl px-4">{children}</main>
             <Footer />
           </AuthGate>
         </Providers>

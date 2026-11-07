@@ -10,7 +10,7 @@ interface ParticipantStatCellsProps {
   durationSeconds: number;
 }
 
-// 行の右半分: ダメージ・ワード・CS・アイテム
+// 行の右半分: 与ダメージ・被ダメージ（1列に左右で並べる）、ワード、CS、アイテム
 export function ParticipantStatCells({
   participant: p,
   damageMax,
@@ -18,15 +18,13 @@ export function ParticipantStatCells({
 }: ParticipantStatCellsProps) {
   return (
     <>
-      <div className={COLUMN_CLASSES.damage}>
+      <div className={`${COLUMN_CLASSES.damage} flex gap-2`}>
         <DamageBar
           label="与ダメージ"
           value={p.damage_to_champions}
           max={damageMax.dealt}
           barClassName="bg-accent"
         />
-      </div>
-      <div className={COLUMN_CLASSES.taken}>
         <DamageBar
           label="被ダメージ"
           value={p.damage_taken}

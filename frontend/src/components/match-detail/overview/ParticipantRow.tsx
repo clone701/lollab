@@ -6,13 +6,14 @@ import { ParticipantStatCells } from './ParticipantStatCells';
 
 interface ParticipantRowProps {
   participant: ParticipantDetail;
-  /** 対象プレイヤー（検索したサモナー）の行は強調する */
+  /** 対象プレイヤー（検索したサモナー）の行を強調する */
   isTarget: boolean;
   region: Region;
   damageMax: DamageMax;
   durationSeconds: number;
 }
 
+// 1人の行（高さ 40px）。強調は背景と左端の印。行の区切り線は親の divide-y が引く
 export function ParticipantRow({
   participant,
   isTarget,
@@ -23,8 +24,8 @@ export function ParticipantRow({
   return (
     <li
       data-target={isTarget}
-      className={`flex items-center gap-2 rounded p-2 ${
-        isTarget ? 'ring-2 ring-accent bg-accent/15' : ''
+      className={`flex h-10 items-center gap-2 border-l-2 px-2 ${
+        isTarget ? 'border-accent bg-accent/15' : 'border-transparent'
       }`}
     >
       <ParticipantIdentityCells participant={participant} region={region} />

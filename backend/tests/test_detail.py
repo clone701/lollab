@@ -7,33 +7,32 @@ _Requirements: 5.1, 5.2, 5.3, 6.1, 6.2, 7.1〜7.4_
 """
 
 import asyncio
-import sys
 from datetime import datetime, timedelta, timezone
-from types import ModuleType
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
-# adapters.summoner_store は import 時に Supabase クライアントを作るため、
-# 環境変数なしでもインポートできるようにスタブを注入する
-_fake_store = ModuleType("adapters.summoner_store")
-for _name in (
-    "get_recent_participations",
-    "get_participations_between",
-    "get_current_season",
-):
-    setattr(_fake_store, _name, AsyncMock())
-sys.modules.setdefault("adapters.summoner_store", _fake_store)
+from tests.sync_helpers import install_store_stub
 
+# adapters の各ストアは import 時に Supabase クライアントを作るため、
+# 環境変数なしでもインポートできるようにスタブを注入する
+install_store_stub()
+
+from schemas.match_detail import RankBrief  # noqa: E402
 from schemas.summoner_store import (  # noqa: E402
+    MatchMemberRecord,
     ParticipationRecord,
     SeasonRecord,
     SummonerRecord,
 )
 from services.summoner.detail import build_detail  # noqa: E402
+from tests.participation_helpers import member, participation  # noqa: E402
 
 _RECENT = "services.summoner.detail.summoner_store.get_recent_participations"
 _BETWEEN = "services.summoner.detail.summoner_store.get_participations_between"
 _SEASON = "services.summoner.detail.summoner_store.get_current_season"
-
+_YEAR_START = "services.summoner.stats_period.season_store.get_earliest_start_at"
+_MEMBERS = "services.summoner.match_card.match_member_store.get_members_by_match"
+_RANKS = "services.summoner.match_card.match_rank_store.get_ranks"
 _UPDATED_AT = datetime(2025, 3, 1, 12, 0, tzinfo=timezone.utc)
 
 # ---------------------------------------------------------------------------
@@ -70,37 +69,11 @@ def _participation(
     champion: str = "Ahri",
     win: bool = True,
     ended_ago: timedelta = timedelta(hours=1),
-    kills: int = 5,
-    deaths: int = 2,
-    assists: int = 8,
-    cs: int = 180,
+    **overrides: Any,
 ) -> ParticipationRecord:
     """ParticipationRecord を生成する（試合終了は現在から ended_ago 前）。"""
-    return ParticipationRecord(
-        match_id=match_id,
-        puuid="puuid-0",
-        team_id=100,
-        team_position="MIDDLE",
-        champion_id=103,
-        champion_name=champion,
-        win=win,
-        kills=kills,
-        deaths=deaths,
-        assists=assists,
-        cs=cs,
-        gold_earned=10000,
-        damage_to_champions=20000,
-        vision_score=20,
-        item_ids=[3157, 3089, 0, 0, 0, 0, 3363],
-        spell1_id=4,
-        spell2_id=14,
-        keystone_id=8112,
-        primary_style_id=8100,
-        sub_style_id=8200,
-        queue_id=420,
-        game_end_at=datetime.now(timezone.utc) - ended_ago,
-        game_mode="CLASSIC",
-        game_duration=1800,
+    return participation(
+        match_id, ended_ago=ended_ago, champion_name=champion, win=win, **overrides
     )
 
 
@@ -109,6 +82,9 @@ def _build(
     recent: list[ParticipationRecord] | None = None,
     between: list[ParticipationRecord] | None = None,
     season: SeasonRecord | None = None,
+    members: dict[str, list[MatchMemberRecord]] | None = None,
+    ranks: dict[str, RankBrief] | None = None,
+    year_start: datetime | None = None,  # 同じ年で最も早いシーズンの start_at
 ) -> tuple:  # type: ignore[type-arg]
     """build_detail を実行し、(結果, recent モック, between モック) を返す。"""
     mock_recent = AsyncMock(return_value=recent or [])
@@ -117,6 +93,9 @@ def _build(
         patch(_RECENT, new=mock_recent),
         patch(_BETWEEN, new=mock_between),
         patch(_SEASON, new=AsyncMock(return_value=season)),
+        patch(_YEAR_START, new=AsyncMock(return_value=year_start)),
+        patch(_MEMBERS, new=AsyncMock(return_value=members or {})),
+        patch(_RANKS, new=AsyncMock(return_value=ranks or {})),
     ):
         detail = asyncio.run(build_detail(record))
     return detail, mock_recent, mock_between
@@ -204,40 +183,90 @@ def test_build_detail_matches_from_recent_participations() -> None:
     assert abs(detail.matches[1].timeAgoSeconds - 86400) < 5
 
 
-def test_build_detail_champion_stats_use_current_season_period() -> None:
-    """チャンピオン統計は現行シーズンの期間で集計し、総試合数の降順に並べる。"""
+def test_build_detail_matches_have_card_fields() -> None:
+    """試合カードの項目（キュー・スペル・ルーン・参加者・キル関与率・試合のランク）を作る。"""
+    recent = [participation("JP1_1", kills=5, assists=8)]
+    members = {
+        "JP1_1": [
+            member(puuid="enemy", team_id=200, team_position="TOP", kills=7),
+            member(puuid="puuid-0", team_id=100, kills=5),
+            member(puuid="ally", team_id=100, team_position="TOP", kills=15),
+        ]
+    }
+    ranks = {
+        "puuid-0": RankBrief(tier="GOLD", division="IV"),
+        "ally": RankBrief(tier="GOLD", division="II"),
+    }
+
+    detail, _, _ = _build(_record(), recent=recent, members=members, ranks=ranks)
+
+    card = detail.matches[0]
+    assert card.queueId == 420
+    assert card.spellIds == [4, 14]
+    assert (card.keystoneId, card.subStyleId) == (8112, 8200)
+    assert [p.puuid for p in card.participants] == ["ally", "puuid-0", "enemy"]
+    # (5 + 8) / (5 + 15) = 0.65。敵チームのキルは含めない
+    assert card.killParticipation == 0.65
+    assert card.averageRank is not None
+    assert (card.averageRank.tier, card.averageRank.division) == ("GOLD", "III")
+
+
+def test_build_detail_champion_stats_start_from_year_of_current_season() -> None:
+    """チャンピオン統計は、現行シーズンと同じ年の最初のシーズンの開始から集計する。"""
     season = SeasonRecord(
-        id="2025-S1",
-        name="2025 Season 1",
-        start_at=datetime(2025, 1, 9, tzinfo=timezone.utc),
+        id="2025-S3",
+        name="2025 Season 3",
+        start_at=datetime(2025, 9, 1, tzinfo=timezone.utc),
         end_at=None,
     )
+    year_start = datetime(2025, 1, 9, tzinfo=timezone.utc)
     between = [
-        _participation("JP1_1", champion="Zed", cs=100, kills=4, deaths=2, assists=2),
+        _participation("JP1_1", champion="Zed", cs=100),
         _participation("JP1_2", champion="Ahri", win=True, cs=200),
         _participation("JP1_3", champion="Ahri", win=False, cs=100),
+        _participation("JP1_4", champion="Ahri", queue_id=440, cs=300),
     ]
 
-    detail, _, mock_between = _build(_record(), between=between, season=season)
+    detail, _, mock_between = _build(
+        _record(), between=between, season=season, year_start=year_start
+    )
 
-    mock_between.assert_awaited_once_with("puuid-0", season.start_at, None)
-    assert [s.championName for s in detail.championStats] == ["Ahri", "Zed"]
-    ahri = detail.championStats[0]
-    assert (ahri.wins, ahri.losses) == (1, 1)
-    assert ahri.cs == 150.0
-    assert ahri.kda == (5 + 8 + 5 + 8) / (2 + 2)
+    mock_between.assert_awaited_once_with("puuid-0", year_start, None)
+    stats = detail.championStats
+    assert [s.championName for s in stats.all] == ["Ahri", "Zed"]
+    ahri = stats.all[0]
+    assert (ahri.wins, ahri.losses) == (2, 1)
+    assert ahri.cs == 200.0
+    assert [s.championName for s in stats.solo] == ["Ahri", "Zed"]
+    assert [(s.championName, s.wins) for s in stats.flex] == [("Ahri", 1)]
+    assert detail.championStatsYear == 2025
 
 
 def test_build_detail_champion_stats_all_time_without_season() -> None:
     """現行シーズンが未登録なら全期間（start / end とも None）で集計する。"""
-    _, _, mock_between = _build(_record(), season=None)
+    detail, _, mock_between = _build(_record(), season=None)
 
     mock_between.assert_awaited_once_with("puuid-0", None, None)
+    assert detail.championStatsYear is None
+
+
+def test_build_detail_champion_stats_year_none_when_id_has_no_year() -> None:
+    """年が取れない id の現行シーズンなら、championStatsYear は None。"""
+    season = SeasonRecord(
+        id="preseason",
+        name="preseason",
+        start_at=datetime(2025, 9, 1, tzinfo=timezone.utc),
+        end_at=None,
+    )
+
+    detail, _, _ = _build(_record(), season=season)
+
+    assert detail.championStatsYear is None
 
 
 def test_build_detail_empty_history() -> None:
     """試合がなければ、試合履歴・チャンピオン統計とも空。"""
     detail, _, _ = _build(_record())
 
-    assert detail.matches == []
-    assert detail.championStats == []
+    stats = detail.championStats
+    assert (detail.matches, stats.all, stats.solo, stats.flex) == ([], [], [], [])

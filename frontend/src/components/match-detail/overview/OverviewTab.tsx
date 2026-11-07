@@ -15,10 +15,10 @@ interface OverviewTabProps {
 export function OverviewTab({ match, targetPuuid, region }: OverviewTabProps) {
   const damageMax = calcDamageMax(match.participants);
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       <TeamComparison teams={match.teams} />
       <div className="overflow-x-auto">
-        <div className={`flex flex-col gap-3 ${TABLE_MIN_WIDTH_CLASS}`}>
+        <div className={`flex flex-col gap-2 ${TABLE_MIN_WIDTH_CLASS}`}>
           {splitTeams(match).map((group) => (
             <TeamTable
               key={group.team.team_id}
