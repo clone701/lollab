@@ -11,7 +11,7 @@ export function ItemsCell({ itemIds }: ItemsCellProps) {
   return (
     <ul className="flex gap-0.5">
       {itemIds.map((id, slot) => (
-        <li key={slot} className="h-6 w-6 rounded bg-surface-2">
+        <li key={slot} className="h-6 w-6 shrink-0 rounded bg-surface-2">
           {id !== 0 && (
             <BuildIcon
               {...itemIconUrls(id)}

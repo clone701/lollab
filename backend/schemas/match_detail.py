@@ -54,6 +54,7 @@ class ParticipantDetail(BaseModel):
     damage_taken: int
     wards_placed: int
     wards_killed: int
+    control_wards_bought: int  # コントロールワードの購入数
     cs: int
     gold_earned: int
     item_ids: list[int]  # item0〜6（0 は空き）

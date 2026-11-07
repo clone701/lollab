@@ -228,17 +228,36 @@ class RankPositionData(BaseModel):  # 現行どおり
     totalPlayers: int
     topPercent: float
 
-class MatchData(BaseModel):         # 現行どおり（timeAgoSeconds は応答時に計算）
+class MatchParticipantBrief(BaseModel):  # 試合カードの参加者の列
+    puuid: str
+    teamId: int                     # 100 / 200
+    championName: str
+    riotIdGameName: str | None
+    riotIdTagline: str | None
+
+class MatchRankBrief(BaseModel):    # 試合のランク（分かる参加者の平均）
+    tier: str                       # EMERALD など
+    division: str | None            # マスター以上は None
+
+class MatchData(BaseModel):         # timeAgoSeconds は応答時に計算
     matchId: str
     isWin: bool
+    isRemake: bool                  # リメイク（早期降伏）。match_participants.is_remake
     gameMode: str
+    queueId: int                    # 420 = ソロ/デュオ、440 = フレックス（表示名はフロントエンドで決める）
     championName: str
     kills: int
     deaths: int
     assists: int
+    killParticipation: float        # 0〜1。(キル + アシスト) / 自チームの合計キル（0除算は0）
     cs: int
     gameDurationSeconds: int
     itemIds: list[int]
+    spellIds: list[int]             # [spell1, spell2]
+    keystoneId: int
+    subStyleId: int
+    participants: list[MatchParticipantBrief]  # 10人。チーム、team_position の順
+    averageRank: MatchRankBrief | None
     timeAgoSeconds: int
 
 class ChampionStatData(BaseModel):  # 現行どおり
@@ -252,7 +271,8 @@ class SummonerDetail(BaseModel):
     summoner: SummonerData
     rankPosition: RankPositionData | None
     matches: list[MatchData]               # 新しい順に最大20件
-    championStats: list[ChampionStatData]  # 現行シーズンの保存済み対象試合から集計
+    championStats: ChampionStatsByQueue    # 今のランクの年の保存済み試合から、キューごとに集計
+    championStatsYear: int | None          # 集計したランクの年（現行シーズンの id の先頭の年）。見出しの「S2026」に使う
 ```
 
 ### DB テーブル
@@ -347,7 +367,7 @@ async def run_backfill(region: str, puuid: str) -> None  # 例外を外に出さ
 async def build_detail(record: SummonerRecord) -> SummonerDetail
 ```
 
-- チャンピオン統計は `get_current_season()` の期間で `get_participations_between()` を呼び、`aggregate_champion_stats` で集計する。現行シーズンが未登録なら全期間で集計する
+- チャンピオン統計は、今のランクの年（現行シーズンの `id` の年（例 `2026-`）で始まるシーズンのうち最も早い `start_at`）から現在までの期間で `get_participations_between()` を呼び、`aggregate_champion_stats` で集計する。`ChampionStatsByQueue` は `all`（ソロ・フレックスの両方）・`solo`（420）・`flex`（440）の3つ。現行シーズンが未登録なら全期間で集計する
 - 期間を引数で受け取るため、将来のシーズン別・全期間の統計も同じ関数で取得できる
 
 ### フロントエンド
@@ -370,7 +390,7 @@ interface SummonerDetail {
   summoner: SummonerData;          // lastUpdatedAt: string（ISO 8601）を追加
   rankPosition: RankPositionData | null;
   matches: MatchData[];
-  championStats: ChampionStatData[];
+  championStats: { all: ChampionStatData[]; solo: ChampionStatData[]; flex: ChampionStatData[] };
 }
 
 function fetchSummonerDetail(region: Region, gameName: string, tagLine: string): Promise<SummonerDetail>
@@ -430,3 +450,9 @@ pytest + hypothesis（最低100イテレーション）。Riot API と DB はモ
 | backfill.py | 429 で終了し、カーソルは保存済みページまでしか進まない / 中断後の再実行で続きから取得 |
 | backfill.py | `backfill_started_at` が10分以内なら開始しない |
 | フロントエンド | formatTimeAgo の境界値 / UpdateButton の更新中表示 |
+
+### 試合カードの項目（MatchData）
+
+- 表示する試合（最大20件）の `match_participants` を1回のクエリでまとめて取得し、参加者の列・自チームの合計キル（キル関与率）を作る。Riot API は呼ばない
+- 試合のランク（`averageRank`）: 参加者のランクを `summoners`（`solo_tier`・`solo_rank`）、なければ `crawler_seeds`（`tier`・`division`）から引く（試合詳細の `match_rank_store.get_ranks` を使う）。分かった人のランクを数値（IRON IV = 0 … DIAMOND I = 27、MASTER = 28、GRANDMASTER = 29、CHALLENGER = 30）にして平均を四捨五入し、ランクに戻す。分かる人がいなければ None
+- `queueId` の表示名はフロントエンドで決める（420 = ランク (ソロ/デュオ)、440 = ランク (フレックス)、それ以外は `gameMode`）

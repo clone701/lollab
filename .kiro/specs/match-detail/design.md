@@ -62,7 +62,7 @@ stateDiagram-v2
 
 | 項目 | 生データの元 |
 |---|---|
-| 成績 | `info.participants[]`: `champLevel`、`kills`/`deaths`/`assists`、`totalDamageDealtToChampions`、`totalDamageTaken`、`wardsPlaced`、`wardsKilled`、`totalMinionsKilled + neutralMinionsKilled`、`goldEarned`、`item0〜6`、`summoner1Id`/`summoner2Id`、`perks` |
+| 成績 | `info.participants[]`: `champLevel`、`kills`/`deaths`/`assists`、`totalDamageDealtToChampions`、`totalDamageTaken`、`wardsPlaced`、`wardsKilled`、`visionWardsBoughtInGame`、`totalMinionsKilled + neutralMinionsKilled`、`goldEarned`、`item0〜6`、`summoner1Id`/`summoner2Id`、`perks` |
 | キル関与率 | (キル + アシスト) / チームの合計キル（0除算は0）。0〜1 の比率で返す |
 | チーム | `info.teams[]`: `win`、`objectives` の `baron`・`dragon`・`riftHerald`・`horde`（ヴォイドグラブ）・`atakhan`・`tower`・`inhibitor` の `kills`。合計キル・合計ゴールドは参加者の合計 |
 | アイテムの購入順 | タイムラインの `ITEM_PURCHASED`。`ITEM_UNDO` で取り消された購入は除く（直前の同じアイテムの購入を1件消す）。分（`timestamp // 60000`）ごとにまとめる |
@@ -124,6 +124,7 @@ class ParticipantDetail(BaseModel):
     damage_taken: int
     wards_placed: int
     wards_killed: int
+    control_wards_bought: int       # visionWardsBoughtInGame
     cs: int
     gold_earned: int
     item_ids: list[int]             # item0〜6（0 は空き）

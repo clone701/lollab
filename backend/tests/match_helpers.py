@@ -52,6 +52,7 @@ def raw_detail(match_id: str = "JP1_1") -> dict[str, Any]:
             totalDamageTaken=10_000 + index,
             wardsPlaced=index,
             wardsKilled=index + 1,
+            visionWardsBoughtInGame=index + 2,
             teamPosition=POSITIONS[index],
         )
     info["teams"] = [

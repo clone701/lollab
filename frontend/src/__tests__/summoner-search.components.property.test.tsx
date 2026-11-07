@@ -8,13 +8,7 @@ import { render } from '@testing-library/react';
 import SummonerProfile from '@/components/summoner-search/SummonerProfile';
 import RankInfo from '@/components/summoner-search/RankInfo';
 import MatchCard from '@/components/summoner-search/MatchCard';
-import ChampionStatRow from '@/components/summoner-search/ChampionStatRow';
-import type {
-  SummonerData,
-  RankData,
-  MatchData,
-  ChampionStatData,
-} from '@/types/summoner';
+import type { SummonerData, RankData, MatchData } from '@/types/summoner';
 
 // Arbitraries
 const rankDataArb = (): fc.Arbitrary<RankData> =>
@@ -51,27 +45,33 @@ const matchDataArb = (): fc.Arbitrary<MatchData> =>
   fc.record({
     matchId: fc.string({ minLength: 1, maxLength: 20 }),
     isWin: fc.boolean(),
+    isRemake: fc.constant(false),
     gameMode: fc.string({ minLength: 1, maxLength: 20 }),
+    queueId: fc.constantFrom(420, 440, 450, 1700),
     championName: championNameArb,
     kills: fc.integer({ min: 0, max: 50 }),
     deaths: fc.integer({ min: 1, max: 50 }), // deaths >= 1 でKDA計算を安定させる
     assists: fc.integer({ min: 0, max: 50 }),
+    killParticipation: fc.double({ min: 0, max: 1, noNaN: true }),
     cs: fc.integer({ min: 1, max: 999 }), // cs >= 1 で "0" の誤検知を避ける
     gameDurationSeconds: fc.integer({ min: 60, max: 7200 }),
     itemIds: fc.array(fc.integer({ min: 1000, max: 9999 }), {
       minLength: 0,
-      maxLength: 6,
+      maxLength: 7,
     }),
+    spellIds: fc.array(fc.constantFrom(4, 7, 12, 14), {
+      minLength: 2,
+      maxLength: 2,
+    }),
+    keystoneId: fc.constantFrom(8112, 8010, 8005),
+    subStyleId: fc.constantFrom(8100, 8200, 8400),
+    participants: fc.constant([]),
+    averageRank: fc.constantFrom(
+      null,
+      { tier: 'GOLD', division: 'II' },
+      { tier: 'MASTER', division: null }
+    ),
     timeAgoSeconds: fc.integer({ min: 0, max: 86400 * 30 }),
-  });
-
-const championStatDataArb = (): fc.Arbitrary<ChampionStatData> =>
-  fc.record({
-    championName: championNameArb,
-    wins: fc.integer({ min: 0, max: 9999 }),
-    losses: fc.integer({ min: 0, max: 9999 }),
-    cs: fc.integer({ min: 1, max: 999 }), // cs >= 1 で "0" の誤検知を避ける
-    kda: fc.float({ min: Math.fround(0.1), max: Math.fround(99), noNaN: true }),
   });
 
 // Property 5: SummonerProfile は全フィールドを表示する
@@ -159,37 +159,6 @@ describe('Property 7: MatchCard は全フィールドを表示し、勝敗に応
         unmount();
         return hasChampion && hasCS && hasWinLabel;
       }),
-      { numRuns: 100 }
-    );
-  });
-});
-
-// Property 8: ChampionStatRow は全フィールドを表示し、プログレスバー幅が勝率と一致する
-// Validates: 要件 8.2, 8.3
-describe('Property 8: ChampionStatRow は全フィールドを表示し、プログレスバー幅が勝率と一致する', () => {
-  it('任意の ChampionStatData に対して全フィールドとプログレスバー幅が勝率と一致する', () => {
-    fc.assert(
-      fc.property(
-        championStatDataArb().filter((c) => c.wins + c.losses > 0),
-        (champion) => {
-          const { unmount } = render(<ChampionStatRow champion={champion} />);
-          const text = document.body.textContent ?? '';
-          // チャンピオン名はalt属性で確認
-          const imgEl = document.body.querySelector(
-            `img[alt="${champion.championName}"]`
-          );
-          const hasName = imgEl !== null;
-          const hasCS = text.includes(`CS ${champion.cs}`);
-          const totalGames = champion.wins + champion.losses;
-          const winRatePct = Math.round((champion.wins / totalGames) * 100);
-          const progressBar = document.body.querySelector(
-            "[data-testid='win-rate-bar']"
-          ) as HTMLElement | null;
-          const hasCorrectWidth = progressBar?.style.width === `${winRatePct}%`;
-          unmount();
-          return hasName && hasCS && hasCorrectWidth;
-        }
-      ),
       { numRuns: 100 }
     );
   });

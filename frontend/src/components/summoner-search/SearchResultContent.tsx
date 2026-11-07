@@ -149,12 +149,15 @@ export default function SearchResultContent({
 
           <div className="mt-4">
             {activeTab === 'overview' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-[300px_minmax(0,1fr)] gap-4">
                 <div className="flex flex-col gap-4">
                   <RankInfo rank={detail.summoner.rank} />
-                  <ChampionStats champions={detail.championStats} />
+                  <ChampionStats
+                    stats={detail.championStats}
+                    year={detail.championStatsYear}
+                  />
                 </div>
-                <div className="md:col-span-2">
+                <div className="min-w-0">
                   <MatchHistory
                     matches={detail.matches}
                     puuid={detail.summoner.puuid}

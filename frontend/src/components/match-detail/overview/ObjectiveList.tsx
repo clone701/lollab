@@ -8,11 +8,11 @@ interface ObjectiveListProps {
 // オブジェクトの獲得数（ブルー - レッド）
 export function ObjectiveList({ pair }: ObjectiveListProps) {
   return (
-    <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <ul className="grid grid-cols-2 gap-1 sm:grid-cols-4">
       {OBJECTIVES.map(({ key, label }) => (
         <li
           key={key}
-          className="flex items-center justify-between rounded bg-surface-2 px-2 py-1 text-xs"
+          className="flex items-center justify-between rounded bg-surface-2 px-2 py-0.5 text-xs"
         >
           <span className="text-fg-muted">{label}</span>
           <span className="font-medium text-fg">

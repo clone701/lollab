@@ -43,7 +43,7 @@ def test_participant_stats_are_mapped() -> None:
     assert p.stat_perk_ids == [5005, 5008, 5002]
     assert (p.kills, p.deaths, p.assists) == (5, 2, 8)
     assert p.damage_to_champions == 23456 and p.damage_taken == 10_000
-    assert (p.wards_placed, p.wards_killed) == (0, 1)
+    assert (p.wards_placed, p.wards_killed, p.control_wards_bought) == (0, 1, 2)
     assert p.cs == 160 and p.gold_earned == 12345
     assert p.item_ids == [3157, 3089, 3135, 3020, 3165, 3040, 3363]
 

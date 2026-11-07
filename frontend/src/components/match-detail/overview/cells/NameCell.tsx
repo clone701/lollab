@@ -13,7 +13,7 @@ interface NameCellProps {
   region: Region;
 }
 
-// 名前（そのプレイヤーの検索結果へのリンク）と、分かっていればランク
+// 名前（そのプレイヤーの検索結果へのリンク）と、分かっていればその下にランク。どちらも省略表示
 export function NameCell({ participant: p, region }: NameCellProps) {
   const href = buildParticipantSearchHref(p, region);
   const name = getDisplayName(p);
@@ -23,15 +23,17 @@ export function NameCell({ participant: p, region }: NameCellProps) {
         <Link
           href={href}
           title={`${name}#${p.riot_id_tagline}`}
-          className="truncate text-sm font-medium text-accent hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="truncate text-sm font-medium leading-4 text-accent hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           {name}
         </Link>
       ) : (
-        <span className="truncate text-sm text-fg-muted">{name}</span>
+        <span className="truncate text-sm leading-4 text-fg-muted">{name}</span>
       )}
       {p.rank && (
-        <span className="text-xs text-fg-subtle">{formatRank(p.rank)}</span>
+        <span className="truncate text-xs leading-4 text-fg-subtle">
+          {formatRank(p.rank)}
+        </span>
       )}
     </div>
   );

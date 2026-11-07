@@ -10,8 +10,8 @@ interface ComparisonBarProps {
 export function ComparisonBar({ label, blue, red }: ComparisonBarProps) {
   const bluePercent = Math.round(calcShare(blue, red) * 100);
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center justify-between text-xs">
+    <div className="flex flex-col gap-0.5">
+      <div className="flex items-center justify-between text-xs leading-4">
         <span className="font-medium text-accent">{formatNumber(blue)}</span>
         <span className="text-fg-muted">{label}</span>
         <span className="font-medium text-danger-fg">{formatNumber(red)}</span>
@@ -19,7 +19,7 @@ export function ComparisonBar({ label, blue, red }: ComparisonBarProps) {
       <div
         role="img"
         aria-label={`${label} ブルー ${formatNumber(blue)} 対 レッド ${formatNumber(red)}`}
-        className="flex h-2 overflow-hidden rounded bg-danger"
+        className="flex h-1.5 overflow-hidden rounded bg-danger"
       >
         <div
           data-testid="comparison-blue"

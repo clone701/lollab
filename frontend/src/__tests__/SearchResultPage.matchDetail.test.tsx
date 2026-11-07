@@ -21,7 +21,8 @@ const DETAIL: SummonerDetail = {
   summoner: { ...MOCK_SUMMONER, puuid: 'puuid-1' },
   rankPosition: null,
   matches: MOCK_MATCHES.slice(0, 1),
-  championStats: [],
+  championStats: { all: [], solo: [], flex: [] },
+  championStatsYear: 2026,
 };
 
 function jsonResponse(body: unknown): Response {
@@ -60,7 +61,7 @@ describe('SearchResultPage: 試合詳細', () => {
     );
     const row = (await screen.findByText('Player1')).closest('li');
     expect(row).toHaveAttribute('data-target', 'true');
-    expect(row).toHaveClass('ring-2', 'ring-accent', 'bg-accent/15');
+    expect(row).toHaveClass('border-l-2', 'border-accent', 'bg-accent/15');
     expect(
       within(row as HTMLElement).getByRole('link', { name: 'Player1' })
     ).toHaveAttribute('href', '/?region=JP&q=Player1%23T1');
