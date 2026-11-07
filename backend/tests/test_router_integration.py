@@ -29,7 +29,10 @@ from api.deps.auth import require_allowed_user  # noqa: E402
 from api.summoner.router import router  # noqa: E402
 from schemas.summoner import (  # noqa: E402
     ChampionStatData,
+    ChampionStatsByQueue,
     MatchData,
+    MatchParticipantBrief,
+    MatchRankBrief,
     RankData,
     RankPositionData,
     SummonerData,
@@ -72,19 +75,49 @@ mock_detail = SummonerDetail(
             matchId="JP1_001",
             isWin=True,
             gameMode="CLASSIC",
+            queueId=420,
             championName="Ahri",
             kills=5,
             deaths=2,
             assists=8,
+            killParticipation=0.65,
             cs=180,
             gameDurationSeconds=1800,
             itemIds=[3157, 3089, 3135, 3020, 3165, 3040, 0],
+            spellIds=[4, 14],
+            keystoneId=8112,
+            subStyleId=8200,
+            participants=[
+                MatchParticipantBrief(
+                    puuid="puuid-0",
+                    teamId=100,
+                    championName="Ahri",
+                    riotIdGameName="TestUser",
+                    riotIdTagline="JP1",
+                )
+            ],
+            averageRank=MatchRankBrief(tier="GOLD", division="II"),
             timeAgoSeconds=3600,
         )
     ],
-    championStats=[
-        ChampionStatData(championName="Ahri", wins=5, losses=3, cs=175.0, kda=3.5)
-    ],
+    championStats=ChampionStatsByQueue(
+        all=[
+            ChampionStatData(
+                championName="Ahri",
+                wins=5,
+                losses=3,
+                cs=175.0,
+                csPerMinute=6.5,
+                kills=5.0,
+                deaths=4.0,
+                assists=9.0,
+                kda=3.5,
+            )
+        ],
+        solo=[],
+        flex=[],
+    ),
+    championStatsYear=2025,
 )
 
 
@@ -101,14 +134,29 @@ def test_get_summoner_returns_detail() -> None:
 
     assert response.status_code == 200
     body = response.json()
-    assert set(body) == {"summoner", "rankPosition", "matches", "championStats"}
+    assert set(body) == {
+        "summoner",
+        "rankPosition",
+        "matches",
+        "championStats",
+        "championStatsYear",
+    }
+    assert body["championStatsYear"] == 2025
+    ahri = body["championStats"]["all"][0]
+    assert (ahri["csPerMinute"], ahri["kills"]) == (6.5, 5.0)
     assert body["summoner"]["puuid"] == "puuid-0"
     assert body["summoner"]["name"] == "TestUser"
     assert body["summoner"]["rank"]["tier"] == "GOLD"
     assert body["summoner"]["lastUpdatedAt"].startswith("2024-01-01")
     assert body["rankPosition"]["position"] == 12
     assert body["matches"][0]["matchId"] == "JP1_001"
-    assert body["championStats"][0]["championName"] == "Ahri"
+    match = body["matches"][0]
+    assert match["queueId"] == 420
+    assert match["spellIds"] == [4, 14]
+    assert match["participants"][0]["riotIdGameName"] == "TestUser"
+    assert match["averageRank"] == {"tier": "GOLD", "division": "II"}
+    assert set(body["championStats"]) == {"all", "solo", "flex"}
+    assert body["championStats"]["all"][0]["championName"] == "Ahri"
 
 
 def test_get_registers_backfill_when_puuid_returned() -> None:

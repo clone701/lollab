@@ -1,5 +1,6 @@
-export { MatchCardSide } from './MatchCardSide';
-export { MatchChampionIcon } from './MatchChampionIcon';
-export { MatchItems } from './MatchItems';
-export { MatchResultBadge } from './MatchResultBadge';
-export { MatchStats } from './MatchStats';
+export { ExpandButton } from './ExpandButton';
+export { MatchBuild } from './MatchBuild';
+export { MatchExtra } from './MatchExtra';
+export { MatchInfo } from './MatchInfo';
+export { MatchParticipants } from './MatchParticipants';
+export { MatchScore } from './MatchScore';

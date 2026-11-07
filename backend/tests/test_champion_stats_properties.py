@@ -40,29 +40,26 @@ sys.modules.setdefault("config", MagicMock(settings=MagicMock()))
 from hypothesis import given, settings  # noqa: E402
 from hypothesis.strategies import booleans, builds, integers, lists, text  # noqa: E402
 
-from schemas.summoner import MatchData  # noqa: E402
+from schemas.summoner_store import ParticipationRecord  # noqa: E402
 from services.summoner.champion_stats import aggregate_champion_stats  # noqa: E402
+from tests.participation_helpers import participation  # noqa: E402
 
-match_data_strategy = builds(
-    MatchData,
-    matchId=text(min_size=1, max_size=20),
-    isWin=booleans(),
-    gameMode=text(min_size=1, max_size=10),
-    championName=text(min_size=1, max_size=20),
+participation_strategy = builds(
+    participation,
+    match_id=text(min_size=1, max_size=20),
+    win=booleans(),
+    champion_name=text(min_size=1, max_size=20),
     kills=integers(min_value=0, max_value=50),
     deaths=integers(min_value=0, max_value=50),
     assists=integers(min_value=0, max_value=50),
     cs=integers(min_value=0, max_value=500),
-    gameDurationSeconds=integers(min_value=0, max_value=3600),
-    itemIds=lists(integers(min_value=0), min_size=7, max_size=7),
-    timeAgoSeconds=integers(min_value=0),
 )
 
 
 @settings(max_examples=100)
-@given(lists(match_data_strategy))
+@given(lists(participation_strategy))
 def test_champion_stats_sorted_by_total_games_descending(
-    matches: list[MatchData],
+    matches: list[ParticipationRecord],
 ) -> None:
     """任意の試合リストから生成されたチャンピオン統計が総試合数（wins + losses）の降順で並んでいる。"""
     result = aggregate_champion_stats(matches)

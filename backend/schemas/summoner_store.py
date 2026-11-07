@@ -134,6 +134,19 @@ class ParticipationRecord(ParticipantRecord):
     game_duration: int
 
 
+class MatchMemberRecord(BaseModel):
+    """試合カードの参加者・キル関与率に使う match_participants の列だけの読み出しモデル"""
+
+    match_id: str
+    puuid: str
+    riot_id_game_name: str | None = None
+    riot_id_tagline: str | None = None
+    team_id: int
+    team_position: str
+    champion_name: str
+    kills: int
+
+
 class EnrichTarget(BaseModel):
     """補完対象の試合（matches の1行から求める）"""
 

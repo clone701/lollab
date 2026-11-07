@@ -48,6 +48,7 @@ FAILED_STORE_FUNCTIONS = (
 )
 ENRICH_STORE_FUNCTIONS = ("get_enrichment_targets",)
 RANK_STORE_FUNCTIONS = ("get_latest_snapshot", "insert_snapshot")
+MEMBER_STORE_FUNCTIONS = ("get_members_by_match",)
 
 
 def install_store_stub() -> ModuleType:
@@ -59,6 +60,9 @@ def install_store_stub() -> ModuleType:
     _install_stub("adapters.failed_match_store", FAILED_STORE_FUNCTIONS)
     _install_stub("adapters.enrich_store", ENRICH_STORE_FUNCTIONS)
     _install_stub("adapters.rank_snapshot_store", RANK_STORE_FUNCTIONS)
+    _install_stub("adapters.match_member_store", MEMBER_STORE_FUNCTIONS)
+    _install_stub("adapters.match_rank_store", ("get_ranks",))
+    _install_stub("adapters.season_store", ("get_earliest_start_at",))
     return module
 
 

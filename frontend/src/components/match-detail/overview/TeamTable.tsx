@@ -12,7 +12,7 @@ interface TeamTableProps {
   durationSeconds: number;
 }
 
-// 1チーム分: 勝敗とチームの色の見出し、5人の行
+// 1チーム分: 勝敗とチームの色の見出し、人の行（細い区切り線で分ける）
 export function TeamTable({
   group,
   targetPuuid,
@@ -24,9 +24,9 @@ export function TeamTable({
   return (
     <section
       aria-label={teamName(team.team_id)}
-      className={`rounded-lg p-2 ${team.win ? 'bg-win/15' : 'bg-loss/15'}`}
+      className={`rounded-lg px-2 py-1 ${team.win ? 'bg-win/15' : 'bg-loss/15'}`}
     >
-      <h3 className="mb-1 px-2 text-sm font-bold">
+      <h3 className="mb-0.5 px-2 text-sm font-bold">
         <span className={team.win ? 'text-win' : 'text-loss'}>
           {team.win ? '勝利' : '敗北'}
         </span>
@@ -35,7 +35,7 @@ export function TeamTable({
         </span>
       </h3>
       <ColumnHeader />
-      <ul className="flex flex-col gap-1">
+      <ul className="flex flex-col divide-y divide-line/50">
         {participants.map((p) => (
           <ParticipantRow
             key={p.puuid}

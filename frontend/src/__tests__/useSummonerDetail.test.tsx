@@ -14,7 +14,8 @@ function makeDetail(level: number): SummonerDetail {
     summoner: { ...MOCK_SUMMONER, level },
     rankPosition: null,
     matches: [],
-    championStats: [],
+    championStats: { all: [], solo: [], flex: [] },
+    championStatsYear: 2026,
   };
 }
 

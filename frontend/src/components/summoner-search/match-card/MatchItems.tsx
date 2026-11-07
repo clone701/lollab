@@ -1,26 +1,26 @@
-import Image from 'next/image';
+import { BuildIcon } from '@/components/champion-build';
+import { itemIconUrls } from '@/lib/champion-build';
 
 interface MatchItemsProps {
+  /** item0〜6（0 は空き） */
   itemIds: number[];
 }
 
-// アイテムアイコン（空きの枠は出さない）
+// 最終アイテム7枠。空きの枠も残して位置をそろえる
 export function MatchItems({ itemIds }: MatchItemsProps) {
   return (
-    <div className="flex gap-0.5 flex-wrap max-w-[80px]">
-      {itemIds
-        .slice(0, 6)
-        .filter((id) => id !== 0)
-        .map((id, i) => (
-          <Image
-            key={i}
-            src={`/images/item/${id}.png`}
-            alt={`item-${id}`}
-            width={20}
-            height={20}
-            className="rounded"
-          />
-        ))}
-    </div>
+    <ul className="flex gap-0.5">
+      {itemIds.slice(0, 7).map((id, slot) => (
+        <li key={slot} className="h-6 w-6 rounded bg-surface-2">
+          {id !== 0 && (
+            <BuildIcon
+              {...itemIconUrls(id)}
+              label={`アイテム${id}`}
+              size={24}
+            />
+          )}
+        </li>
+      ))}
+    </ul>
   );
 }

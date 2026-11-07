@@ -55,7 +55,7 @@ describe('OverviewTab: チーム', () => {
 });
 
 describe('OverviewTab: 対象プレイヤーの強調', () => {
-  it('対象プレイヤーの行だけを ring-2 ring-accent bg-accent/15 にする', () => {
+  it('対象プレイヤーの行だけを bg-accent/15 と左端の印 (border-l-2 border-accent) で強調する', () => {
     const { container } = render(
       <OverviewTab
         match={makeMatchDetail()}
@@ -65,13 +65,21 @@ describe('OverviewTab: 対象プレイヤーの強調', () => {
     );
     const targets = container.querySelectorAll('[data-target="true"]');
     expect(targets).toHaveLength(1);
-    expect(targets[0]).toHaveClass('ring-2', 'ring-accent', 'bg-accent/15');
+    expect(targets[0]).toHaveClass(
+      'border-l-2',
+      'border-accent',
+      'bg-accent/15'
+    );
+    expect(targets[0]).not.toHaveClass('ring-2');
     expect(
       within(targets[0] as HTMLElement).getByText('Player1')
     ).toBeInTheDocument();
     const others = container.querySelectorAll('[data-target="false"]');
     expect(others).toHaveLength(9);
-    others.forEach((row) => expect(row).not.toHaveClass('ring-2'));
+    others.forEach((row) => {
+      expect(row).not.toHaveClass('border-accent');
+      expect(row).not.toHaveClass('bg-accent/15');
+    });
   });
 
   it('対象プレイヤーがいない試合では誰も強調しない', () => {
@@ -123,9 +131,19 @@ describe('OverviewTab: 成績の表示', () => {
 
   it('ワードの設置 / 破壊、CS と分あたりの CS を出す', () => {
     renderOverview(
-      withParticipant(0, { wards_placed: 12, wards_killed: 3, cs: 210 })
+      withParticipant(0, {
+        wards_placed: 12,
+        wards_killed: 3,
+        control_wards_bought: 4,
+        cs: 210,
+      })
     );
     expect(screen.getByText('12 / 3')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(
+        'コントロールワード購入 4 / ワード設置 12 / ワード破壊 3'
+      )
+    ).toHaveAttribute('title');
     expect(screen.getByText('210')).toBeInTheDocument();
     expect(screen.getByText('7.0/分')).toBeInTheDocument();
   });

@@ -81,6 +81,7 @@ def _participant(
         damage_taken=p["totalDamageTaken"],
         wards_placed=p["wardsPlaced"],
         wards_killed=p["wardsKilled"],
+        control_wards_bought=p.get("visionWardsBoughtInGame", 0),
         cs=p["totalMinionsKilled"] + p["neutralMinionsKilled"],
         gold_earned=p["goldEarned"],
         item_ids=[p[f"item{i}"] for i in range(7)],

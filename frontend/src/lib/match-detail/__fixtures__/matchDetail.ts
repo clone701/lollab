@@ -43,6 +43,7 @@ export function makeParticipant(
     damage_taken: 8000,
     wards_placed: 7,
     wards_killed: 2,
+    control_wards_bought: 2,
     cs: 180,
     gold_earned: 11000,
     item_ids: [3157, 6655, 0, 0, 0, 0, 3340],

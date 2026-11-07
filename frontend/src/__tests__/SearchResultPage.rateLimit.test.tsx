@@ -22,7 +22,8 @@ const DETAIL: SummonerDetail = {
   summoner: MOCK_SUMMONER,
   rankPosition: null,
   matches: [],
-  championStats: [],
+  championStats: { all: [], solo: [], flex: [] },
+  championStatsYear: 2026,
 };
 
 function jsonResponse(status: number, body: unknown): Response {
