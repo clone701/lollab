@@ -1,4 +1,5 @@
 import { NoData } from '@/components/champion-build';
+import { getChampionLabel } from '@/lib/champion-stats';
 import { getDisplayName } from '@/lib/match-detail';
 import type { ParticipantDetail } from '@/types/matchDetail';
 import { BuildSection } from './BuildSection';
@@ -17,7 +18,7 @@ export function BuildDetails({ participant: p }: BuildDetailsProps) {
       <h3 className="text-sm font-bold text-fg">
         {getDisplayName(p)}
         <span className="ml-2 font-medium text-fg-muted">
-          {p.champion_name}
+          {getChampionLabel(p.champion_name)}
         </span>
       </h3>
       <BuildSection title="アイテムの購入順">

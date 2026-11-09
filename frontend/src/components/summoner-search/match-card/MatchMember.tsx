@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { BuildIcon } from '@/components/champion-build';
+import { getChampionLabel } from '@/lib/champion-stats';
 import { buildMemberHref, getMemberName } from '@/lib/match-card';
 import { toChampionId } from '@/lib/match-detail';
 import type { MatchParticipantBrief, Region } from '@/types/summoner';
@@ -23,7 +24,7 @@ export function MatchMember({ member, targetPuuid, region }: MatchMemberProps) {
     <li className="flex min-w-0 items-center gap-1">
       <BuildIcon
         src={`/images/champion/${toChampionId(member.championName)}.png`}
-        label={member.championName}
+        label={getChampionLabel(member.championName)}
         size={16}
         className="flex-shrink-0 rounded"
       />

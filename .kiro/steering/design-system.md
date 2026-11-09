@@ -24,6 +24,7 @@ fileMatchPattern: 'frontend/**/*.{tsx,ts,jsx,js,css}'
 | 削除ボタン / エラー文字 | `bg-danger` / `hover:bg-danger-hover` / `text-danger-fg` | `#dc2626` / `#b91c1c` / `#f87171` |
 | 勝利・高い勝率 / 敗北・低い勝率 | `text-win` / `text-loss`（背景は `bg-win/15`・`bg-loss/15`） | `#34d399` / `#f87171` |
 | 強調（お気に入り・注目） | `text-highlight` / `ring-highlight` | `#fbbf24` |
+| ブルーチーム / レッドチーム（試合の文字・比較バー） | `text-team-blue` / `text-team-red`（棒は `bg-team-blue`・`bg-team-red`） | `#6b9cf0` / `#f06a7e` |
 
 - コントラストは WCAG AA（本文 4.5:1）を満たす組み合わせだけを使う。白文字は `bg-action`・`bg-danger` とそのホバー色の上でのみ使う（ホバーは暗くする）
 

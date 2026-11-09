@@ -191,21 +191,29 @@ describe('OverviewTab: リンク', () => {
   it('チャンピオンのアイコンは、ロールを選んだビルドページへのリンク', () => {
     renderOverview();
     expect(
-      screen.getByRole('link', { name: 'LeeSinのビルド' })
+      screen.getByRole('link', { name: 'リー・シンのビルド' })
     ).toHaveAttribute('href', '/champion/LeeSin?role=JUNGLE');
   });
 
   it('Riot の名前が異なるチャンピオンは画面の ID でリンクする', () => {
     renderOverview();
     expect(
-      screen.getByRole('link', { name: 'MonkeyKingのビルド' })
+      screen.getByRole('link', { name: 'ウーコンのビルド' })
     ).toHaveAttribute('href', '/champion/Wukong?role=MIDDLE');
+  });
+
+  it('Riot の名前が異なるチャンピオンは日本語名で出し、画像は Wukong.png のまま', () => {
+    renderOverview();
+    const link = screen.getByRole('link', { name: 'ウーコンのビルド' });
+    const icon = within(link).getByAltText('ウーコン');
+    expect(icon.getAttribute('src')).toContain('/images/champion/Wukong.png');
+    expect(screen.queryByAltText('MonkeyKing')).toBeNull();
   });
 
   it('team_position が空ならロールを付けない', () => {
     renderOverview(withParticipant(0, { team_position: '' }));
     expect(
-      screen.getByRole('link', { name: 'Aatroxのビルド' })
+      screen.getByRole('link', { name: 'エイトロックスのビルド' })
     ).toHaveAttribute('href', '/champion/Aatrox');
   });
 

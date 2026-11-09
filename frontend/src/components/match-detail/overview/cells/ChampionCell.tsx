@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { BuildIcon } from '@/components/champion-build';
+import { getChampionLabel } from '@/lib/champion-stats';
 import { buildParticipantBuildHref, toChampionId } from '@/lib/match-detail';
 import type { ParticipantDetail } from '@/types/matchDetail';
 
@@ -9,16 +10,17 @@ interface ChampionCellProps {
 
 // チャンピオンのアイコン（ビルドページへのリンク）。レベルは右下に小さなバッジで重ねる
 export function ChampionCell({ participant: p }: ChampionCellProps) {
+  const label = getChampionLabel(p.champion_name);
   return (
     <div className="relative h-8 w-8">
       <Link
         href={buildParticipantBuildHref(p)}
-        aria-label={`${p.champion_name}のビルド`}
+        aria-label={`${label}のビルド`}
         className="block rounded-full transition-colors duration-150 hover:ring-2 hover:ring-accent/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         <BuildIcon
           src={`/images/champion/${toChampionId(p.champion_name)}.png`}
-          label={p.champion_name}
+          label={label}
           size={32}
           className="rounded-full"
         />
