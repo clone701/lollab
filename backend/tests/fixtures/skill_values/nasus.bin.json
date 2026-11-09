@@ -1,0 +1,132 @@
+{
+ "Characters/Nasus/Spells/NasusQAbility/NasusQ": {
+  "mSpell": {
+   "DataValues": [
+    {
+     "name": "BonusRange",
+     "values": [
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0
+     ]
+    },
+    {
+     "name": "BonusDamage",
+     "values": [
+      10.0,
+      30.0,
+      50.0,
+      70.0,
+      90.0,
+      110.0,
+      130.0
+     ]
+    },
+    {
+     "name": "BasicStacks",
+     "values": [
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0
+     ]
+    },
+    {
+     "name": "BigStacks",
+     "values": [
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      10.0
+     ]
+    },
+    {
+     "name": "BuffDuration",
+     "values": [
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      10.0
+     ]
+    }
+   ],
+   "mSpellCalculations": {
+    "TotalDamage": {
+     "mFormulaParts": [
+      {
+       "mDataValue": "BonusDamage",
+       "__type": "NamedDataValueCalculationPart"
+      },
+      {
+       "mStat": 2,
+       "mCoefficient": 1.0,
+       "__type": "StatByCoefficientCalculationPart"
+      },
+      {
+       "mBuffName": "{1b1d7345}",
+       "mIconKey": "%i:nasusStackIcon%",
+       "mCoefficient": 1.0,
+       "__type": "BuffCounterByCoefficientCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    },
+    "CritDamage": {
+     "mSimpleTooltipCalculationDisplay": 6,
+     "mExpandedTooltipCalculationDisplay": 6,
+     "mFormulaParts": [
+      {
+       "mPart1": {
+        "mStat": 9,
+        "mCoefficient": 1.0,
+        "__type": "StatByCoefficientCalculationPart"
+       },
+       "mPart2": {
+        "mSubparts": [
+         {
+          "mDataValue": "BonusDamage",
+          "__type": "NamedDataValueCalculationPart"
+         },
+         {
+          "mStat": 2,
+          "mCoefficient": 1.0,
+          "__type": "StatByCoefficientCalculationPart"
+         }
+        ],
+        "__type": "SumOfSubPartsCalculationPart"
+       },
+       "__type": "ProductOfSubPartsCalculationPart"
+      },
+      {
+       "mBuffName": "{1b1d7345}",
+       "mIconKey": "%i:nasusStackIcon%",
+       "mCoefficient": 1.0,
+       "__type": "BuffCounterByCoefficientCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    }
+   },
+   "mClientData": {
+    "mTooltipData": {
+     "mLocKeys": {
+      "keyTooltip": "Spell_NasusQ_Tooltip"
+     }
+    }
+   }
+  }
+ }
+}

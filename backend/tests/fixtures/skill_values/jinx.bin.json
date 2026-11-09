@@ -1,0 +1,103 @@
+{
+ "Characters/Jinx/Spells/JinxWAbility/JinxW": {
+  "mSpell": {
+   "DataValues": [
+    {
+     "name": "JinxLowEndWCastTime",
+     "values": [
+      0.4000000059604645,
+      0.4000000059604645,
+      0.4000000059604645,
+      0.4000000059604645,
+      0.4000000059604645,
+      0.4000000059604645,
+      0.4000000059604645
+     ]
+    },
+    {
+     "name": "JinxWASpeedCastTimeScalarPerHundrethSecond",
+     "values": [
+      0.07999999821186066,
+      0.07999999821186066,
+      0.07999999821186066,
+      0.07999999821186066,
+      0.07999999821186066,
+      0.07999999821186066,
+      0.07999999821186066
+     ]
+    },
+    {
+     "name": "Damage",
+     "values": [
+      -40.0,
+      10.0,
+      60.0,
+      110.0,
+      160.0,
+      210.0,
+      260.0
+     ]
+    },
+    {
+     "name": "SlowPercent",
+     "values": [
+      30.0,
+      40.0,
+      50.0,
+      60.0,
+      70.0,
+      80.0,
+      90.0
+     ]
+    },
+    {
+     "name": "SlowDuration",
+     "values": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+     ]
+    },
+    {
+     "name": "ADRatio",
+     "values": [
+      1.399999976158142,
+      1.399999976158142,
+      1.399999976158142,
+      1.399999976158142,
+      1.399999976158142,
+      1.399999976158142,
+      1.399999976158142
+     ]
+    }
+   ],
+   "mSpellCalculations": {
+    "TotalDamage": {
+     "mFormulaParts": [
+      {
+       "mDataValue": "Damage",
+       "__type": "NamedDataValueCalculationPart"
+      },
+      {
+       "mStat": 2,
+       "mDataValue": "ADRatio",
+       "__type": "StatByNamedDataValueCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    }
+   },
+   "mClientData": {
+    "mTooltipData": {
+     "mLocKeys": {
+      "keyTooltip": "Spell_JinxW_Tooltip"
+     }
+    }
+   }
+  }
+ }
+}

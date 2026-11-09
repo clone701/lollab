@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "自身がダメージを与えた敵チャンピオンが、3秒以内にキルされると、自身の全スキルのクールダウンが15秒短縮する。<br><br>自身が<font color='#FFF673'>「短剣」</font>を拾うと、周囲の敵を斬りつけて魔法ダメージを与える。",
+  "spells": [
+    "<keywordMajor>「短剣」</keywordMajor>を投げて、対象と周囲の2体の敵に<magicDamage>80/115/150/185/220 (+魔力の40%)の魔法ダメージ</magicDamage>を与える。<keywordMajor>「短剣」</keywordMajor>は跳ね返った後、最初に指定した対象の後ろに落ちる。",
+    "<keywordMajor>「短剣」</keywordMajor>を頭上に投げて<speed>移動速度が50/60/70/80/90%</speed>増加する。この移動速度は1.25秒かけて元に戻る。",
+    null,
+    null
+  ]
+}

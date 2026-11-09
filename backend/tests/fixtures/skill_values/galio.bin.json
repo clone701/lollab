@@ -1,0 +1,408 @@
+{
+ "Characters/Galio/Spells/GalioWAbility/GalioW": {
+  "mSpell": {
+   "DataValues": [
+    {
+     "name": "MinimumWBaseDamage",
+     "values": [
+      10.0,
+      20.0,
+      30.0,
+      40.0,
+      50.0,
+      60.0,
+      70.0
+     ]
+    },
+    {
+     "name": "MaximumWBaseDamage",
+     "values": [
+      30.0,
+      60.0,
+      90.0,
+      120.0,
+      150.0,
+      180.0,
+      210.0
+     ]
+    },
+    {
+     "name": "PassiveShieldHealthRatio",
+     "values": [
+      0.05999999865889549,
+      0.07500000298023224,
+      0.09000000357627869,
+      0.10499999672174454,
+      0.11999999731779099,
+      0.13500000536441803,
+      0.15000000596046448
+     ]
+    },
+    {
+     "name": "MRRatio",
+     "values": [
+      0.0007999999797903001,
+      0.0007999999797903001,
+      0.0007999999797903001,
+      0.0007999999797903001,
+      0.0007999999797903001,
+      0.0007999999797903001,
+      0.0007999999797903001
+     ]
+    },
+    {
+     "name": "PhysicalDRPercent",
+     "values": [
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5
+     ]
+    },
+    {
+     "name": "DamageReductionBase",
+     "values": [
+      0.20000000298023224,
+      0.25,
+      0.30000001192092896,
+      0.3499999940395355,
+      0.4000000059604645,
+      0.44999998807907104,
+      0.5
+     ]
+    },
+    {
+     "name": "MaxChargeDuration",
+     "values": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+     ]
+    },
+    {
+     "name": "SelfSlowPercent",
+     "values": [
+      15.0,
+      15.0,
+      15.0,
+      15.0,
+      15.0,
+      15.0,
+      15.0
+     ]
+    },
+    {
+     "name": "CCDurationMin",
+     "values": [
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5
+     ]
+    },
+    {
+     "name": "HpRatio",
+     "values": [
+      9.999999747378752e-05,
+      9.999999747378752e-05,
+      9.999999747378752e-05,
+      9.999999747378752e-05,
+      9.999999747378752e-05,
+      9.999999747378752e-05,
+      9.999999747378752e-05
+     ]
+    },
+    {
+     "name": "CCDurationMax",
+     "values": [
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5
+     ]
+    },
+    {
+     "name": "DRLingerDuration",
+     "values": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+     ]
+    },
+    {
+     "name": "ApRatio",
+     "values": [
+      0.00039999998989515007,
+      0.00039999998989515007,
+      0.00039999998989515007,
+      0.00039999998989515007,
+      0.00039999998989515007,
+      0.00039999998989515007,
+      0.00039999998989515007
+     ]
+    }
+   ],
+   "mSpellCalculations": {
+    "TotalPassiveShield": {
+     "mFormulaParts": [
+      {
+       "mStat": 12,
+       "mDataValue": "PassiveShieldHealthRatio",
+       "__type": "StatByNamedDataValueCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    },
+    "MagicDamageReduction": {
+     "mMultiplier": {
+      "mNumber": 1.0,
+      "__type": "NumberCalculationPart"
+     },
+     "mFormulaParts": [
+      {
+       "mDataValue": "DamageReductionBase",
+       "__type": "NamedDataValueCalculationPart"
+      },
+      {
+       "mDataValue": "APRatio",
+       "__type": "StatByNamedDataValueCalculationPart"
+      },
+      {
+       "mStat": 6,
+       "mStatFormula": 2,
+       "mDataValue": "MRRatio",
+       "__type": "StatByNamedDataValueCalculationPart"
+      },
+      {
+       "mStat": 12,
+       "mStatFormula": 2,
+       "mDataValue": "HPRatio",
+       "__type": "StatByNamedDataValueCalculationPart"
+      }
+     ],
+     "mDisplayAsPercent": true,
+     "__type": "GameCalculation"
+    },
+    "PhysicalDamageReduction": {
+     "mMultiplier": {
+      "mDataValue": "PhysicalDRPercent",
+      "__type": "NamedDataValueCalculationPart"
+     },
+     "mModifiedGameCalculation": "MagicDamageReduction",
+     "__type": "GameCalculationModified"
+    },
+    "MinTotalDamage": {
+     "mFormulaParts": [
+      {
+       "mDataValue": "MinimumWBaseDamage",
+       "__type": "NamedDataValueCalculationPart"
+      },
+      {
+       "mCoefficient": 0.30000001192092896,
+       "__type": "StatByCoefficientCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    },
+    "MaxTotalDamage": {
+     "mMultiplier": {
+      "mNumber": 3.0,
+      "__type": "NumberCalculationPart"
+     },
+     "mModifiedGameCalculation": "MinTotalDamage",
+     "__type": "GameCalculationModified"
+    },
+    "PassiveShieldOOCTimer": {
+     "mSimpleTooltipCalculationDisplay": 6,
+     "mFormulaParts": [
+      {
+       "mLevel1Value": 12.0,
+       "mBreakpoints": [
+        {
+         "mLevel": 6,
+         "mAdditionalBonusAtThisLevel": -1.0,
+         "__type": "Breakpoint"
+        },
+        {
+         "mLevel": 11,
+         "mAdditionalBonusAtThisLevel": -3.0,
+         "__type": "Breakpoint"
+        }
+       ],
+       "__type": "ByCharLevelBreakpointsCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    },
+    "{7a7521c1}": {
+     "mMultiplier": {
+      "mNumber": 100.0,
+      "__type": "NumberCalculationPart"
+     },
+     "tooltipOnly": true,
+     "mModifiedGameCalculation": "MagicDamageReduction",
+     "__type": "GameCalculationModified"
+    },
+    "{c9a870dd}": {
+     "mMultiplier": {
+      "mNumber": 50.0,
+      "__type": "NumberCalculationPart"
+     },
+     "tooltipOnly": true,
+     "mModifiedGameCalculation": "MagicDamageReduction",
+     "__type": "GameCalculationModified"
+    }
+   },
+   "mClientData": {
+    "mTooltipData": {
+     "mLocKeys": {
+      "keyTooltip": "Spell_GalioW_Tooltip"
+     }
+    }
+   }
+  }
+ },
+ "Characters/Galio/Spells/GalioQAbility/GalioQ": {
+  "mSpell": {
+   "DataValues": [
+    {
+     "name": "BaseDamage",
+     "values": [
+      35.0,
+      70.0,
+      105.0,
+      140.0,
+      175.0,
+      210.0,
+      245.0
+     ]
+    },
+    {
+     "name": "SuperQDuration",
+     "values": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+     ]
+    },
+    {
+     "name": "SuperQMonsterMaxDamage",
+     "values": [
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0
+     ]
+    },
+    {
+     "name": "SuperQBasePercentage",
+     "values": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+     ]
+    },
+    {
+     "name": "TornadoTicks",
+     "values": [
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0
+     ]
+    }
+   ],
+   "mSpellCalculations": {
+    "QMissileDamage": {
+     "mFormulaParts": [
+      {
+       "mDataValue": "BaseDamage",
+       "__type": "NamedDataValueCalculationPart"
+      },
+      {
+       "mCoefficient": 0.699999988079071,
+       "__type": "StatByCoefficientCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    },
+    "{85f4c0e9}": {
+     "mFormulaParts": [
+      {
+       "mDataValue": "SuperQBasePercentage",
+       "__type": "NamedDataValueCalculationPart"
+      },
+      {
+       "mCoefficient": 0.009999999776482582,
+       "__type": "StatByCoefficientCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    },
+    "PercentSuperQDamageTT": {
+     "mMultiplier": {
+      "mDataValue": "TornadoTicks",
+      "__type": "NamedDataValueCalculationPart"
+     },
+     "mModifiedGameCalculation": "{85f4c0e9}",
+     "__type": "GameCalculationModified"
+    },
+    "SuperQMonsterMaxDamageTotal": {
+     "mExpandedTooltipCalculationDisplay": 5,
+     "mFormulaParts": [
+      {
+       "mPart1": {
+        "mDataValue": "SuperQMonsterMaxDamage",
+        "__type": "NamedDataValueCalculationPart"
+       },
+       "mPart2": {
+        "mDataValue": "TornadoTicks",
+        "__type": "NamedDataValueCalculationPart"
+       },
+       "__type": "ProductOfSubPartsCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    }
+   },
+   "mClientData": {
+    "mTooltipData": {
+     "mLocKeys": {
+      "keyTooltip": "Spell_GalioQ_Tooltip"
+     }
+    }
+   }
+  }
+ }
+}

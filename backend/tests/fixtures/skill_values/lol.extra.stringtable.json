@@ -1,0 +1,9 @@
+{
+ "entries": {
+  "buff_ahrip_tooltip": "ミニオンまたはモンスターをキルすると「生気のかけら」を獲得する。「生気のかけら」を@MaxStacks@個獲得すると、それらを消費して<healing>@MinionHeal@の体力を回復する</healing>。<br><br>敵チャンピオンにダメージを与えてから@TakedownWindow@秒以内にキルまたはアシストを奪うと、その「生気のかけら」を消費し、<healing>@ChampionHeal@の体力を回復する</healing>。",
+  "game_character_passivedescription_ahri": "ミニオンまたはモンスターを9体キルすると体力が回復する。敵チャンピオンからキルまたはアシストを奪うと体力が大幅に回復する。",
+  "spell_galioq_tooltip": "それぞれ<magicDamage>@QMissileDamage@の魔法ダメージ</magicDamage>を与える2つの突風を放つ。突風同士が交わると竜巻が発生して、<magicDamage>最大体力の@PercentSuperQDamageTT@%の魔法ダメージ</magicDamage>を@SuperQDuration@秒かけて与える。",
+  "spell_galiow_tooltip": "<spellPassive>自動効果:</spellPassive> @PassiveShieldOOCTimer@秒間ダメージを受けずにいると、<shield>@TotalPassiveShield@の魔法ダメージを防ぐシールド</shield>を獲得する。<br><br><charge>チャージ開始:</charge> 受ける魔法ダメージを@MagicDamageReduction@、物理ダメージを@PhysicalDamageReduction@軽減するようになり、自身が@SelfSlowPercent@%の<status>スロウ効果</status>を受ける。<br><br><release>解放:</release> 敵チャンピオンに@CCDurationMin@ - @CCDurationMax@秒間<status>タウント効果</status>を付与し、<magicDamage>@MinTotalDamage@</magicDamage> - <magicDamage>@MaxTotalDamage@の魔法ダメージ</magicDamage>を与えて、ダメージ軽減効果を@DRLingerDuration@秒間更新する。タウントの効果時間と効果範囲、ダメージはチャージ時間に応じて増加する。",
+  "spell_nasusq_tooltip": "次の通常攻撃が<physicalDamage>@TotalDamage@の物理ダメージ</physicalDamage>を与える。この通常攻撃で敵を倒すたびに、そのダメージが恒久的に@BasicStacks@増加する。対象がチャンピオン、大型ミニオン、大型ジャングルモンスターだった場合は@BigStacks@増加する。"
+ }
+}

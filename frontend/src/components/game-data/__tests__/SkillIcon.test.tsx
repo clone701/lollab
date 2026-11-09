@@ -60,4 +60,23 @@ describe('SkillIcon', () => {
     expect(tooltip).not.toHaveTextContent('秒');
     expect(tooltip).not.toHaveTextContent('マナ');
   });
+
+  it('detail があれば説明にそれを出す（概要は出さない）', () => {
+    const withDetail: SkillInfo = {
+      ...q,
+      detail:
+        '<physicalDamage>25/70 のダメージ</physicalDamage>を与え、1.25秒間',
+    };
+    render(<SkillIcon skill={withDetail} fallbackKey="Q" />);
+    const tooltip = openTooltip(withDetail);
+    expect(tooltip).toHaveTextContent('25/70 のダメージを与え、1.25秒間');
+    expect(tooltip).not.toHaveTextContent('榴弾を発射する');
+  });
+
+  it('detail の数値が数値の色になる', () => {
+    const withDetail: SkillInfo = { ...q, detail: '1.25秒間スロウする' };
+    render(<SkillIcon skill={withDetail} fallbackKey="Q" />);
+    const tooltip = openTooltip(withDetail);
+    expect(within(tooltip).getByText('1.25秒')).toHaveClass('text-game-number');
+  });
 });

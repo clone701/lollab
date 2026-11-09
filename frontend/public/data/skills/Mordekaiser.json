@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "通常攻撃が<magicDamage>魔力の40%の魔法ダメージ</magicDamage>を追加で与える。<br><br>チャンピオンまたはジャングルモンスターに通常スキルか通常攻撃を3回当てると、自身を負のエネルギーが包む。このエネルギーは毎秒<magicDamage>5 (+魔力の30%)(+最大体力の1〜5%)の魔法ダメージ</magicDamage>を与え、自身の<speed>移動速度が3〜9%</speed>増加する。",
+  "spells": [
+    null,
+    "<passive>自動効果:</passive> 与えたダメージの45%と受けたダメージの7.5%を蓄える。<br><br><active>発動効果:</active> 蓄えたダメージを<shield>シールド</shield>として獲得する。<recast>再発動</recast>すると<healing>残ったシールド量の35/37.5/40/42.5/45%を体力</healing>として回復する。<br><br>最小シールド量: <shield>最大体力の5%</shield><br>最大シールド量: <shield>最大体力の30%</shield>",
+    "<spellPassive>自動効果:</spellPassive> <magicPen>5/7.5/10/12.5/15%の魔法防御貫通</magicPen>を獲得する。<br><br><spellActive>発動効果:</spellActive> 敵を自身の方向に引き寄せ、<magicDamage>60/80/100/120/140 (+魔力の45%)の魔法ダメージ</magicDamage>を与える。",
+    "チャンピオン1体を7秒間冥界へと引きずりこみ、その間、敵のコアステータスの10%を奪い取る。<br><br>冥界の中で敵を倒した場合は相手の魂を吸収し、その対象が復活するまで奪ったステータスが維持される。"
+  ]
+}

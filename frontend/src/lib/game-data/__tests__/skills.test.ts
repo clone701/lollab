@@ -46,6 +46,54 @@ describe('toChampionSkills', () => {
   });
 });
 
+describe('toChampionSkills: 数値入りの説明文（detail）', () => {
+  const values = {
+    version: '16.21.1',
+    passive: 'パッシブの数値入りの文',
+    spells: ['Q の文', null, 'E の文', null],
+  };
+
+  it('結果のファイルがあれば detail に入る', () => {
+    const skills = toChampionSkills(urgotFixture, values);
+    expect(skills.map((s) => s.detail)).toEqual([
+      'パッシブの数値入りの文',
+      'Q の文',
+      null,
+      'E の文',
+      null,
+    ]);
+  });
+
+  it('null のスキルは detail が null で、概要の description は残る', () => {
+    const w = toChampionSkills(urgotFixture, values)[2];
+    expect(w.detail).toBeNull();
+    expect(w.description).toContain('最も近くにいる敵');
+  });
+
+  it('結果のファイルが無いときは全部 null', () => {
+    expect(toChampionSkills(urgotFixture, null).map((s) => s.detail)).toEqual([
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
+    expect(toChampionSkills(urgotFixture).every((s) => s.detail === null)).toBe(
+      true
+    );
+  });
+
+  it('射程（rangeBurn）はスキルに入り、パッシブは null', () => {
+    const skills = toChampionSkills(urgotFixture);
+    expect(skills.map((s) => s.rangeBurn)).toEqual([
+      null,
+      '800',
+      '490',
+      '475',
+      '2500',
+    ]);
+  });
+});
 describe('formatCooldown', () => {
   it('末尾に「 秒」を付ける', () => {
     expect(formatCooldown('10/9.5/9/8.5/8')).toBe('10/9.5/9/8.5/8 秒');

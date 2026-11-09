@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": null,
+  "spells": [
+    null,
+    null,
+    "ダッシュして2秒間、<shield>耐久値70/112.5/155/197.5/240 (+増加体力の13.5%)のシールド</shield>を獲得する。味方までダッシュする場合はダッシュ距離が大幅に増加し、その味方も<shield>シールドを獲得</shield>する。<br><br><keywordMajor>オールアウト</keywordMajor>: クールダウンが50%短縮されて、ダッシュ速度が増加する。",
+    "エントーフォを砕き、敵チャンピオン1体を<status>ノックバック</status>して<physicalDamage>80/115/150の物理ダメージ</physicalDamage>を与え、その後、対象の背後までダッシュして、15秒間、<keywordMajor>「オールアウト」</keywordMajor>状態になる。敵が壁にぶつかった場合は壁を越えて<status>ノックバック</status>し、自身はもう一度攻撃を行って<physicalDamage>80/115/150 (+増加体力の5%)の物理ダメージ</physicalDamage>を与える。<br><br><keywordMajor>「オールアウト」</keywordMajor>中はスキルがアップグレードされて、<attackSpeed>攻撃速度が40/60/80%</attackSpeed>、増加物理防御貫通が50%、<omnivamp>オムニヴァンプが20%</omnivamp>増加するが、<healing>最大体力が35%</healing>、<scaleArmor>増加物理防御が85%</scaleArmor>、<scaleMR>増加魔法防御が85%</scaleMR>低下する。"
+  ]
+}

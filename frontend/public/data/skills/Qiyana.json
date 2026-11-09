@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "通常攻撃とスキルが追加で<physicalDamage>15〜83 (+増加攻撃力の25% +魔力の30%)の追加物理ダメージ</physicalDamage>を与える。この効果は対象ごとに25秒のクールダウンがある。<br><br><spellName>「大地の力」</spellName>を使って異なる武器の<keywordMajor>「エンチャントメント」</keywordMajor>を獲得すると、すべての対象に対してこの効果のクールダウンがリセットされる。",
+  "spells": [
+    null,
+    "<spellPassive>自動効果:</spellPassive> 武器が<keywordMajor>「エンチャントメント」</keywordMajor>を獲得していると、<attackSpeed>攻撃速度が15/20/25/30/35%</attackSpeed>増加し、通常攻撃が<magicDamage>8/16/24/32/40 (+魔力の45% +増加攻撃力の20%)の魔法ダメージ</magicDamage>を追加で与える。また非戦闘時、近くに<keywordMajor>「エンチャントメント」</keywordMajor>に使ったものと同種の地形が存在する場合は、<speed>移動速度が3/5/7/9/11%</speed>増加する。<br><br><spellActive>発動効果:</spellActive> 近くの茂み、壁、川までダッシュして、それに対応した<keywordMajor>「エンチャントメント」</keywordMajor>を武器に付与する。これを行うと<spellName>「エレメントの怒り/イシュタルの切先」</spellName>のクールダウンが解消される。",
+    "敵を通り過ぎるようにダッシュし、<physicalDamage>50/90/130/170/210 (+増加攻撃力の50%)の物理ダメージ</physicalDamage>を与える。",
+    "衝撃波を発生させる。衝撃波は敵を<status>ノックバック</status>させて、地形に当たると爆発する。爆発はその地形全体に沿って進み、0.5 - 1秒間の<status>スタン効果</status>と<physicalDamage>100/200/300 (+増加攻撃力の125%)</physicalDamage><physicalDamage>(+最大体力の10%)の物理ダメージ</physicalDamage>を与える。<status>スタン効果</status>の時間は、爆発の移動距離に応じて低下する。<br><br>少ししてから、衝撃波が通った場所にあった川と茂みも爆発し、同じダメージと<status>スタン効果</status>を与える。"
+  ]
+}
