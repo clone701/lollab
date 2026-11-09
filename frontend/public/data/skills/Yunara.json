@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "クリティカル攻撃が<magicDamage>10% (+魔力100ごとに10%)の魔法ダメージ</magicDamage>を追加で与える。",
+  "spells": [
+    null,
+    null,
+    "1.5秒間、<speed>移動速度が30/35/40/45/50%</speed>増加する。敵チャンピオンに向かっている場合は<speed>移動速度が45/52.5/60/67.5/75%</speed>まで増加する。<br><br><keywordMajor>超越状態 - 触れ得ぬ影</keywordMajor>: 指定方向にダッシュする。",
+    "15秒間、<keywordMajor>超越状態</keywordMajor>になり、効果時間中は通常スキルがアップグレードされる。"
+  ]
+}

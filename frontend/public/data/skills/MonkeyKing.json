@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "<scaleArmor>4.5〜10の物理防御</scaleArmor>を獲得して、<healing>5秒ごとに最大体力の0.35%</healing>を回復する。自身または<keywordMajor>分身</keywordMajor>が、敵チャンピオンもしくはジャングルモンスターに通常攻撃を行うかスキルを使用するたびに、これらのボーナスが5秒間100%増加して、最大5回までスタックする。",
+  "spells": [
+    "自身と<keywordMajor>分身</keywordMajor>が行う次の通常攻撃の射程距離が135/145/155/165/175増加する。また対象に<physicalDamage>20/45/70/95/120 (+増加攻撃力の50%)の物理ダメージ</physicalDamage>を追加で与えて、3秒間<scaleArmor>物理防御を10/15/20/25/30%</scaleArmor>低下させる。<br><br>自身または<keywordMajor>分身</keywordMajor>が敵を通常効果かスキルで攻撃するたびに、このスキルのクールダウンが0.5秒短縮される。<br><br><rules>このスキルはダメージを与えた際にスキル命中時効果を発動する。</rules>",
+    "ダッシュして1秒間<keywordStealth>インビジブル</keywordStealth>状態になり、発動地点に自身の動かない<keywordMajor>分身</keywordMajor>を4秒間出現させる。<br><br><keywordMajor>分身</keywordMajor>はウーコンが直前にダメージを与えた近くにいる敵を攻撃し、ウーコンがアルティメットスキルを使用するとそれを模倣する。<keywordMajor>分身</keywordMajor>の与えるダメージは通常の40/45/50/55/60%になる。",
+    "敵1体に向かってダッシュし、<keywordMajor>分身</keywordMajor>を放つ。<keywordMajor>分身</keywordMajor>は対象の近くにいる別の敵に向かって同じようにダッシュする(最大2体まで)。命中した敵にはそれぞれ<magicDamage>80/120/160/200/240 (+魔力の100%)の魔法ダメージ</magicDamage>を与える。その後、自身と分身が5秒間<attackSpeed>40/45/50/55/60%の攻撃速度</attackSpeed>を獲得する。<br><br>",
+    "<speed>20%の移動速度</speed>を獲得して如意棒を振り回し、周囲の敵を0.6秒間<status>ノックアップ</status>させて<physicalDamage>攻撃力の275%(+最大体力の8/12/16%)の物理ダメージ</physicalDamage>を2秒かけて与える。<br><br>このスキルは8秒以内であれば再び発動させることが可能で、その後クールダウンに入る。"
+  ]
+}

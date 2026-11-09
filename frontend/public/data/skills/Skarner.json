@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "スカーナーの通常攻撃、<spellName>「砕けし大地」</spellName>、<spellName>「大地の怒り」</spellName>、<spellName>「インペイル」</spellName>は、4秒間、敵に<keywordMajor>「振動」</keywordMajor>を付与する。<keywordMajor>「振動」</keywordMajor>が3スタックになると、その効果時間をかけて敵に<magicDamage>最大体力の5〜9%の魔法ダメージ</magicDamage>を与える。",
+  "spells": [
+    null,
+    "2.5秒間、<shield>耐久値最大体力の8%のシールド</shield>を獲得し、地震を発生させて、周囲の敵に<magicDamage>50/70/90/110/130 (+魔力の80%)の魔法ダメージ</magicDamage>を与え、1秒間20%の<status>スロウ効果</status>を与える。",
+    "前方に突撃し、選択した方向に向きを変え、地形を無視する。チャンピオンか大型モンスターにぶつかると、突撃終了まで対象を引きずっていく。<br><br>引きずった敵と一緒に壁に衝突し、敵に<physicalDamage>30/60/90/120/150 (+増加攻撃力の120% +最大体力の6%)の物理ダメージ</physicalDamage>を与えて1.1秒間<status>スタン</status>させる。<br><br>このスキルを<recast>再発動</recast>すると、突撃を早めに終了する。",
+    "尻尾で前方を貫き、最初に命中した3体のチャンピオンに<magicDamage>150/250/350 (+魔力の100%)の魔法ダメージ</magicDamage>を与え、1.5秒間、<status>サプレッション効果</status>を付与する。この攻撃が命中したチャンピオンは、このスキルの効果時間中、スカーナーに引きずられる。<br><br>この攻撃が少なくとも1体のチャンピオンに命中すると、1.5秒間、自身の<speed>移動速度が40%</speed>増加する。<br><br><spellName>「砕けし大地」</spellName>が発動中は、先に<spellName>「大地の怒り」</spellName>を発動する。"
+  ]
+}

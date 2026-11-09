@@ -1,0 +1,27 @@
+{
+ "type": "champion",
+ "version": "16.21.1",
+ "data": {
+  "Ahri": {
+   "id": "Ahri",
+   "spells": [
+    {
+     "id": "AhriQ",
+     "maxrank": 5
+    },
+    {
+     "id": "AhriW",
+     "maxrank": 5
+    },
+    {
+     "id": "AhriE",
+     "maxrank": 5
+    },
+    {
+     "id": "AhriR",
+     "maxrank": 3
+    }
+   ]
+  }
+ }
+}

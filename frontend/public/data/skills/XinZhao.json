@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": null,
+  "spells": [
+    "次の3回の通常攻撃が<physicalDamage>15/30/45/60/75 (+増加攻撃力の45%)の物理ダメージ</physicalDamage>を追加で与え、他のスキルのクールダウンを1秒短縮する。また、3回目の通常攻撃は対象を0.75秒間<status>ノックアップ</status>する。<br>",
+    null,
+    null,
+    "<spellPassive>自動効果</spellPassive>: 最後に通常攻撃または<spellName>「兵貴神速」</spellName>でダメージを与えたチャンピオンを3秒間、<keywordMajor>挑戦対象</keywordMajor>にする。<br><br><spellActive>発動効果: </spellActive>周囲を槍で薙ぎ払って<physicalDamage>75/175/275 (+増加攻撃力の100% +魔力の110%) + 現在体力の15%の物理ダメージ</physicalDamage>を与え、<keywordMajor>挑戦対象を除く</keywordMajor>すべての敵を<status>ノックバック</status>させる。<br> <br>その後4秒間、薙ぎ払いの範囲外にいる敵からはダメージを受けなくなる。 "
+  ]
+}

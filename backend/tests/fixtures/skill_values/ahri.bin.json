@@ -1,0 +1,43 @@
+{
+ "Characters/Ahri/Spells/AhriQAbility/AhriQ": {
+  "mSpell": {
+   "DataValues": [
+    {
+     "name": "BaseDamage",
+     "values": [
+      10.0,
+      35.0,
+      60.0,
+      85.0,
+      110.0,
+      135.0,
+      160.0
+     ]
+    }
+   ],
+   "mSpellCalculations": {
+    "TotalDamage": {
+     "mSimpleTooltipCalculationDisplay": 6,
+     "mFormulaParts": [
+      {
+       "mDataValue": "BaseDamage",
+       "__type": "NamedDataValueCalculationPart"
+      },
+      {
+       "mCoefficient": 0.5,
+       "__type": "StatByCoefficientCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    }
+   },
+   "mClientData": {
+    "mTooltipData": {
+     "mLocKeys": {
+      "keyTooltip": "Spell_AhriOrbofDeception_Tooltip"
+     }
+    }
+   }
+  }
+ }
+}

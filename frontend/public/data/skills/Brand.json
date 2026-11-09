@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "スキルで攻撃するたびに対象が<keywordMajor>炎上</keywordMajor>し、4秒かけて<magicDamage>最大体力の2%の魔法ダメージ</magicDamage>を与える。自身が<keywordMajor>炎上</keywordMajor>しているユニットを倒すと<scaleMana>20〜39.98マナ</scaleMana>を獲得する。<keywordMajor>「炎上」</keywordMajor>は最大で3スタックする。<br><br>チャンピオンまたは大型ジャングルモンスターに付与された<keywordMajor>「炎上」</keywordMajor>が3スタックに達すると2秒後に爆発し、周囲の敵に<magicDamage>最大体力の6〜12% (+魔力100ごとに2%)に相当する魔法ダメージ</magicDamage>を与える。",
+  "spells": [
+    "火の玉を放ち、最初に命中した敵に<magicDamage>70/100/130/160/190 (+魔力の65%)の魔法ダメージ</magicDamage>を与える。<br><br>対象が<keywordMajor>炎上</keywordMajor>している場合、1.75秒間<status>スタン</status>させる。",
+    "純然たる炎の柱を発生させて<magicDamage>75/120/165/210/255 (+魔力の70%)の魔法ダメージ</magicDamage>を与える。<br><br><keywordMajor>炎上</keywordMajor>しているユニットは、代わりに<magicDamage>93.75/150/206.25/262.5/318.75 (+魔力の87.5%)のダメージ</magicDamage>を受ける。",
+    "強力な爆風で対象を攻撃し、周囲のユニットに<magicDamage>55/80/105/130/155 (+魔力の60%)の魔法ダメージ</magicDamage>を与える。<br><br>対象が<keywordMajor>炎上</keywordMajor>している場合は、この効果範囲が2倍になる。",
+    "指定した対象に最大5回まで跳ね返る強力な火炎弾を放つ。この火炎弾は自身または他の敵に向かって跳ね返り、敵に命中するたびに<magicDamage>100/175/250 (+魔力の30%)の魔法ダメージ</magicDamage>を与える。この跳ね返りは、優先的に敵チャンピオンの<keywordMajor>「炎上」</keywordMajor>スタックを最大にしようとする。<br><br><keywordMajor>炎上</keywordMajor>している対象には、短時間30/45/60%の<status>スロウ効果</status>を与える。"
+  ]
+}

@@ -1,0 +1,75 @@
+{
+ "Characters/Ahri/Spells/AhriPassiveAbility/AhriPassiveCounter": {
+  "mSpell": {
+   "DataValues": [],
+   "mSpellCalculations": {}
+  }
+ },
+ "Characters/Ahri/Spells/AhriPassiveAbility/AhriPassive": {
+  "mSpell": {
+   "DataValues": [
+    {
+     "name": "TakedownWindow",
+     "values": [
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0
+     ]
+    },
+    {
+     "name": "MaxStacks",
+     "values": [
+      9.0,
+      9.0,
+      9.0,
+      9.0,
+      9.0,
+      9.0,
+      9.0
+     ]
+    }
+   ],
+   "mSpellCalculations": {
+    "ChampionHeal": {
+     "mFormulaParts": [
+      {
+       "mStartValue": 75.0,
+       "mEndValue": 165.0,
+       "__type": "ByCharLevelInterpolationCalculationPart"
+      },
+      {
+       "mCoefficient": 0.30000001192092896,
+       "__type": "StatByCoefficientCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    },
+    "MinionHeal": {
+     "mFormulaParts": [
+      {
+       "mStartValue": 35.0,
+       "mEndValue": 95.0,
+       "__type": "ByCharLevelInterpolationCalculationPart"
+      },
+      {
+       "mCoefficient": 0.20000000298023224,
+       "__type": "StatByCoefficientCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    }
+   },
+   "mClientData": {
+    "mTooltipData": {
+     "mLocKeys": {
+      "keyTooltip": "Buff_AhriP_Tooltip"
+     }
+    }
+   }
+  }
+ }
+}

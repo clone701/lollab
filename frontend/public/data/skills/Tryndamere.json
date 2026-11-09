@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "通常攻撃で<keywordMajor>フューリーを5</keywordMajor>、クリティカルが発生すると<keywordMajor>フューリーを10</keywordMajor>、ユニットをキルすると<keywordMajor>フューリーを10</keywordMajor>獲得する。非戦闘状態が8秒間続くと、その後毎秒<keywordMajor>フューリーが5</keywordMajor>ずつ減少していく。<br><br>たまった<keywordMajor>フューリー</keywordMajor>1ポイントにつき、クリティカル率が0.5%増加する。",
+  "spells": [
+    null,
+    "嘲りの言葉を浴びせ、4秒間チャンピオンの攻撃力を20/35/50/65/80低下させる。トリンダメアに背を向けている敵は3.25秒間、30/35/40/45/50%の<status>スロウ効果</status>を受ける。",
+    "回転しながら敵に切り込み、<physicalDamage>80/120/160/200/240 (+増加攻撃力の100% +魔力の80%)の物理ダメージ</physicalDamage>を与えて、命中した敵1体につき<keywordMajor>2フューリー</keywordMajor>を、対象が敵チャンピオンだった場合は<keywordMajor>5フューリー</keywordMajor>を獲得する。<br><br>クリティカルが発生すると、このスキルのクールダウンが0.75秒短縮される(対象がチャンピオンの場合は1.5秒短縮)。",
+    "5秒間不死身になり、体力が30/50/70未満にならなくなる。発動すると、瞬時に<keywordMajor>フューリーが50/75/100</keywordMajor>増加する。"
+  ]
+}

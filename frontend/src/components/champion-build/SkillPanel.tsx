@@ -1,9 +1,6 @@
-import {
-  SkillIcon,
-  SkillPriorityIcons,
-  useChampionSkills,
-} from '@/components/game-data';
+import { SkillIcon, SkillPriorityIcons } from '@/components/game-data';
 import { selectOption } from '@/lib/champion-build';
+import type { SkillInfo } from '@/lib/game-data';
 import type { BuildElement, BuildMode } from '@/types/championBuild';
 import { NoData } from './NoData';
 import { OptionStat } from './OptionStat';
@@ -11,8 +8,8 @@ import { PanelSection } from './PanelSection';
 import { SkillOrderGrid } from './SkillOrderGrid';
 
 interface SkillPanelProps {
-  /** スキル画像の取得に使う（champions.ts の id） */
-  championId: string;
+  /** パッシブと Q/W/E/R。読み込み前・失敗時は null */
+  skills: SkillInfo[] | null;
   skillPriority: BuildElement;
   skillOrder: BuildElement;
   mode: BuildMode;
@@ -20,12 +17,11 @@ interface SkillPanelProps {
 
 // スキル画像は読み込み後に出す。読み込み前・失敗時は Q/W/E/R の文字のまま
 export function SkillPanel({
-  championId,
+  skills,
   skillPriority,
   skillOrder,
   mode,
 }: SkillPanelProps) {
-  const skills = useChampionSkills(championId);
   const passive = skills?.find((s) => s.key === 'P');
   const priority = selectOption(skillPriority, mode);
   const order = selectOption(skillOrder, mode);

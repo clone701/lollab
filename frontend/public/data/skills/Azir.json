@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "タワーの瓦礫から<keywordMajor>「太陽の円盤」</keywordMajor>を召喚できる。<keywordMajor>「太陽の円盤」</keywordMajor>は<magicDamage>230〜410 (+魔力の40%)の魔法ダメージ</magicDamage>を与え、30〜90の<scaleArmor>物理防御</scaleArmor>と<scaleMR>魔法防御</scaleMR>を持っているが、45秒かけて崩壊していく。",
+  "spells": [
+    "すべての<keywordMajor>砂塵兵</keywordMajor>を指定範囲に集結させる。<keywordMajor>砂塵兵</keywordMajor>は進路上でぶつかった敵に<magicDamage>75/95/115/135/155 (+魔力の35/40/45/50/55%)の魔法ダメージ</magicDamage>を与え、1秒間25%の<status>スロウ効果</status>を付与する。",
+    null,
+    "自身が1.5秒間、<shield>耐久値70/110/150/190/230 (+魔力の60%)のシールド</shield>を獲得して、<keywordMajor>砂塵兵</keywordMajor>の1体に向かってダッシュし、触れた敵に<magicDamage>70/110/150/190/230 (+魔力の60%)の魔法ダメージ</magicDamage>を与える。<br><br>敵チャンピオンに衝突するとその場で停止し、<keywordMajor>砂塵兵</keywordMajor>のチャージを獲得する。",
+    "兵士たちの壁を召喚する。兵士たちは前方に突進し、衝突した敵に<magicDamage>200/400/600 (+魔力の75%)の魔法ダメージ</magicDamage>を与え、<status>ノックバック</status>させる。兵士たちはその後5秒間その場にとどまり、敵の通過を阻止する。"
+  ]
+}

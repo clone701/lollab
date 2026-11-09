@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "ユニットを1体倒すたびに「幸運のサイコロ」を振り、1～6の追加ゴールドを獲得する。",
+  "spells": [
+    "3枚のカードを投げ、それぞれが<magicDamage>60/105/150/195/240 (+増加攻撃力の50% +魔力の85%)の魔法ダメージ</magicDamage>を与える。",
+    null,
+    "<spellPassive>自動効果:</spellPassive> <attackSpeed>攻撃速度が15/25/35/45/55%</attackSpeed>増加する。また、通常攻撃4回ごとに<magicDamage>65/90/115/140/165 (+増加攻撃力の20% +魔力の40%)の魔法ダメージ</magicDamage>を追加で与える。",
+    null
+  ]
+}

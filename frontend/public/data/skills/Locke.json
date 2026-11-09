@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": null,
+  "spells": [
+    "数本の<keywordMajor>「魂の釘」</keywordMajor>を構えて投げ、<magicDamage>40/48/56/64/72 (+魔力の20%)の魔法ダメージ</magicDamage>を与えて、命中した敵をマークする。釘は命中した本数に応じてスタックする<status>スロウ効果</status>を付与する。(1/1/2秒間、25/25/60%)<br><br>敵を通常攻撃すると<keywordMajor>「魂の釘」</keywordMajor>を消費し、スタックごとに<magicDamage>18/26/34/42/50 (+魔力の25/27.5/30/32.5/35%)の魔法ダメージ</magicDamage>を与える。ダメージは、釘が2本の場合20%、3本の場合40%増加する。",
+    null,
+    "指定地点にテレポートし、到着時に周囲の敵に<magicDamage>40/55/70/85/100 (+魔力の50%)の魔法ダメージ</magicDamage>を与える。<br><br>次の通常攻撃時、対象へダッシュし、進路上のすべての敵に<magicDamage>40/60/80/100/120 (+魔力の40%)の魔法ダメージ</magicDamage>を与える。攻撃が命中するたびに<keywordMajor>「魂の釘」</keywordMajor>が消費される。<br><br>キルまたはアシストを獲得すると、このスキルのクールダウンが解消される。",
+    null
+  ]
+}

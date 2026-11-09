@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "茂みに入ると移動速度が2秒間10%増加する。さらに、距離1400の範囲内にいる可視状態の敵チャンピオンに向かって移動する場合は30%増加する。<br><br>敵チャンピオンまたは中立モンスターに「槍投げ」または「虎挟み」でダメージを与えると、対象に4秒間<font color='#FFF673'>「マーキング」</font>を付与し、<font color='#ee91d7'>真の視界</font>を得る。この間、ニダリーの移動速度が10%増加し、さらに、<font color='#FFF673'>「マーキング」</font>中の対象に向かって移動する場合は30%増加する。また、対象に対する「テイクダウン」と「ジャンプ」の効果が増加する。",
+  "spells": [
+    "<keywordMajor>ヒト形態:</keywordMajor> 槍を投げて<magicDamage>70/90/110/130/150 (+魔力の50%)の魔法ダメージ</magicDamage>を与える。ダメージは槍の飛距離に応じて最大<magicDamage>227.5/292.5/357.5/422.5/487.5 (+魔力の162.5%)の魔法ダメージ</magicDamage>まで増加する。",
+    null,
+    "<keywordMajor>ヒト形態:</keywordMajor> <healing>体力を50/75/100/125/150 (+魔力の35%)</healing>回復する。回復量は減少体力に応じて最大<healing>100/150/200/250/300 (+魔力の70%)</healing>まで増加する。また7秒間、<attackSpeed>攻撃速度が20/30/40/50/60%</attackSpeed>増加する。",
+    "<spellPassive>自動効果:</spellPassive> <keywordMajor>ヒト形態</keywordMajor>の間は、<keywordMajor>「マーキング」</keywordMajor>を適用するとこのスキルのクールダウンが解消される。<br><br><keywordMajor>ヒト形態:</keywordMajor> <keywordMajor>クーガー形態</keywordMajor>に変化して通常攻撃が近接になり、発動スキルが入れ替わる。<br><br><keywordMajor>クーガー形態:</keywordMajor> <keywordMajor>ヒト形態</keywordMajor>に変化して通常攻撃が遠隔になり、発動スキルが入れ替わる。"
+  ]
+}

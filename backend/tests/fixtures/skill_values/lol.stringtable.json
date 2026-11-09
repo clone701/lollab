@@ -1,0 +1,11 @@
+{
+ "entries": {
+  "spell_ahriorbofdeception_tooltip": "往復するオーブを放ち、命中した敵に<magicDamage>@TotalDamage@の魔法ダメージ</magicDamage>を与える。戻る時に与えるダメージは<trueDamage>@TotalDamage@の確定ダメージ</trueDamage>になる。",
+  "spell_jinxw_tooltip": "電撃を放ち、最初に命中した敵に<physicalDamage>@TotalDamage@の物理ダメージ</physicalDamage>を与える。さらに@SlowDuration@秒間、対象に@SlowPercent@%の<status>スロウ効果</status>を与えて可視化する。",
+  "spell_urgote_tooltip": "前方に突撃して、@EShieldDuration@秒間<shield>耐久値@ETotalShieldHealth@のシールド</shield>を獲得し、最初に当たったチャンピオンを@StunDuration@秒間<status>スタン</status>させて自身の背後に投げる。突撃中にぶつかったすべての敵は、<physicalDamage>@EDamage@の物理ダメージ</physicalDamage>を受ける。",
+  "spell_urgotpassive_tooltip": "アーゴットは6本の脚にキャノンを装備している。通常攻撃と<spellName>「{{Spell_UrgotW_Name}}」</spellName>で対象の方を向いている脚のキャノンを発射し、<physicalDamage>@ADDamage@(+最大体力の@PercentHPRatio@)の物理ダメージ</physicalDamage>を与える。この効果には脚ごとに@PerLegCD@秒間のクールダウンがある。",
+  "spell_urgotq_tooltip": "榴弾を発射して<physicalDamage>@TotalDamage@の物理ダメージ</physicalDamage>を与え、@SlowDuration@秒間@SlowAmount*100@%の<status>スロウ効果</status>を与える。",
+  "spell_urgotw_name": "パージ",
+  "spell_urgotw_tooltip": "<spellPassive>自動効果:</spellPassive> 自身の他のスキルが、最後に命中したチャンピオンを5秒間マークする。<br><br><spellActive>発動効果:</spellActive> 最も近くにいる敵(マークした敵を優先)にチェーンガンを発砲する。1秒間に@WAttacksPerSecond@回通常攻撃を行い、1回ごとに<physicalDamage>@DamagePerShot@の物理ダメージ</physicalDamage>を与える。発砲中も移動可能で、@SlowResistance@%の<status>スロウ</status>耐性を獲得するが、<speed>移動速度が@MoveSpeedMod@</speed>低下する。<br><br>スキルレベルが最大になると、このスキルが無限に持続して、<toggle>発動/非発動</toggle>を切り替えられるようになる。"
+ }
+}

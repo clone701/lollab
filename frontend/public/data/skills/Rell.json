@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": null,
+  "spells": [
+    "ランスを突き出して、対象を0.65秒間<status>スタン</status>させ、<shield>シールド</shield>をすべて破壊し、<magicDamage>60/100/140/180/220 (+魔力の60%)の魔法ダメージ</magicDamage>を与える。",
+    null,
+    "レルと味方1体が突撃し、3秒間、<speed>移動速度が15%</speed>増加する。敵チャンピオンまたはお互いの方を向いている場合は、この増加移動速度が<speed>30%</speed>に増加する。次の通常攻撃または範囲内の<spellName>「破鋼撃」</spellName>が爆発し、<magicDamage>最大体力の5/5.5/6/6.5/7% (+魔力100ごとに3%)の魔法ダメージ</magicDamage>を与える。",
+    "猛烈な磁場を発生させ、周囲の敵を自身の方向に<status>引き寄せる</status>。その後も継続的に周囲の敵を自身の方向に<status>引き付け</status>、2秒間かけて<magicDamage>150/250/350 (+魔力の110%)の魔法ダメージ</magicDamage>を与える。"
+  ]
+}

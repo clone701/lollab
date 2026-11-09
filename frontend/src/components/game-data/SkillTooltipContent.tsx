@@ -22,7 +22,7 @@ export function SkillTooltipContent({ skill }: SkillTooltipContentProps) {
       iconSrc={skill.imagePath}
       meta={cooldown}
       subline={cost}
-      description={skill.description}
+      description={skill.detail ?? skill.description}
     />
   );
 }

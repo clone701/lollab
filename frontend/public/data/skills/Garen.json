@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "8秒間ダメージや敵のスキルを受けずにいると、5秒毎に<healing>最大体力の1.5〜10.1%</healing>を回復するようになる。",
+  "spells": [
+    "自身の受けている<status>スロウ効果</status>を解除し、1.4/1.95/2.5/3.05/3.6秒間<speed>移動速度が35%</speed>増加する。<br><br>次の通常攻撃が1.5秒間<status>サイレンス効果</status>を付与し、<physicalDamage>30/60/90/120/150 (+攻撃力の150%)の物理ダメージ</physicalDamage>を与えるようになる。",
+    "<spellPassive>自動効果:</spellPassive> <scaleArmor>物理防御が1スタックにつき0.2</scaleArmor>、<scaleMR>魔法防御が1スタックにつき0.2</scaleMR>増加する。ユニットを倒すと恒久的に<attention>物理防御と魔法防御を0.2</attention>獲得する(最大<attention>30</attention>)。<br><br><spellActive>発動効果:</spellActive> 4秒間、勇気を奮い立たせ、受けるダメージが25/29/33/37/41%軽減される。さらに、0.75秒間、<shield>耐久値65/85/105/125/145 (+増加体力の18%)のシールド</shield>を獲得し、<slow>行動妨害耐性が60%</slow>増加する。",
+    null,
+    "デマーシア魂を燃え上がらせ、敵に必殺の一撃を繰り出して<trueDamage>125/200/275(+減少体力の25/30/35%)の確定ダメージ</trueDamage>を与える。"
+  ]
+}

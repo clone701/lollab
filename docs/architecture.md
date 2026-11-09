@@ -188,6 +188,20 @@ aws codebuild start-build --profile lollab --region ap-northeast-1 --project-nam
 
 `supabase/migrations/` のファイルを、Supabase の SQL Editor でファイル名の順に実行する。定義は `.kiro/specs/database/design.md` で管理する。
 
+### ゲームのパッチを更新する
+
+仕様は `.kiro/specs/skill-values/`。スキルの数値入りの文（`frontend/public/data/skills/*.json`）は、パッチごとに作り直す。
+
+1. Data Dragon の最新版を `D:\dev\<版>`（例 `D:\dev\16.22.1`）にダウンロードする
+2. 必要なファイル（`css`・`data`・`img`）を `frontend/public/images/` の `css`・`data`・`img` に上書きコピーする（置き方は `.kiro/steering/structure.md` の「`frontend/public/images/` のゲームデータ」）
+3. 数値入りの文を作り直す（CommunityDragon から取得。取得したファイルは `--cache` に残り、次回は再取得しない）
+   ```powershell
+   python backend/scripts/build_skill_values.py D:\dev\<版> --cache D:\dev\cdragon
+   ```
+4. 最後に表示される「解けたスキルの割合」（全体・パッシブ・Q/W/E/R）を前回と比べる。大きく下がったら、解けなかった理由の上位を見てスクリプトを直す
+5. `git diff frontend/public/data/skills` で変わった数値を確かめ、気になる所は公式のパッチノートと見比べる
+6. コミットする
+
 ## トラブルシューティング
 
 | 症状 | 原因と対処 |

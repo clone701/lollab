@@ -5,7 +5,7 @@ import {
   TARGET_PUUID,
   makeMatchDetail,
 } from '@/lib/match-detail/__fixtures__/matchDetail';
-import { fetchChampionData } from '@/adapters/game-data';
+import { fetchChampionData, fetchSkillValues } from '@/adapters/game-data';
 import monkeyKingFixture from '@/lib/game-data/__fixtures__/monkeyKing.json';
 import urgotFixture from '@/lib/game-data/__fixtures__/urgot.json';
 import type { MatchDetailResponse } from '@/types/matchDetail';
@@ -17,13 +17,17 @@ jest.mock('@/adapters/game-data', () => ({
   fetchRuneData: jest.fn(),
   fetchSummonerData: jest.fn(),
   fetchChampionData: jest.fn(),
+  fetchSkillValues: jest.fn(),
 }));
 const mockFetchChampionData = fetchChampionData as jest.Mock;
+const mockFetchSkillValues = fetchSkillValues as jest.Mock;
 
 // 既定はスキルの JSON が読み込まれない状態（文字の表示）
 beforeEach(() => {
   mockFetchChampionData.mockReset();
   mockFetchChampionData.mockReturnValue(new Promise(() => {}));
+  mockFetchSkillValues.mockReset();
+  mockFetchSkillValues.mockResolvedValue(null);
 });
 
 function renderBuild(match: MatchDetailResponse = makeMatchDetail()): void {

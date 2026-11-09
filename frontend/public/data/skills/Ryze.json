@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "<scaleMana>最大マナが魔力の10%</scaleMana>増加する。スキルが<scaleMana>増加マナ</scaleMana>に応じて追加ダメージを与える。",
+  "spells": [
+    null,
+    "<magicDamage>60/90/120/150/180 (+魔力の70% +増加マナの3%)の魔法ダメージ</magicDamage>を与え、1.5秒間50%の<status>スロウ効果</status>を付与する。対象に<keywordMajor>「フラックス」</keywordMajor>が付与されている場合は、それを消費して、<status>スロウ効果</status>の代わりに<status>スネア効果</status>を付与する。",
+    "オーブを発射して<magicDamage>60/90/120/150/180 (+魔力の50% +増加マナの2%)の魔法ダメージ</magicDamage>を与え、対象と周囲の敵に4秒間<keywordMajor>「フラックス」</keywordMajor>を付与する。敵がすでに<keywordMajor>「フラックス」</keywordMajor>を受けていた場合は<keywordMajor>「フラックス」</keywordMajor>がさらに拡散する。",
+    "<spellPassive>自動効果:</spellPassive> <keywordMajor>「フラックス」</keywordMajor>が付与された対象に対する<spellName>「オーバーロード」</spellName>の追加ダメージが40/70/100%に増加する。<br><br><spellActive>発動効果:</spellActive> 離れた場所にポータルを作り出す。2秒後、ポータルの近くにいるすべての味方が、その場所までテレポートする。"
+  ]
+}

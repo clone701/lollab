@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "スキルか通常攻撃を5回行うと、次の通常スキルが強化される。",
+  "spells": [
+    "<font color='#FF8C00'>短く押す(タップ):</font> 槍を突き出し、命中した敵に<physicalDamage>70/100/130/160/190 (+増加攻撃力の115%)の物理ダメージ</physicalDamage>を与える。このスキルのクールダウンが60%短縮される。<br><br><font color='#FF8C00'>長く押す(ホールド):</font> 槍を投げ、最初に命中した敵に<physicalDamage>70/100/130/160/190 (+増加攻撃力の115% +魔力の50%)の物理ダメージ</physicalDamage>を与える。それ以降の敵に与えるダメージは50%減少する。<br><br>対象の体力が20%未満の場合、このスキルは強化され<physicalDamage>155/230/305/380/455 (+増加攻撃力の230%)の物理ダメージ</physicalDamage>を与える。<br><br><font color='#EDDA74'>「定命の意志」による強化効果:</font> 追加で<physicalDamage>20〜240 (+増加攻撃力の115%)の物理ダメージ</physicalDamage>を与える。",
+    "対象に向かって跳躍し、1秒間<status>スタン</status>させて<physicalDamage>6/6.5/7/7.5/8% (+増加体力100ごとに0.4% +魔力100ごとに1.5%)の最大体力に応じた物理ダメージ</physicalDamage>を与える。<br><br><keywordMajor>「定命の意志」による強化効果:</keywordMajor> 次の通常攻撃が3回攻撃になり、合計<physicalDamage>攻撃力の120〜165%の物理ダメージ</physicalDamage>を与える。",
+    "盾を構え、1.5秒間にわたり指定方向の敵を攻撃する。効果時間中はその方向からのタワー以外のダメージを無効化し、継続的に<physicalDamage>攻撃力の100%の物理ダメージ</physicalDamage>を与える。詠唱終了後に盾で一撃を放ち、<physicalDamage>55/105/155/205/255 (+増加攻撃力の150%)の物理ダメージ</physicalDamage>を与える。<br><br><font color='#EDDA74'>「定命の意志」による強化効果:</font> 盾での一撃を放つと4秒間、<scaleArmor>物理防御5〜30 (+増加体力の2.5%)</scaleArmor>と<scaleMR>魔法防御5〜30 (+増加体力の2.5%)</scaleMR>が増加し、1.5秒間、<speed>移動速度が60%</speed>増加する。<br>",
+    null
+  ]
+}

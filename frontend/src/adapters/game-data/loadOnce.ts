@@ -9,8 +9,13 @@ export function loadOnce<T>(url: string): Promise<T> {
   if (cached) return cached as Promise<T>;
   const promise = fetch(url)
     .then((res) => {
-      if (!res.ok)
-        throw new Error(`ゲームデータの取得に失敗しました: ${res.status}`);
+      if (!res.ok) {
+        // 呼び出し側が 404 などを見分けられるよう status を付ける
+        throw Object.assign(
+          new Error(`ゲームデータの取得に失敗しました: ${res.status}`),
+          { status: res.status }
+        );
+      }
       return res.json() as Promise<T>;
     })
     .catch((e: unknown) => {
