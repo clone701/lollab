@@ -98,7 +98,7 @@ def test_download_は_404_で_none(monkeypatch: pytest.MonkeyPatch) -> None:
         raise http_error(404)
 
     monkeypatch.setattr(fetch.urllib.request, "urlopen", fake_urlopen)
-    assert fetch.download("https://example.invalid/x") is None
+    assert fetch.download(f"{fetch.BASE_URL}/x") is None
 
 
 def test_download_は一時的な失敗をやり直す(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -112,7 +112,7 @@ def test_download_は一時的な失敗をやり直す(monkeypatch: pytest.Monke
 
     monkeypatch.setattr(fetch.urllib.request, "urlopen", fake_urlopen)
     monkeypatch.setattr(fetch.time, "sleep", lambda seconds: None)
-    assert fetch.download("https://example.invalid/x") == b"ok"
+    assert fetch.download(f"{fetch.BASE_URL}/x") == b"ok"
     assert len(attempts) == 3
 
 
@@ -123,4 +123,24 @@ def test_download_はやり直しても失敗すれば例外(monkeypatch: pytest
     monkeypatch.setattr(fetch.urllib.request, "urlopen", fake_urlopen)
     monkeypatch.setattr(fetch.time, "sleep", lambda seconds: None)
     with pytest.raises(urllib.error.HTTPError):
-        fetch.download("https://example.invalid/x")
+        fetch.download(f"{fetch.BASE_URL}/x")
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "file:///etc/passwd",
+        "http://raw.communitydragon.org/x",
+        "https://raw.communitydragon.org.example.com/x",
+        "https://example.invalid/x",
+    ],
+)
+def test_download_は_CommunityDragon_以外の_URL_を取得しない(
+    monkeypatch: pytest.MonkeyPatch, url: str
+) -> None:
+    def fake_urlopen(*args: Any, **kwargs: Any) -> Any:
+        raise AssertionError("urlopen を呼んではいけない")
+
+    monkeypatch.setattr(fetch.urllib.request, "urlopen", fake_urlopen)
+    with pytest.raises(ValueError):
+        fetch.download(url)

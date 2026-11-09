@@ -34,11 +34,19 @@ def cdragon_version(ddragon_version: str) -> str:
 
 
 def download(url: str, retries: int = 3, timeout: int = 300) -> bytes | None:
-    """URL を取得する。404 は None。一時的な失敗は数回やり直す。"""
+    """URL を取得する。404 は None。一時的な失敗は数回やり直す。
+
+    取得先は CommunityDragon（BASE_URL の https）だけに限る。
+    """
+    if not url.startswith(f"{BASE_URL}/"):
+        raise ValueError(f"CommunityDragon 以外の URL は取得しません: {url}")
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     for attempt in range(retries):
         try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
+            # 上で https の CommunityDragon に限っているため、file: などは通らない
+            with urllib.request.urlopen(  # nosec B310
+                request, timeout=timeout
+            ) as response:
                 return bytes(response.read())
         except urllib.error.HTTPError as error:
             if error.code == 404:
