@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Champion } from '@/types/champion';
 import type { BuildQuery, ChampionBuildResponse } from '@/types/championBuild';
-import { BuildIcon } from './BuildIcon';
+import { BuildIcon } from '@/components/ui/BuildIcon';
 import { RoleTabs } from './RoleTabs';
 import { SummaryStats } from './SummaryStats';
 

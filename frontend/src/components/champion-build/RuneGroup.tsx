@@ -1,5 +1,5 @@
 import { getRuneIcon } from '@/lib/champion-build';
-import { BuildIcon } from './BuildIcon';
+import { RuneTooltipIcon } from '@/components/game-data';
 
 interface RuneGroupProps {
   label: string;
@@ -14,7 +14,8 @@ export function RuneGroup({ label, ids }: RuneGroupProps) {
         {ids.map((id, index) => {
           const icon = getRuneIcon(id);
           return (
-            <BuildIcon
+            <RuneTooltipIcon
+              id={id}
               key={`${id}-${index}`}
               src={icon?.src ?? null}
               label={icon?.name ?? `ルーン${id}`}

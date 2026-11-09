@@ -29,7 +29,11 @@ export function BuildDetails({ participant: p }: BuildDetailsProps) {
         )}
       </BuildSection>
       <BuildSection title="スキル">
-        {p.build ? <SkillOrderView build={p.build} /> : <NoData />}
+        {p.build ? (
+          <SkillOrderView build={p.build} championName={p.champion_name} />
+        ) : (
+          <NoData />
+        )}
       </BuildSection>
       <BuildSection title="ルーン">
         <RuneTreeView participant={p} />

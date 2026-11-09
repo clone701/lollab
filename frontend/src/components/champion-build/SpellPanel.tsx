@@ -1,6 +1,6 @@
 import { getSpellIcon, selectOption } from '@/lib/champion-build';
 import type { BuildElement, BuildMode } from '@/types/championBuild';
-import { BuildIcon } from './BuildIcon';
+import { SpellTooltipIcon } from '@/components/game-data';
 import { NoData } from './NoData';
 import { OptionStat } from './OptionStat';
 import { PanelSection } from './PanelSection';
@@ -20,7 +20,8 @@ export function SpellPanel({ spells, mode }: SpellPanelProps) {
             {option.key.map((id) => {
               const icon = getSpellIcon(id);
               return (
-                <BuildIcon
+                <SpellTooltipIcon
+                  id={id}
                   key={id}
                   src={icon?.src ?? null}
                   label={icon?.name ?? `スペル${id}`}

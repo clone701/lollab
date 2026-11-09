@@ -1,0 +1,11 @@
+{
+  "data": {
+    "3157": {
+      "name": "ゾーニャの砂時計",
+      "description": "<mainText><stats>魔力<attention>105</attention><br>物理防御 <attention>50</attention></stats><br><br><br><br><active>時間停止</active><br>2.5秒間<keyword>固有時停止</keyword>状態になる。</mainText>",
+      "gold": {
+        "total": 3250
+      }
+    }
+  }
+}

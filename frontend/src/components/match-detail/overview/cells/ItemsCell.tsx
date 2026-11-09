@@ -1,4 +1,4 @@
-import { BuildIcon } from '@/components/champion-build';
+import { ItemTooltipIcon } from '@/components/game-data';
 import { itemIconUrls } from '@/lib/champion-build';
 
 interface ItemsCellProps {
@@ -13,7 +13,8 @@ export function ItemsCell({ itemIds }: ItemsCellProps) {
       {itemIds.map((id, slot) => (
         <li key={slot} className="h-6 w-6 shrink-0 rounded bg-surface-2">
           {id !== 0 && (
-            <BuildIcon
+            <ItemTooltipIcon
+              id={id}
               {...itemIconUrls(id)}
               label={`アイテム${id}`}
               size={24}

@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import { itemIconUrls } from '@/lib/champion-build';
-import { BuildIcon } from './BuildIcon';
+import { ItemTooltipIcon } from '@/components/game-data';
 
 interface ItemIconsProps {
   ids: number[];
@@ -20,7 +20,8 @@ export function ItemIcons({ ids, separator }: ItemIconsProps) {
                 {separator}
               </span>
             )}
-            <BuildIcon
+            <ItemTooltipIcon
+              id={id}
               src={src}
               fallbackSrc={fallbackSrc}
               label={`アイテム${id}`}

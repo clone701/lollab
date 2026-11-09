@@ -1,0 +1,10 @@
+{
+  "data": {
+    "SummonerFlash": {
+      "key": "4",
+      "name": "フラッシュ",
+      "description": "自身のチャンピオンを短い距離、指定した方向に瞬間移動させる。",
+      "cooldownBurn": "300"
+    }
+  }
+}

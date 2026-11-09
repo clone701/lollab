@@ -11,6 +11,10 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
 }));
 jest.mock('@/adapters/api', () => ({ fetchChampionBuild: jest.fn() }));
+// スキル画像の JSON は読み込まれない状態（文字の表示）にする
+jest.mock('@/adapters/game-data', () => ({
+  fetchChampionData: jest.fn(() => new Promise(() => {})),
+}));
 
 const mockFetch = fetchChampionBuild as jest.Mock;
 const DEFAULT_QUERY: BuildQuery = {
@@ -48,7 +52,7 @@ describe('ChampionBuildContent', () => {
     it('初期表示は最高勝率ビルドで、勝率と試合数を併記する', async () => {
       await renderContent();
       const skill = within(sectionOf('スキル'));
-      expect(skill.getByText('E > W > Q')).toBeInTheDocument();
+      expect(skill.getByRole('group', { name: 'E > W > Q' })).toBeVisible();
       // 15 / 20 = 75.0%
       expect(skill.getByText('勝率 75.0%')).toBeInTheDocument();
       expect(skill.getByText('20試合')).toBeInTheDocument();
@@ -62,8 +66,10 @@ describe('ChampionBuildContent', () => {
       await userEvent.click(screen.getByRole('button', { name: '最多ビルド' }));
 
       const skill = within(sectionOf('スキル'));
-      expect(skill.getByText('Q > W > E')).toBeInTheDocument();
-      expect(skill.queryByText('E > W > Q')).not.toBeInTheDocument();
+      expect(skill.getByRole('group', { name: 'Q > W > E' })).toBeVisible();
+      expect(
+        skill.queryByRole('group', { name: 'E > W > Q' })
+      ).not.toBeInTheDocument();
       // 40 / 80 = 50.0%
       expect(skill.getAllByText('勝率 50.0%').length).toBeGreaterThan(0);
       expect(skill.getAllByText('80試合').length).toBeGreaterThan(0);
