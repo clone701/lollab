@@ -4,10 +4,7 @@ export type Role = 'TOP' | 'JUNGLE' | 'MIDDLE' | 'BOTTOM' | 'UTILITY';
 export type Period = 'latest_patch' | 'last_30_days' | 'all';
 export type QueueFilter = 'all' | 'solo' | 'flex';
 export type RankFilter =
-  | 'all'
-  | 'emerald_plus'
-  | 'diamond_plus'
-  | 'master_plus';
+  'all' | 'emerald_plus' | 'diamond_plus' | 'master_plus';
 
 /** 最高勝率 / 最多の切り替え（画面内の状態） */
 export type BuildMode = 'best_win_rate' | 'most_games';
