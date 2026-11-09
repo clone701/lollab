@@ -43,7 +43,7 @@ def test_completed_run_collects_every_seed_and_prunes(
         matches_pruned=5,
         riot_requests=3,
     )
-    pruned.assert_awaited_once_with(100_000, 2_000)
+    pruned.assert_awaited_once_with(40_000, 2_000)
 
 
 def test_no_seeds_ends_without_bundle_but_still_prunes(

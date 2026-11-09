@@ -200,7 +200,7 @@ ID は Riot（Data Dragon）の値（`runes_id_version = 2`）。`runes_id_versi
 | created_at | timestamptz | NOT NULL、既定 now() | |
 
 - インデックス: `(detail_version)`、`(timeline_fetched_at)`（補完対象の抽出用。部分インデックスで可）、`(game_end_at) WHERE rank_tier IS NOT NULL`（上限を超えた試合の削除用）
-- `rank_tier` を持つ行がクローラーの試合。上限（10万試合）の管理は関数 `prune_crawler_matches` で行う（下記）
+- `rank_tier` を持つ行がクローラーの試合。上限（4万試合）の管理は関数 `prune_crawler_matches` で行う（下記）
 
 ### match_bans（試合の BAN）
 
