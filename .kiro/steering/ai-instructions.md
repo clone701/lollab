@@ -42,6 +42,7 @@
 - ブランチ: `develop` から `feature/*`（機能）、`fix/*`（バグ修正）、`docs/*`・`chore/*` を作成。急ぎの修正（`hotfix/*`）も `develop` から作成する
 - マージ: 作業ブランチ → `develop` → `main` を PR 経由で行う。`main`・`develop` への直接 push 禁止（Rulesets で PR 必須・CI 成功必須。`main` への push ではテストせずデプロイだけが動くため、`develop` を経由しないとテストされないコードがデプロイされる）
 - コミットメッセージ: `<type>(<scope>): <日本語の要約>`。type は feat / fix / docs / style / refactor / perf / test / chore
+- Issue を解決するコミットは、本文（2行目以降）に `Closes #番号` を書く。`main` に入った時点で Issue が自動で閉じる（`develop` 向け PR の本文の `Closes` は効かないため）
 
 ## PR と Issue（GitHub CLI `gh`）
 
