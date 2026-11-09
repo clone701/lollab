@@ -1,0 +1,56 @@
+'use client';
+
+interface RuneButtonFaceProps {
+  icon: string;
+  name: string;
+  selected: boolean;
+  disabled: boolean;
+  size: 'sm' | 'md';
+  ariaLabel: string;
+  /** Tooltip の span に包まれているとき true。幅を span に合わせ、無効のボタンはマウスを素通しさせる */
+  isWrapped: boolean;
+  onClick: () => void;
+}
+
+// ルーンのボタン本体（見た目だけ）
+export function RuneButtonFace({
+  icon,
+  name,
+  selected,
+  disabled,
+  size,
+  ariaLabel,
+  isWrapped,
+  onClick,
+}: RuneButtonFaceProps) {
+  const imgSize = size === 'sm' ? 'w-8 h-8' : 'w-10 h-10';
+  const imgPx = size === 'sm' ? 32 : 40;
+  // 無効のボタンはマウスのイベントを出さないため、包んだ span に受けさせる
+  const wrapped = isWrapped ? 'w-full ' : '';
+  const passThrough = disabled && isWrapped ? 'pointer-events-none ' : '';
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`${wrapped}${passThrough}p-1 rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+        selected
+          ? 'ring-2 ring-accent bg-accent/15'
+          : disabled
+            ? 'opacity-50 cursor-not-allowed bg-surface-2'
+            : 'hover:ring-2 hover:ring-accent/60 bg-surface-2'
+      }`}
+      aria-label={ariaLabel}
+      aria-pressed={selected}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={icon}
+        alt={name}
+        className={imgSize}
+        width={imgPx}
+        height={imgPx}
+        loading="lazy"
+      />
+    </button>
+  );
+}

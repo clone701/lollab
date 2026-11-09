@@ -1,5 +1,9 @@
 'use client';
 
+import { RuneTooltipContent } from '@/components/game-data';
+import { Tooltip } from '@/components/ui/tooltip';
+import { RuneButtonFace } from './RuneButtonFace';
+
 interface RuneButtonProps {
   id: number;
   icon: string;
@@ -8,43 +12,31 @@ interface RuneButtonProps {
   disabled: boolean;
   size?: 'sm' | 'md';
   ariaLabel: string;
+  /** true のとき、マウスを乗せると名前と説明を出す（閲覧モード用） */
+  tooltip?: boolean;
   onClick: () => void;
 }
 
 export function RuneButton({
-  icon,
-  name,
-  selected,
-  disabled,
+  id,
+  tooltip = false,
   size = 'md',
-  ariaLabel,
-  onClick,
+  ...faceProps
 }: RuneButtonProps) {
-  const imgSize = size === 'sm' ? 'w-8 h-8' : 'w-10 h-10';
-  const imgPx = size === 'sm' ? 32 : 40;
+  const face = (
+    <RuneButtonFace {...faceProps} size={size} isWrapped={tooltip} />
+  );
+  if (!tooltip) return face;
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`p-1 rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-        selected
-          ? 'ring-2 ring-accent bg-accent/15'
-          : disabled
-            ? 'opacity-50 cursor-not-allowed bg-surface-2'
-            : 'hover:ring-2 hover:ring-accent/60 bg-surface-2'
-      }`}
-      aria-label={ariaLabel}
-      aria-pressed={selected}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={icon}
-        alt={name}
-        className={imgSize}
-        width={imgPx}
-        height={imgPx}
-        loading="lazy"
-      />
-    </button>
+    <Tooltip
+      trigger={face}
+      content={
+        <RuneTooltipContent
+          id={id}
+          label={faceProps.name}
+          iconSrc={faceProps.icon}
+        />
+      }
+    />
   );
 }

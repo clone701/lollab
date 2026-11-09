@@ -1,4 +1,4 @@
-import { BuildIcon } from '@/components/champion-build';
+import { RuneTooltipIcon, SpellTooltipIcon } from '@/components/game-data';
 import { getRuneIcon, getSpellIcon } from '@/lib/champion-build';
 import type { ParticipantDetail } from '@/types/matchDetail';
 
@@ -16,7 +16,8 @@ export function SpellRuneCell({ participant: p }: SpellRuneCellProps) {
     <div className="flex gap-0.5">
       <div className="flex flex-col gap-0.5">
         {spells.map(({ id, icon }) => (
-          <BuildIcon
+          <SpellTooltipIcon
+            id={id}
             key={id}
             src={icon?.src ?? null}
             label={icon?.name ?? `スペル${id}`}
@@ -26,7 +27,8 @@ export function SpellRuneCell({ participant: p }: SpellRuneCellProps) {
       </div>
       <div className="flex flex-col gap-0.5">
         {runes.map(({ id, icon }) => (
-          <BuildIcon
+          <RuneTooltipIcon
+            id={id}
             key={id}
             src={icon?.src ?? null}
             label={icon?.name ?? `ルーン${id}`}

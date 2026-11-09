@@ -1,12 +1,16 @@
+import { SkillSlotIcon } from '@/components/game-data';
 import { SKILL_LABELS } from '@/lib/champion-build';
+import type { SkillInfo } from '@/lib/game-data';
 
 interface SkillLevelListProps {
   /** レベルごとに上げたスキル。1=Q, 2=W, 3=E, 4=R */
   skillOrder: number[];
+  /** マスの画像に使う。読み込み前・失敗時は null（文字だけを出す） */
+  skills: SkillInfo[] | null;
 }
 
 // レベルごとの Q/W/E/R。R は強調する
-export function SkillLevelList({ skillOrder }: SkillLevelListProps) {
+export function SkillLevelList({ skillOrder, skills }: SkillLevelListProps) {
   return (
     <ol className="flex flex-wrap gap-1">
       {skillOrder.map((slot, i) => {
@@ -23,7 +27,7 @@ export function SkillLevelList({ skillOrder }: SkillLevelListProps) {
                   : 'bg-surface text-fg'
               }`}
             >
-              {label}
+              <SkillSlotIcon slot={slot} skills={skills} size={28} />
             </span>
           </li>
         );

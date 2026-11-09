@@ -20,6 +20,15 @@
   --color-win: #34d399;
   --color-loss: #f87171;
   --color-highlight: #fbbf24;
+  /* ツールチップの説明文の色 */
+  --color-game-physical: #fb923c;
+  --color-game-magic: #818cf8;
+  --color-game-heal: #4ade80;
+  --color-game-shield: #7dd3fc;
+  --color-game-status: #c084fc;
+  --color-game-mana: #93c5fd;
+  --color-game-keyword: #48c4b7;
+  --color-game-number: #fde68a;
   /* 試合のブルーチーム・レッドチーム（文字と比較バーの両方に使う） */
   --color-team-blue: #6b9cf0;
   --color-team-red: #f06a7e;

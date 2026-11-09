@@ -29,6 +29,7 @@ export function ShardsSection({
                 name={shard.name}
                 selected={shards[slot] === shard.id}
                 disabled={disabled}
+                tooltip={disabled}
                 size="sm"
                 ariaLabel={`${slotLabels[slot]}シャード: ${shard.name}`}
                 onClick={() => onShardChange(slot, shard.id)}

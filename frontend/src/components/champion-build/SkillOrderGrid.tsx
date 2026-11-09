@@ -1,15 +1,19 @@
+import { SkillSlotIcon } from '@/components/game-data';
 import {
   SKILL_LABELS,
   SKILL_ORDER_LEVELS,
   toSkillGrid,
 } from '@/lib/champion-build';
+import type { SkillInfo } from '@/lib/game-data';
 
 interface SkillOrderGridProps {
   skillKey: number[];
+  /** 行の見出しの画像に使う。読み込み前・失敗時は null（文字だけを出す） */
+  skills: SkillInfo[] | null;
 }
 
 // 行: Q/W/E/R、列: レベル1〜15。そのレベルで上げるスキルのマスを塗る
-export function SkillOrderGrid({ skillKey }: SkillOrderGridProps) {
+export function SkillOrderGrid({ skillKey, skills }: SkillOrderGridProps) {
   const grid = toSkillGrid(skillKey);
   const levels = Array.from({ length: SKILL_ORDER_LEVELS }, (_, i) => i + 1);
   return (
@@ -28,7 +32,9 @@ export function SkillOrderGrid({ skillKey }: SkillOrderGridProps) {
         <tbody>
           {SKILL_LABELS.map((label, row) => (
             <tr key={label}>
-              <th className="pr-1 font-semibold text-fg">{label}</th>
+              <th className="pr-1 font-semibold text-fg">
+                <SkillSlotIcon slot={row + 1} skills={skills} size={24} />
+              </th>
               {grid[row].map((isActive, col) => (
                 <td
                   key={col}
