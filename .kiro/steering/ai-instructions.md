@@ -47,6 +47,8 @@
 
 - **AI は PR をマージしてはいけない**（`gh pr merge`、GitHub API でのマージ、`main`・`develop` への直接 push を含む）。マージは必ずユーザーが行う
 - PR の作成（`gh pr create`）は、ユーザーの承認を得てから行う。本文は日本語で、変更点・確認結果を書き、関係する Issue があれば `Closes #番号` を入れる
+- コミット・push・PR の作成は1つずつ順番に実行する（同時に実行しない。コミットのフックが終わる前に push すると、コミット前の状態が送られる）
+- push の後は `git rev-parse HEAD` と `git ls-remote --heads origin <ブランチ>` を比べ、GitHub に正しいコミットが載ったことを確かめてから PR を作る（違えばもう一度 push する。#118）
 - タスクの管理は GitHub Issues で行う。後回しにする作業は Issue にし、着手・完了時に Issue のチェックリストを更新する。Issue を閉じるのは、作業の完了をユーザーが確認してから
 - Issue・PR の本文にキー・トークン・パスワードなどの秘密情報を書かない（公開リポジトリのため誰でも読める）
 - `gh` が PATH にない場合は、PowerShell で `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')` を実行してから使う
