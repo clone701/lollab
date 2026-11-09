@@ -17,7 +17,7 @@
   - isOpen、onConfirm、onCancelプロップを受け取る
   - _要件: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
 
-- [ ] 3. NoteFormコンポーネントのモード対応拡張
+- [x] 3. NoteFormコンポーネントのモード対応拡張
   - [x] 3.1 NoteFormPropsにmode、initialData、onCancel、onEdit、onDeleteを追加
     - mode: 'create' | 'view' | 'edit'
     - initialData?: ChampionNote
@@ -40,7 +40,7 @@
     - プリセット名、ルーン、スペル、初期アイテム、メモを設定
     - _要件: 2.7, 2.8, 2.9, 2.10, 2.11, 3.2_
 
-- [ ] 4. Supabase API関数の実装
+- [x] 4. Supabase API関数の実装
   - [x] 4.1 fetchNoteById関数を実装
     - `frontend/src/lib/api/notes.ts`にfetchNoteById(noteId: string, userId: string)を追加
     - Supabaseから単一ノートを取得、user_idでフィルタリング
@@ -59,7 +59,7 @@
 - [x] 5. チェックポイント - API関数のテスト
   - 全てのAPI関数が正常に動作することを確認してください。ユーザーに質問があれば尋ねてください。
 
-- [ ] 6. NotesPageの状態管理実装
+- [x] 6. NotesPageの状態管理実装
   - [x] 6.1 NotesPageStateの型定義を追加
     - viewMode: 'list' | 'view' | 'edit'
     - selectedNoteId: string | null
@@ -76,7 +76,7 @@
     - ローディング状態とエラーハンドリングを実装
     - _要件: 1.1, 10.1, 10.2, 10.3, 10.4_
 
-- [ ] 7. 閲覧モードUIの実装
+- [x] 7. 閲覧モードUIの実装
   - [x] 7.1 閲覧モード表示ロジックを実装
     - viewMode='view'の場合、NoteForm mode='view'を表示
     - 一覧へ戻るボタン（左矢印アイコン + テキスト）を表示
@@ -95,7 +95,7 @@
     - viewMode='list'に設定、selectedNote=nullに設定
     - _要件: 8.1, 8.3_
 
-- [ ] 8. 編集モードUIの実装
+- [x] 8. 編集モードUIの実装
   - [x] 8.1 編集モード表示ロジックを実装
     - viewMode='edit'の場合、NoteForm mode='edit'を表示
     - 既存データをinitialDataとして渡す
@@ -112,7 +112,7 @@
     - 編集内容を破棄、viewMode='view'に戻る
     - _要件: 5.1, 5.2, 5.3_
 
-- [ ] 9. 削除機能の実装
+- [x] 9. 削除機能の実装
   - [x] 9.1 削除確認ダイアログの確認ボタンハンドラを実装
     - deleteNoteでノートを削除
     - 成功時: トースト通知表示、viewMode='list'に設定
@@ -123,7 +123,7 @@
     - ダイアログを閉じる
     - _要件: 6.5_
 
-- [ ] 10. トースト通知の実装
+- [x] 10. トースト通知の実装
   - [x] 10.1 トースト通知コンポーネントまたはライブラリを統合
     - 成功メッセージ（緑背景）と失敗メッセージ（赤背景）をサポート
     - 3秒間表示後、自動的に閉じる
@@ -160,7 +160,7 @@
   - useMemoで計算結果をメモ化
   - _要件: 14.4_
 
-- [ ] 15. 統合テストの作成
+- [ ] 15. 統合テストの作成（未実装。#131）
   - ノート閲覧、編集、削除の統合テストを作成
   - エラーケースのテストを作成
   - _要件: 4.1, 4.2, 4.3, 7.1, 10.1, 10.2, 10.3, 10.4, 10.5_

@@ -12,7 +12,7 @@ LoL Labアプリケーション全体で再利用される基本的なUIコン�
   - ItemBtnClassOptionsインターフェースを定義（active?: boolean, disabled?: boolean, extra?: string）
   - _要件: 5.1, 5.2, 5.3, 5.4, 5.5, 7.1, 7.2, 7.3_
 
-- [ ] 2. スタイル定数の実装
+- [x] 2. スタイル定数の実装
   - [x] 2.1 アイテムボタンスタイル定数を実装
     - ITEM_BTN_BASE定数を定義（基本スタイル）
     - ITEM_BTN_ACTIVE定数を定義（ピンク系カラー、選択状態）
