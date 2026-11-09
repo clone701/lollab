@@ -75,7 +75,7 @@ python backend/scripts/build_skill_values.py D:\dev\16.21.1 --cache D:\dev\cdrag
 
 - 上以外の部品が1つでもあれば、その値は解けない
 - `@SlowAmount*100@` のような式は、名前の後ろの `*数`・`/数`・`+数`・`-数` を1つだけ計算する
-- 名前は大文字・小文字を区別せずに、`mSpellCalculations` → `DataValues` の順で探す
+- 名前は大文字・小文字を区別せずに、`mSpellCalculations` → `DataValues` → `EffectNAmount`（`mEffectAmount[N-1].value[1..maxrank]`。全ランク 0 なら解けない）の順で探す
 - `@SpellModifierDescriptionAppend@` など、名前が `SpellModifier` で始まるものは空にする
 
 ### ステータス名（`stats.py`）
