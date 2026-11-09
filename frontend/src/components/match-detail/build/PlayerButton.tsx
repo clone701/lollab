@@ -1,4 +1,5 @@
 import { BuildIcon } from '@/components/champion-build';
+import { getChampionLabel } from '@/lib/champion-stats';
 import { getDisplayName, toChampionId } from '@/lib/match-detail';
 import type { ParticipantDetail } from '@/types/matchDetail';
 
@@ -13,11 +14,12 @@ export function PlayerButton({
   isSelected,
   onSelect,
 }: PlayerButtonProps) {
+  const label = getChampionLabel(p.champion_name);
   return (
     <button
       type="button"
       aria-pressed={isSelected}
-      aria-label={`${p.champion_name}（${getDisplayName(p)}）`}
+      aria-label={`${label}（${getDisplayName(p)}）`}
       onClick={() => onSelect(p.puuid)}
       className={`rounded-full p-0.5 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
         isSelected
@@ -27,7 +29,7 @@ export function PlayerButton({
     >
       <BuildIcon
         src={`/images/champion/${toChampionId(p.champion_name)}.png`}
-        label={p.champion_name}
+        label={label}
         size={36}
         className="rounded-full"
       />
