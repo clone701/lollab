@@ -1,0 +1,7 @@
+{
+ "entries": {
+  "spell_gangplankqwrapper_tooltip": "{{Spell_GangplankQWrapper_Tooltip_@GameModeInteger@}}",
+  "spell_gangplankqwrapper_tooltip_1": "弾丸を発射し<physicalDamage>@ShotDamage@の物理ダメージ</physicalDamage>を与える。このスキルで対象を倒すと、追加で@Effect2Amount@ゴールドと@Effect5Amount@シルバーサーペントを獲得する。<br><br>シルバーサーペントはショップで<spellName>「{{Spell_GangplankR_Name}}」</spellName>をアップグレードする際に使用する。",
+  "spell_gangplankr_name": "一斉砲撃"
+ }
+}

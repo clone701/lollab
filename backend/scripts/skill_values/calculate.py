@@ -1,5 +1,6 @@
 """スペルの GameCalculation を、ランクごと・レベルごとの値にする。"""
 
+import re
 from collections.abc import Callable, Mapping
 from typing import Any
 
@@ -17,6 +18,9 @@ from .values import (
 
 Part = Mapping[str, Any]
 MAX_NESTING = 20
+# 古い形式の `@Effect2Amount@`。N は 1〜11（mEffectAmount[N-1]）
+EFFECT_AMOUNT = re.compile(r"^effect(\d+)amount$")
+MAX_EFFECT_NUMBER = 11
 
 
 class Calculator:
@@ -33,6 +37,7 @@ class Calculator:
             str(name).lower(): calc
             for name, calc in (spell.get("mSpellCalculations") or {}).items()
         }
+        self._effect_amounts = spell.get("mEffectAmount") or []
         self._depth = 0
         self._handlers: dict[str, Callable[[Part], Value]] = {
             "NamedDataValueCalculationPart": self._named,
@@ -50,13 +55,28 @@ class Calculator:
         }
 
     def value(self, name: str) -> Value:
-        """名前の値。mSpellCalculations → DataValues の順に探す。"""
+        """名前の値。mSpellCalculations → DataValues → EffectNAmount の順に探す。"""
         key = name.lower()
         if key in self._calcs:
             return self._guarded(self._calculation, self._calcs[key])
         if key in self._data:
             return Value(self._data_series(key))
+        effect = EFFECT_AMOUNT.match(key)
+        if effect and 1 <= int(effect.group(1)) <= MAX_EFFECT_NUMBER:
+            return Value(self._effect_series(name, int(effect.group(1))))
         raise Unsolvable(f"名前が見つからない: {name}")
+
+    def _effect_series(self, name: str, number: int) -> Series:
+        """mEffectAmount[N-1].value[1..maxrank]。要素・値が無い、全ランク 0 は解けない。"""
+        if number > len(self._effect_amounts):
+            raise Unsolvable(f"mEffectAmount に無い: {name}")
+        values = (self._effect_amounts[number - 1] or {}).get("value") or []
+        if len(values) < self._max_rank + 1:
+            raise Unsolvable(f"mEffectAmount の値が無い: {name}")
+        series = tuple(float(v) for v in values[1 : self._max_rank + 1])
+        if not any(series):
+            raise Unsolvable(f"mEffectAmount が全ランク 0: {name}")
+        return Series(series)
 
     def _guarded(self, func: Callable[[Part], Value], node: Part) -> Value:
         """入れ子が深すぎる（循環している）計算を止める。"""

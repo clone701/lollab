@@ -1,0 +1,241 @@
+{
+ "Characters/Gangplank/Spells/GangplankQWrapperAbility/GangplankQWrapper": {
+  "mSpell": {
+   "mEffectAmount": [
+    {
+     "value": [
+      10.0,
+      10.0,
+      40.0,
+      70.0,
+      100.0,
+      130.0,
+      145.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    {
+     "value": [
+      3.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0,
+      7.0,
+      8.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    {
+     "__type": "SpellEffectAmount"
+    },
+    {
+     "value": [
+      500.0,
+      500.0,
+      500.0,
+      500.0,
+      500.0,
+      500.0,
+      500.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    {
+     "value": [
+      4.0,
+      4.0,
+      5.0,
+      6.0,
+      7.0,
+      8.0,
+      9.0
+     ],
+     "__type": "SpellEffectAmount"
+    },
+    {
+     "__type": "SpellEffectAmount"
+    },
+    {
+     "__type": "SpellEffectAmount"
+    },
+    {
+     "__type": "SpellEffectAmount"
+    },
+    {
+     "__type": "SpellEffectAmount"
+    },
+    {
+     "__type": "SpellEffectAmount"
+    }
+   ],
+   "DataValues": [
+    {
+     "name": "SpellDamage",
+     "values": [
+      -20.0,
+      10.0,
+      40.0,
+      70.0,
+      100.0,
+      130.0,
+      160.0
+     ],
+     "__type": "SpellDataValue"
+    },
+    {
+     "name": "ADRatio",
+     "values": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "__type": "SpellDataValue"
+    },
+    {
+     "name": "CherryRatio",
+     "values": [
+      0.07000000029802322,
+      0.07000000029802322,
+      0.07000000029802322,
+      0.07000000029802322,
+      0.07000000029802322,
+      0.07000000029802322,
+      0.07000000029802322
+     ],
+     "__type": "SpellDataValue"
+    },
+    {
+     "name": "GameModeInteger",
+     "values": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "__type": "SpellDataValue"
+    },
+    {
+     "name": "CritDamageMod",
+     "values": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "__type": "SpellDataValue"
+    },
+    {
+     "name": "GoldProc",
+     "values": [
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0,
+      7.0,
+      8.0
+     ],
+     "__type": "SpellDataValue"
+    },
+    {
+     "name": "SSProc",
+     "values": [
+      3.0,
+      4.0,
+      5.0,
+      6.0,
+      7.0,
+      8.0,
+      9.0
+     ],
+     "__type": "SpellDataValue"
+    },
+    {
+     "name": "ManaRefundPercent",
+     "__type": "SpellDataValue"
+    },
+    {
+     "name": "PlunderThreshold",
+     "values": [
+      500.0,
+      500.0,
+      500.0,
+      500.0,
+      500.0,
+      500.0,
+      500.0
+     ],
+     "__type": "SpellDataValue"
+    }
+   ],
+   "mSpellCalculations": {
+    "ShotDamage": {
+     "mFormulaParts": [
+      {
+       "mDataValue": "SpellDamage",
+       "__type": "NamedDataValueCalculationPart"
+      },
+      {
+       "mStat": 2,
+       "mDataValue": "ADRatio",
+       "__type": "StatByNamedDataValueCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    },
+    "ShotCrit": {
+     "mMultiplier": {
+      "mSubparts": [
+       {
+        "mNumber": 1.0,
+        "__type": "NumberCalculationPart"
+       },
+       {
+        "mPart1": {
+         "mDataValue": "CritDamageMod",
+         "__type": "NamedDataValueCalculationPart"
+        },
+        "mPart2": {
+         "mSubparts": [
+          {
+           "mStat": 9,
+           "mCoefficient": 1.0,
+           "__type": "StatByCoefficientCalculationPart"
+          },
+          {
+           "mNumber": -1.0,
+           "__type": "NumberCalculationPart"
+          }
+         ],
+         "__type": "SumOfSubPartsCalculationPart"
+        },
+        "__type": "ProductOfSubPartsCalculationPart"
+       }
+      ],
+      "__type": "SumOfSubPartsCalculationPart"
+     },
+     "mModifiedGameCalculation": "ShotDamage",
+     "__type": "GameCalculationModified"
+    }
+   },
+   "mClientData": {
+    "mTooltipData": {
+     "mLocKeys": {
+      "keyTooltip": "Spell_GangplankQWrapper_Tooltip"
+     }
+    }
+   }
+  }
+ }
+}
