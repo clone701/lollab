@@ -15,10 +15,10 @@ describe('BuildTab: プレイヤーの切り替え', () => {
   it('初期表示は対象プレイヤーのビルド', () => {
     renderBuild();
     expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(
-      'Player1Aatrox'
+      'Player1エイトロックス'
     );
     expect(
-      screen.getByRole('button', { name: 'Aatrox（Player1）' })
+      screen.getByRole('button', { name: 'エイトロックス（Player1）' })
     ).toHaveAttribute('aria-pressed', 'true');
   });
 
@@ -26,16 +26,16 @@ describe('BuildTab: プレイヤーの切り替え', () => {
     renderBuild();
     expect(screen.getAllByRole('button')).toHaveLength(10);
     await userEvent.click(
-      screen.getByRole('button', { name: 'Jinx（Player4）' })
+      screen.getByRole('button', { name: 'ジンクス（Player4）' })
     );
     expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(
-      'Player4Jinx'
+      'Player4ジンクス'
     );
     expect(
-      screen.getByRole('button', { name: 'Jinx（Player4）' })
+      screen.getByRole('button', { name: 'ジンクス（Player4）' })
     ).toHaveAttribute('aria-pressed', 'true');
     expect(
-      screen.getByRole('button', { name: 'Aatrox（Player1）' })
+      screen.getByRole('button', { name: 'エイトロックス（Player1）' })
     ).toHaveAttribute('aria-pressed', 'false');
   });
 
@@ -79,7 +79,7 @@ describe('BuildTab: アイテムとスキル', () => {
     expect(screen.getByAltText('Conqueror')).toBeInTheDocument();
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'LeeSin（Player2）' })
+      screen.getByRole('button', { name: 'リー・シン（Player2）' })
     );
     expect(screen.queryByText('データなし')).not.toBeInTheDocument();
   });

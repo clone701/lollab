@@ -73,8 +73,9 @@ describe('MatchCard: 表示項目', () => {
 
   it('ウーコンは画像の ID（Wukong）で出す', () => {
     const card = renderCard({ championName: 'MonkeyKing' });
-    const icon = within(card).getAllByAltText('MonkeyKing')[0];
+    const icon = within(card).getAllByAltText('ウーコン')[0];
     expect(icon.getAttribute('src')).toContain('Wukong');
+    expect(within(card).queryByAltText('MonkeyKing')).toBeNull();
   });
 });
 
@@ -93,6 +94,17 @@ describe('MatchCard: 参加者', () => {
         within(card).getByText(p.riotIdGameName ?? '')
       ).toBeInTheDocument();
     }
+  });
+
+  it('参加者のチャンピオンも日本語名で出し、画像は Wukong.png のまま', () => {
+    const participants = MOCK_PARTICIPANTS.map((p, i) =>
+      i === 1 ? { ...p, championName: 'MonkeyKing' } : p
+    );
+    const card = renderCard({ participants });
+    const row = within(card).getByText('Member2').closest('li');
+    const icon = within(row as HTMLElement).getByAltText('ウーコン');
+    expect(icon.getAttribute('src')).toContain('/images/champion/Wukong.png');
+    expect(within(card).queryByAltText('MonkeyKing')).toBeNull();
   });
 
   it('名前は検索結果へのリンクで、title に全名を持つ', () => {
