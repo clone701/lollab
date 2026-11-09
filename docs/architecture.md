@@ -182,7 +182,7 @@ aws codebuild start-build --profile lollab --region ap-northeast-1 --project-nam
 - 結果は起動ごとに1行の JSON で CloudWatch Logs の `/aws/lambda/lollab-crawler` に出る（`stop_reason`・`matches_saved`・`riot_requests` など）
 - Riot API の上限は関数ごとに分け合う（`lollab-api` 6:1,30:120、`lollab-backfill` 4:1,20:120、`lollab-crawler` 8:1,45:120。`app.yaml` のパラメータ）
 - 停止・再開: bootstrap のパラメータ `AppCrawlerEnabled=DISABLED`（再開は `ENABLED`）で bootstrap を更新し、CodeBuild を起動する。停止中は起動されない
-- DB に残すクローラーの試合は直近10万件（検索済みサモナーが参加した試合は除く）。超えた分は起動ごとに古い順に削除される
+- DB に残すクローラーの試合は直近4万件（検索済みサモナーが参加した試合は除く）。超えた分は起動ごとに古い順に削除される。1試合 約9.7KB（DB）で、Supabase の無料枠（500MB）に収まる量（2026-11 の実測）
 
 ### DB のマイグレーション
 
@@ -203,5 +203,5 @@ aws codebuild start-build --profile lollab --region ap-northeast-1 --project-nam
 - 商用リリースまで AWS の Always Free の範囲で動かす（月の予算上限は500円）
 - 使わないもの: VPC・NAT Gateway・常時起動のサーバー・Provisioned Concurrency・AWS WAF・Secrets Manager・CloudFront KeyValueStore・KMS のカスタマー管理キー・CloudFront の標準ログ
 - 通知: AWS Budgets（`lollab-zero-spend` は1セントでも費用が出たら、`My Monthly Cost Budget` は月 $1）と、請求設定の「無料利用枠の使用アラート」
-- 主な無料枠: Lambda（月100万リクエスト・40万 GB 秒）、CloudFront（月1TB・1,000万リクエスト）、CodeBuild（月100分）、CloudWatch Logs（5GB）。S3 は無料枠の対象外の部分があり、クローラーの生データ（1試合約70KB、まとめた束で保存）が10万試合分たまると約7GB・月約25円になる（予算内として受け入れている。期限での削除はしていない）
+- 主な無料枠: Lambda（月100万リクエスト・40万 GB 秒）、CloudFront（月1TB・1,000万リクエスト）、CodeBuild（月100分）、CloudWatch Logs（5GB）。S3 は無料枠の対象外の部分があり、クローラーの生データ（1試合約70KB、まとめた束で保存）は期限で消さないため増え続け、10万試合分で約7GB・月約25円になる（予算内として受け入れている。期限での削除はしていない）
 - ログの保存は14日。S3 `lollab-site` は CodeBuild が今回と直前のリリース以外を消す。成果物バケットの Lambda の ZIP（`lambda/`）は CodeBuild が今回と直前以外を消し、テンプレート（`templates/`）は30日で自動削除

@@ -3,7 +3,7 @@
 ## 概要
 
 EventBridge Scheduler が30分ごとに Lambda `lollab-crawler` を起動する。クローラーは JP のエメラルド以上のプレイヤー（収集元プレイヤー）を順に選び、直近のソロランクの試合のうち未保存のものを、検索・Backfill と同じ取得処理（試合詳細 + タイムライン）で保存する。
-試合と参加者にはランク帯を記録し、生データは1回の起動分を1つのファイルにまとめて S3 に置く。最後に、上限（10万試合）を超えたクローラーの試合を古い順に削除する。
+試合と参加者にはランク帯を記録し、生データは1回の起動分を1つのファイルにまとめて S3 に置く。最後に、上限（4万試合）を超えたクローラーの試合を古い順に削除する。
 
 使うテーブル: `crawler_seeds`（新規）、`matches`・`match_participants`（`rank_tier` 列を追加）、`match_bans`、`failed_matches`、`summoners`、`worker_leases`。定義は [database Spec](../database/design.md) を参照。
 試合データの変換・保存は [summoner-search-api の design.md](../summoner-search-api/design.md)「試合データの取り込み」をそのまま使う。
@@ -150,7 +150,7 @@ async def pick_seeds(limit: int) -> list[CrawlerSeed]
 async def collect_seed(region: str, seed: CrawlerSeed, archive: RawArchive) -> CollectResult  # 429 は RiotRateLimitError
 
 # services/crawler/prune.py
-async def prune(max_matches: int = 100_000, batch: int = 2_000) -> int  # 削除した試合数
+async def prune(max_matches: int = 40_000, batch: int = 2_000) -> int  # 削除した試合数（1試合 約9.7KB の実測から、無料枠 500MB に収まる上限）
 
 # adapters/crawler_seed_store.py
 async def get_last_refreshed_at() -> datetime | None
