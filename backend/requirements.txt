@@ -4,7 +4,7 @@ requests
 pydantic-settings
 httpx==0.28.1
 supabase==2.34.0
-hypothesis==6.155.1
+hypothesis==6.170.14
 
 # AWS Lambda（boto3 は Lambda のランタイムにも含まれる。ローカル・テスト用に入れる）
 mangum
