@@ -12,18 +12,18 @@ export function ComparisonBar({ label, blue, red }: ComparisonBarProps) {
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center justify-between text-xs leading-4">
-        <span className="font-medium text-accent">{formatNumber(blue)}</span>
+        <span className="font-medium text-team-blue">{formatNumber(blue)}</span>
         <span className="text-fg-muted">{label}</span>
-        <span className="font-medium text-danger-fg">{formatNumber(red)}</span>
+        <span className="font-medium text-team-red">{formatNumber(red)}</span>
       </div>
       <div
         role="img"
         aria-label={`${label} ブルー ${formatNumber(blue)} 対 レッド ${formatNumber(red)}`}
-        className="flex h-1.5 overflow-hidden rounded bg-danger"
+        className="flex h-1.5 overflow-hidden rounded bg-team-red"
       >
         <div
           data-testid="comparison-blue"
-          className="h-full bg-action"
+          className="h-full bg-team-blue"
           style={{ width: `${bluePercent}%` }}
         />
       </div>
