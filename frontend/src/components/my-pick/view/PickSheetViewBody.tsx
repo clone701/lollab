@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import { deletePickSheet } from '@/adapters/supabase';
 import DeleteConfirmationDialog from '@/components/notes/DeleteConfirmationDialog';
-import { CHAMPIONS_BY_READING, filterEnemies, toPickMap } from '@/lib/my-pick';
+import { CHAMPIONS_BY_READING } from '@/lib/champion-order';
+import { filterEnemies, toPickMap } from '@/lib/my-pick';
 import type { PickSheetDetail } from '@/types/myPick';
 import { ChampionSearchInput } from '../ChampionSearchInput';
 import type { ShowToast } from '../types';

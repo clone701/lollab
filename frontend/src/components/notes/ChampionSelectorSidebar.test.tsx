@@ -183,4 +183,20 @@ describe('ChampionSelectorSidebar - 検索機能', () => {
     buttons = within(championListSection!).getAllByRole('button');
     expect(buttons.length).toBeGreaterThan(100); // 全チャンピオンが再表示
   });
+
+  test('一覧は五十音順で、先頭はアーゴット、次はアーリになる', () => {
+    render(
+      <ChampionSelectorSidebar
+        myChampionId={null}
+        enemyChampionId={null}
+        onMyChampionChange={mockOnMyChampionChange}
+        onEnemyChampionChange={mockOnEnemyChampionChange}
+      />
+    );
+
+    const section = screen.getByText('チャンピオン一覧').closest('section');
+    const buttons = within(section!).getAllByRole('button');
+    expect(buttons[0]).toHaveTextContent('アーゴット');
+    expect(buttons[1]).toHaveTextContent('アーリ');
+  });
 });

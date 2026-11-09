@@ -20,6 +20,14 @@ describe('ChampionSearchGrid', () => {
     expect(screen.getByAltText('エイトロックス')).toBeInTheDocument();
   });
 
+  it('一覧は五十音順で、先頭はアーゴット、次はアーリになる', () => {
+    render(<ChampionSearchGrid />);
+    const alts = screen
+      .getAllByRole('img')
+      .map((img) => img.getAttribute('alt'));
+    expect(alts.slice(0, 2)).toEqual(['アーゴット', 'アーリ']);
+  });
+
   it('日本語名で絞り込める', async () => {
     render(<ChampionSearchGrid />);
     await search('エイトロックス');

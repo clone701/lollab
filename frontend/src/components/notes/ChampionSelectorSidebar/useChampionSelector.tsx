@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { CHAMPIONS_BY_READING } from '@/lib/champion-order';
 import { champions } from '@/lib/data/champions';
 import useRecentChampions from '@/lib/hooks/useRecentChampions';
 
@@ -38,9 +39,10 @@ export function useChampionSelector({
     [enemyChampionId]
   );
   const filteredChampions = useMemo(() => {
-    if (!searchQuery) return champions;
+    // 検索あり・なしのどちらも五十音順
+    if (!searchQuery) return CHAMPIONS_BY_READING;
     const q = searchQuery.toLowerCase();
-    return champions.filter(
+    return CHAMPIONS_BY_READING.filter(
       (c) => c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q)
     );
   }, [searchQuery]);
