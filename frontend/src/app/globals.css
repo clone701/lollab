@@ -20,6 +20,9 @@
   --color-win: #34d399;
   --color-loss: #f87171;
   --color-highlight: #fbbf24;
+  /* 試合のブルーチーム・レッドチーム（文字と比較バーの両方に使う） */
+  --color-team-blue: #6b9cf0;
+  --color-team-red: #f06a7e;
 }
 
 html {
