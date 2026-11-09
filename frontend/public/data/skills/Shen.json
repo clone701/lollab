@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": null,
+  "spells": [
+    "<keywordMajor>「スピリットブレード」</keywordMajor>を自身の元へ呼び寄せる。このとき「スピリットブレード」が命中した敵は2秒間、シェンから離れる方向に動く際に25/30/35/40/45%の<status>スロウ効果</status>を受ける。<br><br>さらに、次の3回の通常攻撃が<magicDamage>10〜40</magicDamage> <magicDamage>(+最大体力の2/2.5/3/3.5/4% (+魔力100ごとに1.5%))の魔法ダメージ</magicDamage>を与える。<keywordMajor>「スピリットブレード」</keywordMajor>が敵チャンピオンに命中していた場合は、このダメージが<magicDamage>10〜40</magicDamage> <magicDamage>(+最大体力の5/5.5/6/6.5/7% (+魔力100ごとに2%))の魔法ダメージ</magicDamage>に増加し、これらの通常攻撃の<attackSpeed>攻撃速度が50%</attackSpeed>増加する。",
+    "1.75秒間、<keywordMajor>「スピリットブレード」</keywordMajor>の位置に防御フィールドを展開する。フィールド内にいる味方チャンピオンへの通常攻撃はブロックされる。<br><br>フィールド発生時、範囲内に守るべき味方チャンピオンがいない場合は、最大2秒間まで発動を待機する。",
+    "<spellPassive>自動効果:</spellPassive> <spellName>「護刃招来」</spellName>かこのスキルでダメージを与えると、<keywordMajor>気を30〜50</keywordMajor>回復する。<br><br><spellActive>発動効果:</spellActive> ダッシュしてチャンピオンとジャングルモンスターに1.5秒間の<status>タウント効果</status>を付与し、<physicalDamage>60/85/110/135/160 (+増加体力の11%)の物理ダメージ</physicalDamage>を与える。",
+    "距離に関係なく、味方チャンピオン1体に5秒間、対象の減少体力に応じて<shield>耐久値120/220/320 (+増加体力の15% +魔力の135%)</shield> - <shield>192/352/512 (+増加体力の24% +魔力の216%)のシールド</shield>を付与する(シールドは減少体力60%で最大になる)。3秒間詠唱してから、<keywordMajor>「スピリットブレード」</keywordMajor>と一緒に味方の位置までワープする。"
+  ]
+}

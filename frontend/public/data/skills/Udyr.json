@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": null,
+  "spells": [
+    null,
+    null,
+    "<spellActive>猛進の型:</spellActive> <speed>移動速度が25/31/37/43/49/55% (+増加攻撃力100ごとに5%)</speed>増加し、4秒かけて元に戻る。さらに、通常攻撃を行うと対象までダッシュし、0.75秒間<status>スタン</status>させる(対象ごとにクールダウン6/5.6/5.2/4.8/4.4/4秒)。<br><br><keywordMajor>覚醒:</keywordMajor> 1.5秒間、<status>移動不能効果</status>および<status>行動妨害効果</status>を無視し、追加で<speed>移動速度が30〜40% (+増加攻撃力100ごとに10%)</speed>増加する。",
+    "<spellActive>嵐の型:</spellActive> 4秒間、極寒の嵐に身を包み、周囲の敵に毎秒<magicDamage>20/36/52/68/84/100 (+魔力の35%)の魔法ダメージ</magicDamage>を与え、15/18/21/24/27/30%の<status>スロウ効果</status>を付与する。さらに、この「型」で行う次の2回の通常攻撃が、嵐の範囲内にいる敵に<magicDamage>10〜40 (+魔力の35%)の魔法ダメージ</magicDamage>を与える。<br><br><keywordMajor>覚醒:</keywordMajor> 嵐を解き放ち、自身が最後に通常攻撃を行った敵を追跡させる。嵐はその効果時間をかけて追加で<magicDamage>最大体力の8〜14% (+魔力100ごとに3.5%)にあたる魔法ダメージ</magicDamage>を与え、追加で5%の<status>スロウ効果</status>を付与する。"
+  ]
+}

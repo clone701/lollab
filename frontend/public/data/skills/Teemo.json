@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "ダメージを受けずに1.5秒間じっとしていると、次に動き出すまで<keywordStealth>インビジブル</keywordStealth>状態になる。茂みの中では、移動しても<keywordStealth>インビジブル</keywordStealth>状態が維持される。<br><br>この<keywordStealth>インビジブル</keywordStealth>状態が解除されると、5秒間、<attackSpeed>攻撃速度が20〜80%</attackSpeed>増加する。",
+  "spells": [
+    "ダーツを放ち、対象に2/2.25/2.5/2.75/3秒間の<status>ブラインド効果</status>と、<magicDamage>80/125/170/215/260 (+魔力の70%)の魔法ダメージ</magicDamage>を与える。",
+    "<spellPassive>自動効果:</spellPassive> チャンピオンまたはタワーから5秒間ダメージを受けないでいると、<speed>移動速度が12/16/20/24/28%</speed>増加する。<br><br><spellActive>発動効果:</spellActive> 3秒間全力疾走し、<speed>移動速度が24/32/40/48/56%</speed>増加する。この効果は攻撃を受けても消滅しない。",
+    "<spellPassive>自動効果:</spellPassive> 通常攻撃で毒<OnHit>通常攻撃時効果</OnHit>を付与し、追加で<magicDamage>9/23/37/51/65 (+魔力の30% +増加攻撃力の5%)の魔法ダメージ</magicDamage>を与える。さらに4秒かけて<magicDamage>24/48/72/96/120 (+魔力の40% +増加攻撃力の10%)の魔法ダメージ</magicDamage>を与える。",
+    null
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "通常スキルを3回使用後、自身の次の攻撃に追加魔法ダメージ、さらに最後に発動された歌に応じた追加効果が発生する。",
+  "spells": [
+    "周囲の敵2体(チャンピオンを優先)に<magicDamage>50/85/120/155/190 (+魔力の40%)の魔法ダメージ</magicDamage>を与え、その後新たな<keywordMajor>メロディー</keywordMajor>を開始する。ダメージを与えたチャンピオンの数だけ<keywordMajor>アッチェレランド</keywordMajor>のスタックを獲得する。<br><br><keywordMajor>メロディー:</keywordMajor> 3秒間オーラを獲得する。オーラは味方チャンピオンを強化し、5秒内の次の通常攻撃が追加で<magicDamage>10/15/20/25/30 (+魔力の10%)の魔法ダメージ</magicDamage>を与えるようになる。<br><br><keywordMajor>パワーコード - スタッカート:</keywordMajor> 「パワーコード」が追加ダメージを与える(<magicDamage>合計30〜360 (+魔力の30%)の魔法ダメージ</magicDamage>)。",
+    "<spellPassive>発動効果:</spellPassive> 自身および近くにいる味方チャンピオン1体の<healing>体力を30/45/60/75/90 (+魔力の30%)</healing>回復する(現在体力が最も少ない味方を優先)。その後、新たな<keywordMajor>メロディー</keywordMajor>を始める。<br><br><keywordMajor>メロディー:</keywordMajor> 3秒間オーラを獲得する。オーラは味方チャンピオンに1.5秒間、<shield>耐久値25/45/65/85/105 (+魔力の25%)のシールド</shield>を付与する。<br><br>ダメージを受けた味方を回復するか、シールドで他の味方のダメージを25/45/65/85/105以上防ぐたびに、<keywordMajor>アッチェレランド</keywordMajor>のスタックを1獲得する。<br><br><keywordMajor>パワーコード - ディミヌエンド:</keywordMajor> 「パワーコード」が追加で、対象の与える物理および魔法ダメージを3秒間25% (+魔力100ごとに4%)減少させる。",
+    "<spellPassive>発動効果:</spellPassive> 新たな<keywordMajor>メロディー</keywordMajor>を始め、3秒間<speed>移動速度が20% (+魔力100ごとに2%)</speed>増加する。ダメージを受けなければ、この効果時間は最大7秒間まで延長される。<br><br><keywordMajor>メロディー:</keywordMajor> 3秒間オーラを獲得する。オーラは味方チャンピオンに3秒間、<speed>10/12/14/16/18% (+魔力100ごとに2%)の移動速度</speed>を付与する。<br><br><keywordMajor>パワーコード - テンポ:</keywordMajor> 「パワーコード」が追加で、対象に2秒間50% (+魔力100ごとに4%)の<status>スロウ効果</status>を与える。",
+    "魅惑的な和音を演奏し、敵を1.5秒間<status>スタン</status>させ、<magicDamage>150/250/350 (+魔力の50%)の魔法ダメージ</magicDamage>を与える。"
+  ]
+}

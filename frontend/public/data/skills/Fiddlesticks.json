@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "トリンケットが<keywordMajor>「身代わり人形」</keywordMajor>に置き換わる。敵に見つかると<keywordMajor>「身代わり人形」</keywordMajor>は少しの間フィドルスティックスのふりをする。フィドルスティックスは2秒間動かずにいると、<keywordMajor>「身代わり人形」</keywordMajor>のふりをする。チャンピオンレベル6になると<keywordMajor>「身代わり人形」</keywordMajor>が6秒間周囲のワードを可視化する。",
+  "spells": [
+    "<spellPassive>自動効果:</spellPassive> 非戦闘時で敵に見られていない状態または<keywordMajor>「身代わり人形」</keywordMajor>のふりをしているときにスキルで敵にダメージを与えると、1.2/1.4/1.6/1.8/2秒間<status>フィアー効果</status>を与える。<br><br><spellActive>発動効果:</spellActive> 敵に1.2/1.4/1.6/1.8/2秒間<status>フィアー効果</status>を与えて、<magicDamage>現在体力の4/4.5/5/5.5/6% (+魔力100ごとに3%)の魔法ダメージ</magicDamage>を与える。対象が直前にフィドルスティックスから<status>フィアー効果</status>を受けていた場合は、代わりに<magicDamage>現在体力の8/9/10/11/12% (+魔力100ごとに6%)の魔法ダメージ</magicDamage>を与える。<br>",
+    "詠唱して周囲の敵の魂を吸収し、2秒間、毎秒<magicDamage>60/90/120/150/180 (+魔力の45%)の魔法ダメージ</magicDamage>を与え、最後の瞬間には<magicDamage>減少体力の12/14.5/17/19.5/22%の魔法ダメージ</magicDamage>を追加で与える。自身は<healing>ダメージの25/32.5/40/47.5/55%にあたる体力</healing>を回復する。<br><br>詠唱を中断されずに終えると、残りクールダウンが60%短縮される。<br>",
+    "闇の魔法を解き放ち、<magicDamage>70/105/140/175/210 (+魔力の50%)の魔法ダメージ</magicDamage>を与え、1.25秒間30/35/40/45/50%の<status>スロウ効果</status>を付与する。範囲の中心にいる敵には同じ時間<status>サイレンス効果</status>も与える。",
+    "1.5秒間の詠唱後にテレポートして凶暴なカラスの群れを解き放ち、5秒かけて<magicDamage>750/1250/1750 (+魔力の250%)の魔法ダメージ</magicDamage>を与える。"
+  ]
+}

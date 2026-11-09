@@ -1,0 +1,27 @@
+{
+ "type": "champion",
+ "version": "16.21.1",
+ "data": {
+  "Jinx": {
+   "id": "Jinx",
+   "spells": [
+    {
+     "id": "JinxQ",
+     "maxrank": 5
+    },
+    {
+     "id": "JinxW",
+     "maxrank": 5
+    },
+    {
+     "id": "JinxE",
+     "maxrank": 5
+    },
+    {
+     "id": "JinxR",
+     "maxrank": 3
+    }
+   ]
+  }
+ }
+}

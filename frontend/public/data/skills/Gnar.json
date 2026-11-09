@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": "ナーは戦闘中に「怒り」が溜まっていく。「怒り」が最大の状態でスキルを使用するとメガナーに変身し、ステータスとスキルが変化する。",
+  "spells": [
+    null,
+    null,
+    null,
+    "<keywordMajor>ミニナー自動効果:</keywordMajor> <spellName>「ごきげん」</spellName>から得る<speed>移動速度</speed>が増加する。<br><br><keywordMajor>メガナー: </keywordMajor>周囲の敵を放り投げ、<physicalDamage>200/300/400 (+魔力の100% +増加攻撃力の50%)の物理ダメージ</physicalDamage>を与えて<status>ノックバック</status>させ、1.25/1.5/1.75秒間45%の<status>スロウ効果</status>を付与する。壁に衝突した敵には代わりに<physicalDamage>300/450/600 (+魔力の150% +増加攻撃力の75%)の物理ダメージ</physicalDamage>を与え、<status>スタン</status>させる。"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": null,
+  "spells": [
+    "指定方向にダッシュして、最も近くの敵、ワード、建造物のいずれかを突き、<physicalDamage>70/80/90/100/110 (+増加攻撃力の90/95/100/105/110%)の物理ダメージ</physicalDamage>を与える。この攻撃は<keywordMajor>「急所」</keywordMajor>およびこの一撃で倒せる敵を優先する。<br><br>敵に命中させると、このスキルのクールダウンが50%短縮される。",
+    "0.75秒間、あらゆるダメージ、行動妨害効果、ステータス弱化効果を受け流した後、鋭い突きを行う。突きが最初に命中したチャンピオンに<magicDamage>110/150/190/230/270 (+魔力の100%)の魔法ダメージ</magicDamage>を与え、2秒間<speed>移動速度</speed>を50%、<attackSpeed>攻撃速度を25%</attackSpeed>低下させる<status>スロウ効果</status>を付与する。このスキルで<status>移動不能効果</status>を防いだ場合、突きを当てた敵には<status>スロウ効果</status>の代わりに<status>スタン効果</status>を与える。",
+    "次の2回の通常攻撃は<attackSpeed>攻撃速度が50/60/70/80/90%</attackSpeed>増加する。最初の通常攻撃は1秒間30%の<status>スロウ効果</status>を与える。2回目の攻撃は必ずクリティカルになり、<physicalDamage>160/170/180/190/200%のダメージ</physicalDamage>を与える。",
+    null
+  ]
+}

@@ -1,0 +1,610 @@
+{
+ "Characters/Urgot/Spells/UrgotQAbility/UrgotQ": {
+  "mSpell": {
+   "DataValues": [
+    {
+     "name": "SlowDuration",
+     "values": [
+      1.25,
+      1.25,
+      1.25,
+      1.25,
+      1.25,
+      1.25,
+      1.25
+     ]
+    },
+    {
+     "name": "SlowAmount",
+     "values": [
+      0.4000000059604645,
+      0.44999998807907104,
+      0.5,
+      0.550000011920929,
+      0.6000000238418579,
+      0.6499999761581421,
+      0.699999988079071
+     ]
+    },
+    {
+     "name": "BaseDamage",
+     "values": [
+      -20.0,
+      25.0,
+      70.0,
+      115.0,
+      160.0,
+      205.0,
+      250.0
+     ]
+    },
+    {
+     "name": "ExplosionDelayPostMissile",
+     "values": [
+      0.30000001192092896,
+      0.30000001192092896,
+      0.30000001192092896,
+      0.30000001192092896,
+      0.30000001192092896,
+      0.30000001192092896,
+      0.30000001192092896
+     ]
+    },
+    {
+     "name": "DelayOnMissileLaunch",
+     "values": [
+      0.10000000149011612,
+      0.10000000149011612,
+      0.10000000149011612,
+      0.10000000149011612,
+      0.10000000149011612,
+      0.10000000149011612,
+      0.10000000149011612
+     ]
+    },
+    {
+     "name": "WHalterDuration",
+     "values": [
+      0.30000001192092896,
+      0.30000001192092896,
+      0.30000001192092896,
+      0.30000001192092896,
+      0.30000001192092896,
+      0.30000001192092896,
+      0.30000001192092896
+     ]
+    },
+    {
+     "name": "AoERadius",
+     "values": [
+      210.0,
+      210.0,
+      210.0,
+      210.0,
+      210.0,
+      210.0,
+      210.0
+     ]
+    }
+   ],
+   "mSpellCalculations": {
+    "TotalDamage": {
+     "mFormulaParts": [
+      {
+       "mDataValue": "BaseDamage",
+       "__type": "NamedDataValueCalculationPart"
+      },
+      {
+       "mStat": 2,
+       "mCoefficient": 0.699999988079071,
+       "__type": "StatByCoefficientCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    }
+   },
+   "mClientData": {
+    "mTooltipData": {
+     "mLocKeys": {
+      "keyTooltip": "Spell_UrgotQ_Tooltip"
+     }
+    }
+   }
+  }
+ },
+ "Characters/Urgot/Spells/UrgotWAbility/UrgotW": {
+  "mSpell": {
+   "DataValues": [
+    {
+     "name": "ADRatioTT",
+     "values": [
+      0.16500000655651093,
+      0.20000000298023224,
+      0.23499999940395355,
+      0.27000001072883606,
+      0.3050000071525574,
+      0.3400000035762787,
+      0.375
+     ]
+    },
+    {
+     "name": "OnHitDamageReduction",
+     "values": [
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5
+     ]
+    },
+    {
+     "name": "WAttacksPerSecond",
+     "values": [
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0
+     ]
+    },
+    {
+     "name": "BaseDamage",
+     "values": [
+      12.0,
+      12.0,
+      12.0,
+      12.0,
+      12.0,
+      12.0,
+      12.0
+     ]
+    },
+    {
+     "name": "MinionMinimumDamage",
+     "values": [
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0,
+      50.0
+     ]
+    },
+    {
+     "name": "SlowResistance",
+     "values": [
+      40.0,
+      40.0,
+      40.0,
+      40.0,
+      40.0,
+      40.0,
+      40.0
+     ]
+    },
+    {
+     "name": "Duration",
+     "values": [
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      25000.0,
+      25000.0
+     ]
+    },
+    {
+     "name": "MoveSpeedMod",
+     "values": [
+      125.0,
+      125.0,
+      125.0,
+      125.0,
+      125.0,
+      125.0,
+      125.0
+     ]
+    },
+    {
+     "name": "MoveSpeedDuration",
+     "values": [
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5,
+      0.5
+     ]
+    }
+   ],
+   "mSpellCalculations": {
+    "DamagePerShot": {
+     "tooltipOnly": true,
+     "mFormulaParts": [
+      {
+       "mDataValue": "BaseDamage",
+       "__type": "NamedDataValueCalculationPart"
+      },
+      {
+       "mStat": 2,
+       "mDataValue": "ADRatioTT",
+       "__type": "StatByNamedDataValueCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    },
+    "RangeCheck": {
+     "mFormulaParts": [
+      {
+       "mNumber": 450.0,
+       "__type": "NumberCalculationPart"
+      },
+      {
+       "mStat": 31,
+       "mStatFormula": 2,
+       "mCoefficient": 1.0,
+       "__type": "StatByCoefficientCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    }
+   },
+   "mClientData": {
+    "mTooltipData": {
+     "mLocKeys": {
+      "keyTooltip": "Spell_UrgotW_Tooltip"
+     }
+    }
+   }
+  }
+ },
+ "Characters/Urgot/Spells/UrgotEAbility/UrgotE": {
+  "mSpell": {
+   "DataValues": [
+    {
+     "name": "EShieldDuration",
+     "values": [
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0
+     ]
+    },
+    {
+     "name": "EShieldBaseHealth",
+     "values": [
+      35.0,
+      55.0,
+      75.0,
+      95.0,
+      115.0,
+      135.0,
+      155.0
+     ]
+    },
+    {
+     "name": "EShieldbADRatio",
+     "values": [
+      1.5,
+      1.350000023841858,
+      1.350000023841858,
+      1.350000023841858,
+      1.350000023841858,
+      1.350000023841858,
+      1.350000023841858
+     ]
+    },
+    {
+     "name": "EBaseDamage",
+     "values": [
+      60.0,
+      90.0,
+      120.0,
+      150.0,
+      180.0,
+      210.0,
+      240.0
+     ]
+    },
+    {
+     "name": "EShieldBonusHealthRatio",
+     "values": [
+      0.0,
+      0.13500000536441803,
+      0.13500000536441803,
+      0.13500000536441803,
+      0.13500000536441803,
+      0.13500000536441803,
+      0.13500000536441803
+     ]
+    },
+    {
+     "name": "StunDuration",
+     "values": [
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5
+     ]
+    },
+    {
+     "name": "BaseDashSpeed",
+     "values": [
+      1200.0,
+      1200.0,
+      1200.0,
+      1200.0,
+      1200.0,
+      1200.0,
+      1200.0
+     ]
+    },
+    {
+     "name": "MinimumDashRange",
+     "values": [
+      450.0,
+      450.0,
+      450.0,
+      450.0,
+      450.0,
+      450.0,
+      450.0
+     ]
+    },
+    {
+     "name": "ThrowDistance",
+     "values": [
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0
+     ]
+    },
+    {
+     "name": "WHalterDuration",
+     "values": [
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5
+     ]
+    }
+   ],
+   "mSpellCalculations": {
+    "ETotalShieldHealth": {
+     "mFormulaParts": [
+      {
+       "mDataValue": "EShieldBaseHealth",
+       "__type": "NamedDataValueCalculationPart"
+      },
+      {
+       "mStat": 2,
+       "mStatFormula": 2,
+       "mDataValue": "EShieldbADRatio",
+       "__type": "StatByNamedDataValueCalculationPart"
+      },
+      {
+       "mStat": 12,
+       "mStatFormula": 2,
+       "mDataValue": "EShieldBonusHealthRatio",
+       "__type": "StatByNamedDataValueCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    },
+    "EDamage": {
+     "mFormulaParts": [
+      {
+       "mDataValue": "EBaseDamage",
+       "__type": "NamedDataValueCalculationPart"
+      },
+      {
+       "mStat": 2,
+       "mStatFormula": 2,
+       "mCoefficient": 1.0,
+       "__type": "StatByCoefficientCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    }
+   },
+   "mClientData": {
+    "mTooltipData": {
+     "mLocKeys": {
+      "keyTooltip": "Spell_UrgotE_Tooltip"
+     }
+    }
+   }
+  }
+ },
+ "Characters/Urgot/Spells/UrgotPassiveAbility/UrgotPassive": {
+  "mSpell": {
+   "DataValues": [
+    {
+     "name": "LegWarningTime",
+     "values": [
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5,
+      2.5
+     ]
+    }
+   ],
+   "mSpellCalculations": {
+    "PerLegCD": {
+     "mFormulaParts": [
+      {
+       "mLevel1Value": 30.0,
+       "mBreakpoints": [
+        {
+         "mLevel": 6,
+         "mAdditionalBonusAtThisLevel": -10.0,
+         "__type": "Breakpoint"
+        },
+        {
+         "mLevel": 9,
+         "mAdditionalBonusAtThisLevel": -10.0,
+         "__type": "Breakpoint"
+        },
+        {
+         "mLevel": 11,
+         "mAdditionalBonusAtThisLevel": -5.0,
+         "__type": "Breakpoint"
+        },
+        {
+         "mLevel": 13,
+         "mAdditionalBonusAtThisLevel": -2.5,
+         "__type": "Breakpoint"
+        }
+       ],
+       "__type": "ByCharLevelBreakpointsCalculationPart"
+      }
+     ],
+     "mPrecision": 1,
+     "__type": "GameCalculation"
+    },
+    "ADDamage": {
+     "mFormulaParts": [
+      {
+       "mStat": 2,
+       "mSubpart": {
+        "mLevel1Value": 0.4000000059604645,
+        "mBreakpoints": [
+         {
+          "mLevel": 6,
+          "mAdditionalBonusAtThisLevel": 0.11999999731779099,
+          "__type": "Breakpoint"
+         },
+         {
+          "mLevel": 9,
+          "mAdditionalBonusAtThisLevel": 0.11999999731779099,
+          "__type": "Breakpoint"
+         },
+         {
+          "mLevel": 11,
+          "mAdditionalBonusAtThisLevel": 0.11999999731779099,
+          "__type": "Breakpoint"
+         },
+         {
+          "mLevel": 13,
+          "mAdditionalBonusAtThisLevel": 0.11999999731779099,
+          "__type": "Breakpoint"
+         },
+         {
+          "mLevel": 15,
+          "mAdditionalBonusAtThisLevel": 0.11999999731779099,
+          "__type": "Breakpoint"
+         }
+        ],
+        "__type": "ByCharLevelBreakpointsCalculationPart"
+       },
+       "__type": "StatBySubPartCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    },
+    "PercentHPRatio": {
+     "mFormulaParts": [
+      {
+       "mLevel1Value": 0.019999999552965164,
+       "mBreakpoints": [
+        {
+         "mLevel": 6,
+         "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+         "__type": "Breakpoint"
+        },
+        {
+         "mLevel": 9,
+         "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+         "__type": "Breakpoint"
+        },
+        {
+         "mLevel": 11,
+         "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+         "__type": "Breakpoint"
+        },
+        {
+         "mLevel": 13,
+         "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+         "__type": "Breakpoint"
+        }
+       ],
+       "__type": "ByCharLevelBreakpointsCalculationPart"
+      }
+     ],
+     "mDisplayAsPercent": true,
+     "__type": "GameCalculation"
+    },
+    "MonsterCap": {
+     "mFormulaParts": [
+      {
+       "mStartValue": 100.0,
+       "mEndValue": 360.0,
+       "__type": "ByCharLevelInterpolationCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    },
+    "TriggerRange": {
+     "mFormulaParts": [
+      {
+       "mNumber": 650.0,
+       "__type": "NumberCalculationPart"
+      },
+      {
+       "mStat": 31,
+       "mStatFormula": 2,
+       "mCoefficient": 1.0,
+       "__type": "StatByCoefficientCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    },
+    "CastRange": {
+     "mFormulaParts": [
+      {
+       "mNumber": 700.0,
+       "__type": "NumberCalculationPart"
+      },
+      {
+       "mStat": 31,
+       "mStatFormula": 2,
+       "mCoefficient": 1.0,
+       "__type": "StatByCoefficientCalculationPart"
+      }
+     ],
+     "__type": "GameCalculation"
+    }
+   },
+   "mClientData": {
+    "mTooltipData": {
+     "mLocKeys": {
+      "keyTooltip": "Spell_UrgotPassive_Tooltip"
+     }
+    }
+   }
+  }
+ }
+}

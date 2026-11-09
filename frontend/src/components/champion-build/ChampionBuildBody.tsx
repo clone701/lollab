@@ -1,3 +1,4 @@
+import { useChampionDetail } from '@/components/game-data';
 import type { Champion } from '@/types/champion';
 import type {
   BuildMode,
@@ -24,6 +25,8 @@ export function ChampionBuildBody({
   data,
   mode,
 }: ChampionBuildBodyProps) {
+  // スキルと基礎情報で同じデータを使うため、ここで1回だけ取る
+  const detail = useChampionDetail(champion.id);
   return (
     <div className="flex flex-col gap-4">
       <ChampionBuildHeader
@@ -32,6 +35,7 @@ export function ChampionBuildBody({
         roles={data.roles}
         summary={data.summary}
         query={query}
+        detail={detail}
       />
       <BuildScope
         games={data.summary.games}
@@ -40,7 +44,7 @@ export function ChampionBuildBody({
       />
       <div className="grid gap-4 md:grid-cols-2">
         <SkillPanel
-          championId={champion.id}
+          skills={detail.skills}
           skillPriority={data.skill_priority}
           skillOrder={data.skill_order}
           mode={mode}

@@ -2,6 +2,7 @@ import {
   fetchChampionData,
   fetchItemData,
   fetchRuneData,
+  fetchSkillValues,
   fetchSummonerData,
   loadOnce,
 } from '..';
@@ -91,5 +92,38 @@ describe('fetch 関数の URL', () => {
     expect(mockFetch).toHaveBeenCalledWith(
       '/images/data/ja_JP/champion/Urgot.json'
     );
+  });
+});
+
+describe('fetchSkillValues', () => {
+  const values = { version: '16.21.1', passive: null, spells: [null] };
+
+  beforeEach(() => {
+    mockFetch.mockReset();
+    global.fetch = mockFetch as unknown as typeof fetch;
+  });
+
+  it('/data/skills/<Key>.json を取る（ウーコンは MonkeyKing）', async () => {
+    mockFetch.mockResolvedValue(jsonResponse(200, values));
+    await expect(fetchSkillValues('Wukong')).resolves.toEqual(values);
+    expect(mockFetch).toHaveBeenCalledWith('/data/skills/MonkeyKing.json');
+  });
+
+  it('それ以外の ID はそのままファイル名にする', async () => {
+    mockFetch.mockResolvedValue(jsonResponse(200, values));
+    await fetchSkillValues('Ahri');
+    expect(mockFetch).toHaveBeenCalledWith('/data/skills/Ahri.json');
+  });
+
+  it('404 は null', async () => {
+    mockFetch.mockResolvedValue(jsonResponse(404, null));
+    await expect(fetchSkillValues('NoFile404')).resolves.toBeNull();
+  });
+
+  it('404 以外のエラーは失敗のまま', async () => {
+    mockFetch.mockResolvedValue(jsonResponse(500, null));
+    await expect(fetchSkillValues('Error500')).rejects.toThrow();
+    mockFetch.mockRejectedValue(new TypeError('network'));
+    await expect(fetchSkillValues('ErrorNet')).rejects.toThrow('network');
   });
 });

@@ -14,6 +14,7 @@ jest.mock('@/adapters/api', () => ({ fetchChampionBuild: jest.fn() }));
 // スキル画像の JSON は読み込まれない状態（文字の表示）にする
 jest.mock('@/adapters/game-data', () => ({
   fetchChampionData: jest.fn(() => new Promise(() => {})),
+  fetchSkillValues: jest.fn(() => new Promise(() => {})),
 }));
 
 const mockFetch = fetchChampionBuild as jest.Mock;

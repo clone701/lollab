@@ -1,0 +1,10 @@
+{
+  "version": "16.21.1",
+  "passive": null,
+  "spells": [
+    "霧の波動を発射して、<magicDamage>70/115/160/205/250 (+魔力の70%)の魔法ダメージ</magicDamage>を与える。波動は発射から少しすると、サイズが小さくなって加速する。<br><br>命中した敵の<keywordMajor>「ユーウツ」</keywordMajor>を消費する。",
+    "2.5秒間<shield>耐久値50/75/100/125/150 (+魔力の75%)のシールド</shield>を獲得し、<magicDamage>80/120/160/200/240 (+魔力の30%)の魔法ダメージ</magicDamage>を与える衝撃波を放つ。<br><br>命中した敵の<keywordMajor>「ユーウツ」</keywordMajor>を消費する。",
+    "移動中にサイズが増加するシャドウを指定地点に向かわせる。指定地点に到着すると<magicDamage>50/70/90/110/130 (+魔力の40/45/50/55/60%)の魔法ダメージ</magicDamage>を与え、2秒間30/35/40/45/50%の<status>スロウ効果</status>を付与する。<br><br>このスキルで敵をキルすると<keywordMajor>「フコウとユーウツ」</keywordMajor>のクールダウンが10%短縮される。<br><br>命中した敵に<keywordMajor>「ユーウツ」</keywordMajor>を付与する。",
+    null
+  ]
+}

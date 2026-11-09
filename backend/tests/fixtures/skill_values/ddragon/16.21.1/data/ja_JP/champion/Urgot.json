@@ -1,0 +1,27 @@
+{
+ "type": "champion",
+ "version": "16.21.1",
+ "data": {
+  "Urgot": {
+   "id": "Urgot",
+   "spells": [
+    {
+     "id": "UrgotQ",
+     "maxrank": 5
+    },
+    {
+     "id": "UrgotW",
+     "maxrank": 5
+    },
+    {
+     "id": "UrgotE",
+     "maxrank": 5
+    },
+    {
+     "id": "UrgotR",
+     "maxrank": 3
+    }
+   ]
+  }
+ }
+}
