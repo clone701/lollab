@@ -1,9 +1,7 @@
 'use client';
 
 import ChampionButton from '../ChampionButton';
-import { champions as allChampions } from '@/lib/data/champions';
-
-type Champion = (typeof allChampions)[number];
+import type { Champion } from '@/types/champion';
 
 interface ChampionListProps {
   champions: Champion[];

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, RefObject } from 'react';
-import { champions } from '@/lib/data/champions';
+import { CHAMPIONS_BY_READING } from '@/lib/champion-order';
 import { Champion } from '@/types/champion';
 
 interface SuggestState {
@@ -36,14 +36,13 @@ export function useChampionSuggest(
       return;
     }
     const q = query.toLowerCase();
-    const candidates = champions
-      .filter(
-        (c) =>
-          c.id.toLowerCase().startsWith(q) ||
-          c.name.toLowerCase().includes(q) ||
-          (c.reading && c.reading.includes(q))
-      )
-      .slice(0, 8);
+    // 候補は五十音順の先頭8件
+    const candidates = CHAMPIONS_BY_READING.filter(
+      (c) =>
+        c.id.toLowerCase().startsWith(q) ||
+        c.name.toLowerCase().includes(q) ||
+        (c.reading && c.reading.includes(q))
+    ).slice(0, 8);
     setSuggest(
       candidates.length > 0
         ? { candidates, triggerIndex: slashIdx, focusedIndex: 0 }

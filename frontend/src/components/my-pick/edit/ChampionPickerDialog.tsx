@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { filterChampions } from '@/lib/champion-build';
-import { CHAMPIONS_BY_READING } from '@/lib/my-pick';
+import { CHAMPIONS_BY_READING } from '@/lib/champion-order';
 import { ChampionSearchInput } from '../ChampionSearchInput';
 import { ModalFrame } from '../ModalFrame';
 import { PickerChampionButton } from './PickerChampionButton';

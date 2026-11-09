@@ -20,5 +20,3 @@ export { filterEnemies } from './filterEnemies';
 export { filterSheetsByLane } from './filterSheetsByLane';
 export { serializeDraft } from './serializeDraft';
 export { confirmDiscard, UNSAVED_MESSAGE } from './confirmDiscard';
-export { sortByReading } from './sortByReading';
-export { CHAMPIONS_BY_READING } from './championsByReading';
