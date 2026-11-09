@@ -1,4 +1,4 @@
-import { BuildIcon } from '@/components/champion-build';
+import { RuneTooltipIcon, SpellTooltipIcon } from '@/components/game-data';
 import { getRuneIcon, getSpellIcon } from '@/lib/champion-build';
 
 interface MatchSpellRuneProps {
@@ -22,7 +22,8 @@ export function MatchSpellRune({
     <div className="flex gap-0.5">
       <div className="flex flex-col gap-0.5">
         {spells.map(({ id, icon }, slot) => (
-          <BuildIcon
+          <SpellTooltipIcon
+            id={id}
             key={slot}
             src={icon?.src ?? null}
             label={icon?.name ?? `スペル${id}`}
@@ -32,7 +33,8 @@ export function MatchSpellRune({
       </div>
       <div className="flex flex-col gap-0.5">
         {runes.map(({ id, icon }) => (
-          <BuildIcon
+          <RuneTooltipIcon
+            id={id}
             key={id}
             src={icon?.src ?? null}
             label={icon?.name ?? `ルーン${id}`}

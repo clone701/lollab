@@ -1,11 +1,30 @@
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
+  SAMPLE_BUILD,
   TARGET_PUUID,
   makeMatchDetail,
 } from '@/lib/match-detail/__fixtures__/matchDetail';
+import { fetchChampionData } from '@/adapters/game-data';
+import monkeyKingFixture from '@/lib/game-data/__fixtures__/monkeyKing.json';
+import urgotFixture from '@/lib/game-data/__fixtures__/urgot.json';
 import type { MatchDetailResponse } from '@/types/matchDetail';
 import { BuildTab } from '../build';
+
+// loadOnce のキャッシュがテスト間で残らないよう、adapters をモックする
+jest.mock('@/adapters/game-data', () => ({
+  fetchItemData: jest.fn(),
+  fetchRuneData: jest.fn(),
+  fetchSummonerData: jest.fn(),
+  fetchChampionData: jest.fn(),
+}));
+const mockFetchChampionData = fetchChampionData as jest.Mock;
+
+// 既定はスキルの JSON が読み込まれない状態（文字の表示）
+beforeEach(() => {
+  mockFetchChampionData.mockReset();
+  mockFetchChampionData.mockReturnValue(new Promise(() => {}));
+});
 
 function renderBuild(match: MatchDetailResponse = makeMatchDetail()): void {
   render(<BuildTab match={match} targetPuuid={TARGET_PUUID} />);
@@ -53,13 +72,16 @@ describe('BuildTab: アイテムとスキル', () => {
     expect(screen.getByText('0分')).toBeInTheDocument();
     expect(screen.getByText('6分')).toBeInTheDocument();
     expect(screen.getByText('12分')).toBeInTheDocument();
-    expect(screen.getAllByText('>')).toHaveLength(2);
+    const section = screen
+      .getByRole('heading', { name: 'アイテムの購入順' })
+      .closest('section') as HTMLElement;
+    expect(within(section).getAllByText('>')).toHaveLength(2);
     expect(screen.getAllByAltText(/^アイテム/)).toHaveLength(5);
   });
 
   it('スキルは最大化の順とレベルごとの Q/W/E/R を出し、R を強調する', () => {
     renderBuild();
-    expect(screen.getByText('Q > W > E')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Q > W > E' })).toBeVisible();
     const levels = screen.getAllByLabelText(/^レベル\d+: /);
     expect(levels.map((l) => l.textContent).join('')).toBe('QWEQQRQW');
     const r = screen.getByLabelText('レベル6: R');
@@ -133,5 +155,61 @@ describe('BuildTab: ルーン', () => {
       'data-selected',
       'false'
     );
+  });
+});
+
+describe('BuildTab: スキル画像', () => {
+  it('読み込み前は文字の表示で、画像は出ない', () => {
+    renderBuild();
+    expect(mockFetchChampionData).toHaveBeenCalledWith('Aatrox');
+    expect(screen.queryByAltText('コラプトシェル')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('レベル1: Q')).toHaveTextContent('Q');
+  });
+
+  it('取得に失敗しても文字の表示のまま壊れない', async () => {
+    mockFetchChampionData.mockRejectedValue(new Error('network'));
+    renderBuild();
+    await act(async () => {});
+    expect(screen.queryByAltText('コラプトシェル')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('レベル6: R')).toHaveTextContent('R');
+  });
+
+  it('読み込み後は最大化の順とレベルごとのマスがスキル画像になり、R の強調は残る', async () => {
+    mockFetchChampionData.mockResolvedValue(urgotFixture);
+    renderBuild();
+    await act(async () => {});
+    const priority = within(screen.getByRole('group', { name: 'Q > W > E' }));
+    expect(priority.getAllByRole('img')).toHaveLength(3);
+    const levels = screen.getAllByLabelText(/^レベル\d+: /);
+    expect(levels.map((l) => l.textContent).join('')).toBe('QWEQQRQW');
+    const r = screen.getByLabelText('レベル6: R');
+    expect(within(r).getByAltText('デスグラインダー')).toBeInTheDocument();
+    expect(r).toHaveClass('text-highlight', 'font-bold', 'ring-highlight');
+    expect(
+      within(screen.getByLabelText('レベル1: Q')).getByAltText('コラプトシェル')
+    ).toBeInTheDocument();
+  });
+
+  it('ウーコン（MonkeyKing）でも画像が出る', async () => {
+    mockFetchChampionData.mockResolvedValue(monkeyKingFixture);
+    render(<BuildTab match={makeMatchDetail()} targetPuuid="puuid-8" />);
+    await act(async () => {});
+    expect(mockFetchChampionData).toHaveBeenCalledWith('Wukong');
+    expect(
+      within(screen.getByLabelText('レベル1: Q')).getByAltText('強棒打')
+    ).toHaveAttribute(
+      'src',
+      expect.stringContaining('MonkeyKingDoubleAttack.png')
+    );
+  });
+
+  it('skill_order が空ならスキルの JSON を要求しない', () => {
+    const match = makeMatchDetail();
+    match.participants[0] = {
+      ...match.participants[0],
+      build: { ...SAMPLE_BUILD, skill_order: [] },
+    };
+    renderBuild(match);
+    expect(mockFetchChampionData).not.toHaveBeenCalled();
   });
 });

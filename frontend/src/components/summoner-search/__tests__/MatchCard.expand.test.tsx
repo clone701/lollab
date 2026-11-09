@@ -11,6 +11,10 @@ jest.mock('@/adapters/api', () => ({
   fetchMatchDetail: jest.fn(),
 }));
 
+// ビルドのタブを開いてもスキルの JSON は読み込まれない状態（文字の表示）にする
+jest.mock('@/adapters/game-data', () => ({
+  fetchChampionData: jest.fn(() => new Promise(() => {})),
+}));
 const mockFetch = jest.mocked(fetchMatchDetail);
 
 function renderHistory(matchCount = 1): void {

@@ -34,6 +34,7 @@ export function PrimaryRuneSection({
             name={path.name}
             selected={primaryPath === path.id}
             disabled={disabled}
+            tooltip={disabled}
             size="sm"
             ariaLabel={`メインルーンパス: ${path.name}`}
             onClick={() => onPathChange(path.id)}
@@ -51,6 +52,7 @@ export function PrimaryRuneSection({
                 name={rune.name}
                 selected={keystone === rune.id}
                 disabled={disabled}
+                tooltip={disabled}
                 ariaLabel={`キーストーン: ${rune.name}`}
                 onClick={() => onKeystoneChange(rune.id)}
               />
@@ -67,6 +69,7 @@ export function PrimaryRuneSection({
                     name={rune.name}
                     selected={primaryRunes[slot] === rune.id}
                     disabled={disabled}
+                    tooltip={disabled}
                     ariaLabel={`メインルーン ${slot + 1}: ${rune.name}`}
                     onClick={() => onRuneChange(slot, rune.id)}
                   />

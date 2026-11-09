@@ -1,0 +1,32 @@
+[
+  {
+    "id": 8100,
+    "name": "覇道",
+    "slots": [
+      {
+        "runes": [
+          {
+            "id": 8112,
+            "name": "電撃",
+            "longDesc": "3秒以内に敵チャンピオンを<b>個別の</b>スキルか通常攻撃で3回攻撃すると、追加<lol-uikit-tooltipped-keyword key='LinkTooltip_Description_AdaptiveDmg'><font color='#48C4B7'>アダプティブダメージ</font></lol-uikit-tooltipped-keyword>を与える。<br><br>ダメージ: 70 - 240(+増加攻撃力x0.1、+魔力x0.05)<br>クールダウン: 20秒<br><br>「彼らは、雷で大惨事をもたらしたことから“雷帝”と呼ばれた」"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 8000,
+    "name": "栄光",
+    "slots": [
+      {
+        "runes": [
+          {
+            "id": 8010,
+            "name": "征服者",
+            "longDesc": "敵チャンピオンにダメージを与える通常攻撃またはスキルで5秒間、「征服者」のスタックを2つ獲得する。スタック1つごとに1.8 - 4の<lol-uikit-tooltipped-keyword key='LinkTooltip_Description_Adaptive'><font color='#48C4B7'>アダプティブフォース</font></lol-uikit-tooltipped-keyword>を獲得する。最大12スタック。遠隔攻撃チャンピオンは通常攻撃1回につき1スタックのみ獲得する。<br><br>最大スタック時にチャンピオンに与えたダメージの8%(遠隔攻撃チャンピオンは5%)の体力を回復する。"
+          }
+        ]
+      }
+    ]
+  }
+]

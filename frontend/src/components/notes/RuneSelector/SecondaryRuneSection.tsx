@@ -34,6 +34,7 @@ export function SecondaryRuneSection({
                 name={path.name}
                 selected={secondaryPath === path.id}
                 disabled={disabled}
+                tooltip={disabled}
                 size="sm"
                 ariaLabel={`サブルーンパス: ${path.name}`}
                 onClick={() => onPathChange(path.id)}
@@ -50,6 +51,7 @@ export function SecondaryRuneSection({
                   name={rune.name}
                   selected={secondaryRunes.includes(rune.id)}
                   disabled={disabled}
+                  tooltip={disabled}
                   ariaLabel={`サブルーン: ${rune.name}`}
                   onClick={() => onRuneToggle(rune.id)}
                 />

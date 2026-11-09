@@ -40,6 +40,7 @@ export function ChampionBuildBody({
       />
       <div className="grid gap-4 md:grid-cols-2">
         <SkillPanel
+          championId={champion.id}
           skillPriority={data.skill_priority}
           skillOrder={data.skill_order}
           mode={mode}

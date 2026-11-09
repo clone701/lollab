@@ -1,5 +1,5 @@
 import type { Champion } from '@/types/champion';
-import { BuildIcon } from './BuildIcon';
+import { BuildIcon } from '@/components/ui/BuildIcon';
 
 interface ChampionGridItemProps {
   champion: Champion;

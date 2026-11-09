@@ -1,4 +1,4 @@
-import { BuildIcon } from '@/components/champion-build';
+import { ItemTooltipIcon } from '@/components/game-data';
 import { itemIconUrls } from '@/lib/champion-build';
 import type { ItemPurchaseGroup } from '@/types/matchDetail';
 
@@ -12,7 +12,8 @@ export function ItemGroup({ group }: ItemGroupProps) {
     <div className="flex flex-col items-center gap-1">
       <div className="flex gap-0.5">
         {group.item_ids.map((id, i) => (
-          <BuildIcon
+          <ItemTooltipIcon
+            id={id}
             key={`${id}-${i}`}
             {...itemIconUrls(id)}
             label={`アイテム${id}`}

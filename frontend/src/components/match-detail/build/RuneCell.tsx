@@ -1,4 +1,4 @@
-import { BuildIcon } from '@/components/champion-build';
+import { RuneTooltipIcon } from '@/components/game-data';
 import type { Rune } from '@/lib/data/runes';
 
 interface RuneCellProps {
@@ -13,7 +13,8 @@ export function RuneCell({ rune, isSelected }: RuneCellProps) {
       data-selected={isSelected}
       className={isSelected ? 'opacity-100' : 'opacity-30'}
     >
-      <BuildIcon
+      <RuneTooltipIcon
+        id={rune.id}
         src={rune.icon}
         label={rune.name}
         size={36}
