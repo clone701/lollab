@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { champions } from '@/lib/data/champions';
+import { CHAMPIONS_BY_READING } from '@/lib/champion-order';
 import {
   DEFAULT_PERIOD,
   DEFAULT_QUEUE,
@@ -16,7 +16,10 @@ import { ChampionGridItem } from './ChampionGridItem';
 export function ChampionSearchGrid() {
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const filtered = useMemo(() => filterChampions(champions, query), [query]);
+  const filtered = useMemo(
+    () => filterChampions(CHAMPIONS_BY_READING, query),
+    [query]
+  );
 
   const handleSelect = (championId: string): void => {
     router.push(

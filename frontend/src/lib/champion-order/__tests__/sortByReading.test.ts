@@ -1,6 +1,5 @@
 import { champions } from '@/lib/data/champions';
-import { CHAMPIONS_BY_READING, sortByReading } from '..';
-import { readingKey } from '../sortByReading';
+import { CHAMPIONS_BY_READING, readingKey, sortByReading } from '..';
 
 describe('チャンピオンの五十音順', () => {
   it('読みの五十音順に並べ、元の配列は変えない', () => {
