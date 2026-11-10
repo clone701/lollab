@@ -1,5 +1,4 @@
 import type {
-  BuildMode,
   Period,
   QueueFilter,
   RankFilter,
@@ -25,7 +24,7 @@ export const PERIOD_OPTIONS: { value: Period; label: string }[] = [
 ];
 
 export const QUEUE_OPTIONS: { value: QueueFilter; label: string }[] = [
-  { value: 'all', label: 'ソロ/デュオ + フレックス' },
+  { value: 'all', label: 'すべて' },
   { value: 'solo', label: 'ソロ/デュオ' },
   { value: 'flex', label: 'フレックス' },
 ];
@@ -35,11 +34,6 @@ export const RANK_OPTIONS: { value: RankFilter; label: string }[] = [
   { value: 'emerald_plus', label: 'エメラルド以上' },
   { value: 'diamond_plus', label: 'ダイヤモンド以上' },
   { value: 'master_plus', label: 'マスター以上' },
-];
-
-export const MODE_OPTIONS: { value: BuildMode; label: string }[] = [
-  { value: 'best_win_rate', label: '最高勝率ビルド' },
-  { value: 'most_games', label: '最多ビルド' },
 ];
 
 /** スキルキー 1〜4 に対応する表記 */

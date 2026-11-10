@@ -22,7 +22,10 @@ export function RoleTabs({
   const entries = Object.entries(roles);
   if (entries.length === 0) return null;
   return (
-    <nav aria-label="ロール" className="flex flex-wrap gap-2">
+    <nav aria-label="ロール" className="flex flex-wrap items-center gap-2">
+      <span className="text-sm text-fg-muted" aria-hidden="true">
+        ロール
+      </span>
       {entries.map(([role, games]) => {
         const href = buildChampionBuildHref(championId, {
           ...query,
