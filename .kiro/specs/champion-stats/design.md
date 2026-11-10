@@ -3,7 +3,7 @@
 ## 概要
 
 `match_participants` に保存済みの参加者成績を、チャンピオン・ロール・集計期間・キュー・ランク帯で絞り込み、ビルド要素ごとに選択肢別の試合数・勝利数を集計して返す。
-「最高勝率」と「最多」の切り替えはフロントエンドで行う（API は選択肢ごとの試合数・勝利数を返すだけ）。
+画面は最多ビルドだけを表示する（最高勝率ビルドは #142 で廃止）。API は選択肢ごとの試合数・勝利数を返すだけ。
 
 使うテーブル: `matches`、`match_participants`、`match_bans`。定義は [database Spec](../database/design.md) を参照。
 試合データの取り込み（ルーン・BAN・タイムライン）は [summoner-search-api の design.md](../summoner-search-api/design.md)「試合データの取り込み」を参照。
@@ -73,7 +73,7 @@ stateDiagram-v2
 | 4〜6番目のアイテム | `completed_items` の4〜6番目それぞれ（単体） | 該当番目がない |
 | ルーン | `primary_style_id`・`primary_perk_ids`・`sub_style_id`・`sub_perk_ids`（サブは昇順）・`stat_perk_ids` の組 | `primary_perk_ids` が NULL |
 
-- 各要素について、選択肢ごとに試合数・勝利数を数え、試合数の多い順に上位10件を返す。最高勝率の選択肢が上位10件に入らない場合に備え、最高勝率の1件も別に返す（同率なら試合数の多い方）
+- 各要素について、選択肢ごとに試合数・勝利数を数え、試合数の多い順に上位10件を返す（同数はキーの辞書順）
 - 集計はサービス層の Python で行う。対象行は必要な列だけをページ単位（1000行）で取得する
 - 将来クローラーで試合数が大きく増えたら、集計結果を保存するテーブルや PostgreSQL の関数に移す（API の形は変えない）
 
@@ -100,7 +100,6 @@ class BuildOption(BaseModel):
 class BuildElement(BaseModel):
     games: int                      # この要素の集計対象の行数
     options: list[BuildOption]      # 試合数の多い順、最大10件
-    best_win_rate: BuildOption | None
 
 class ChampionBuildSummary(BaseModel):
     games: int
@@ -169,11 +168,13 @@ frontend/src/
 ├── app/champion/[championName]/page.tsx     # ビルド画面（searchParams は await して受け取る）
 ├── adapters/api/championBuild.ts            # fetchChampionBuild
 ├── types/championBuild.ts
-├── lib/champion-build/                      # 勝率計算・最高勝率/最多の選択・期間とキューの定数
+├── lib/champion-build/                      # 勝率・採用率の計算・期間とキューの定数
 └── components/champion-build/
     ├── ChampionSearchGrid.tsx               # 名前入力 + アイコン一覧（champions.ts の name・reading・id で検索）
-    ├── ChampionBuildHeader.tsx              # アイコン・名前・概要の値・ロール切り替え
-    ├── BuildFilters.tsx                     # 期間・キュー・ランク帯のプルダウン、最高勝率/最多の切り替え
+    ├── ChampionBuildHeader.tsx              # 戻るリンク・アイコン・名前・称号と役割・基礎情報
+    ├── BuildStatsCard.tsx                   # 「ビルドの集計」カード: 見出しと集計範囲（パッチ・試合数）、BuildFilters、RoleTabs、SummaryStats
+    ├── BuildFilters.tsx                     # 期間・キューのボタン（SegmentedControl）、ランク帯のプルダウン
+    ├── SegmentedControl.tsx                 # 横並びのボタン（role="radiogroup"、選択中は ring-accent bg-accent/15）
     ├── SkillPanel.tsx                       # スキル優先順・15レベルのスキル順
     ├── SpellPanel.tsx
     ├── ItemPanel.tsx                        # 開始アイテム・コアビルド・4〜6番目
@@ -181,8 +182,13 @@ frontend/src/
     └── OptionStat.tsx                       # 勝率・試合数の表示（共通）
 ```
 
-- 状態（ロール・期間・キュー・ランク帯）は URL のクエリで持つ。最高勝率/最多の切り替えは画面内の状態で持つ
-- 4〜6番目のアイテムは上位3件を「OR」で並べる。最多は試合数の多い順、最高勝率は `options` と `best_win_rate` を合わせて勝率の高い順（同率は試合数の多い順）
+- 状態（ロール・期間・キュー・ランク帯）は URL のクエリで持つ。ルーンの1番目/2番目の切り替えは画面内の状態で持つ
+- 画面の並び: 戻るリンク → 名前・称号・役割 → 基礎情報 → 「ビルドの集計」カード → スキル・スペル・アイテム・ルーン
+- 「ビルドの集計」カード: 見出しの右に「パッチ 16.22・191試合」（期間が最新パッチのときだけパッチを出す）。1行目に期間・キュー（ボタン）とランク帯（プルダウン）、区切り線の下にロール、その下に概要の5つの値。勝率と全体平均との差は勝ち・負けの色（50% 以上・0 以上は `text-win`、未満は `text-loss`、試合数0は `text-fg`）
+- キューの「すべて」の表示名は「すべて」（今の「ソロ/デュオ + フレックス」から変える。値は `all` のまま）
+- サモナースペル: `options` の上位2件を行で並べる。各行にアイコン・勝率・試合数と、採用率の横棒（`role="meter"`、`bg-accent`、数値も表示）。1件目の行は `bg-surface-2`
+- ルーン: 上位2件を `SegmentedControl` で切り替える（ラベル「1番目 採用率54%」）。2件目が無ければボタンを出さない。チャンピオン・ロール・絞り込みが変わったら1番目に戻す
+- 4〜6番目のアイテムは試合数の多い順に上位3件を「OR」で並べる（今と同じ）
 - 画像はローカル静的画像（`/images/champion/`、`/images/item/`、`/images/runes/`）を使う。サモナースペル・スキルのアイコンは Data Dragon の CDN から取得する
 - アイコンには勝率と試合数を必ず併記する
 - 選択肢がない要素は「データなし」と表示する
@@ -200,9 +206,10 @@ frontend/src/
 
 | 対象 | 内容 |
 |---|---|
-| aggregate.py | プロパティ: 任意の行に対し、各選択肢の試合数の合計 = 要素の games / options は試合数の降順 / best_win_rate は勝率最大（同率は試合数最大） |
+| aggregate.py | プロパティ: 任意の行に対し、各選択肢の試合数の合計 = 要素の games / options は試合数の降順 |
 | skill_priority.py | 典型例（Q>E>W など）と、5回に達しないスキルの補い方 |
 | build.py | 期間・キュー・ランク帯・リメイク除外の絞り込み / ロール省略時に最多ロールを選ぶ / 試合数0 |
 | timeline_convert.py（summoner-search-api 側） | スキル順・開始アイテム（取り消し反映）・完成アイテムの順序 |
 | router | 入力検証 422、エラー形式 |
-| フロントエンド | 最高勝率/最多の切り替え、データなし表示、検索の絞り込み（日本語名・読み・英語 ID） |
+| フロントエンド | 最多ビルドの表示、データなし表示、検索の絞り込み（日本語名・読み・英語 ID） |
+| フロントエンド（#142） | 並び（基礎情報の後に「ビルドの集計」カード）/ 期間・キューのボタンで URL が `router.replace` で変わり `aria-checked` が付く / ランク帯のプルダウン / 集計範囲の表示（最新パッチ以外はパッチなし）/ 勝率の色 / スペルが2行で採用率（例 `443/878` → `50%`）/ スペルが1件だけなら1行 / ルーンの切り替え（初期は1番目、押すと2番目、2件目が無ければボタンなし、ロールが変わると1番目）/ 最高勝率ビルドのボタンが無い |

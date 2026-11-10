@@ -1,29 +1,18 @@
 import Link from 'next/link';
 import type { ChampionDetail } from '@/components/game-data';
 import type { Champion } from '@/types/champion';
-import type { BuildQuery, ChampionBuildResponse } from '@/types/championBuild';
 import { BuildIcon } from '@/components/ui/BuildIcon';
 import { ChampionInfoPanel } from './champion-info';
 import { ChampionTitleTags } from './ChampionTitleTags';
-import { RoleTabs } from './RoleTabs';
-import { SummaryStats } from './SummaryStats';
 
 interface ChampionBuildHeaderProps {
   champion: Champion;
-  role: ChampionBuildResponse['role'];
-  roles: ChampionBuildResponse['roles'];
-  summary: ChampionBuildResponse['summary'];
-  query: BuildQuery;
   /** 称号・役割と基礎情報に使う（useChampionDetail の結果） */
   detail: ChampionDetail;
 }
 
 export function ChampionBuildHeader({
   champion,
-  role,
-  roles,
-  summary,
-  query,
   detail,
 }: ChampionBuildHeaderProps) {
   return (
@@ -49,13 +38,6 @@ export function ChampionBuildHeader({
         </div>
       </div>
       <ChampionInfoPanel detail={detail} />
-      <RoleTabs
-        championId={champion.id}
-        roles={roles}
-        currentRole={role}
-        query={query}
-      />
-      <SummaryStats summary={summary} />
     </div>
   );
 }

@@ -6,9 +6,6 @@ export type QueueFilter = 'all' | 'solo' | 'flex';
 export type RankFilter =
   'all' | 'emerald_plus' | 'diamond_plus' | 'master_plus';
 
-/** 最高勝率 / 最多の切り替え（画面内の状態） */
-export type BuildMode = 'best_win_rate' | 'most_games';
-
 /** ビルド要素の選択肢1つ分。key はスキル(1〜4)・アイテム・ルーン・スペルの ID */
 export interface BuildOption {
   key: number[];
@@ -20,7 +17,6 @@ export interface BuildElement {
   games: number;
   /** 試合数の多い順、最大10件 */
   options: BuildOption[];
-  best_win_rate: BuildOption | null;
 }
 
 /** 比率（win_rate_delta・pick_rate・ban_rate）は 0〜1 */

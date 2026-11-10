@@ -5,7 +5,6 @@
 """
 
 from collections import Counter
-from fractions import Fraction
 
 from hypothesis import given, settings
 from hypothesis import strategies as st
@@ -54,48 +53,7 @@ def test_options_are_sorted_descending_and_limited_to_ten(rows: Rows) -> None:
     assert sum(games) <= element.games
 
 
-@settings(max_examples=100)
-@given(_rows)
-def test_best_win_rate_is_max_over_all_options(rows: Rows) -> None:
-    """上位10件に限らず全選択肢から、勝率最大（同率は試合数最大）を選ぶ。"""
-    element = aggregate_element(rows)
-    totals = _totals(rows)
-
-    if not totals:
-        assert element.best_win_rate is None
-        return
-    best = element.best_win_rate
-    assert best is not None
-    assert (tuple(best.key) in totals) and totals[tuple(best.key)] == (
-        best.games,
-        best.wins,
-    )
-
-    def score(item: tuple[tuple[int, ...], tuple[int, int]]) -> tuple[Fraction, int]:
-        _, (games, wins) = item
-        return Fraction(wins, games), games
-
-    top = max(score(item) for item in totals.items())
-    assert (Fraction(best.wins, best.games), best.games) == top
-    # 同点なら、キーの辞書順で先のもの（決定的）
-    tied = [key for key, g_w in totals.items() if score((key, g_w)) == top]
-    assert tuple(best.key) == min(tied)
-
-
-def test_best_win_rate_can_be_outside_the_top_ten() -> None:
-    """試合数の少ない選択肢が最高勝率なら、options に含まれなくても best_win_rate に出る。"""
-    rows: Rows = []
-    for i in range(11):
-        rows += [((i,), True), ((i,), False)] * 2  # 勝率 50%、4試合
-    rows.append(((99,), True))  # 勝率 100%、1試合
-    element = aggregate_element(rows)
-
-    assert all(o.key != [99] for o in element.options)
-    assert element.best_win_rate is not None
-    assert element.best_win_rate.key == [99]
-
-
 def test_empty_rows_return_no_data() -> None:
     element = aggregate_element([])
 
-    assert (element.games, element.options, element.best_win_rate) == (0, [], None)
+    assert (element.games, element.options) == (0, [])

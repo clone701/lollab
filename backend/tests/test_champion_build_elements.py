@@ -88,4 +88,4 @@ def test_wins_are_counted_per_option() -> None:
 
 def test_no_rows_give_empty_elements() -> None:
     for element in build_elements([]).values():
-        assert (element.games, element.options, element.best_win_rate) == (0, [], None)
+        assert (element.games, element.options) == (0, [])

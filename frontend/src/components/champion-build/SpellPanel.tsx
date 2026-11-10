@@ -1,39 +1,30 @@
-import { getSpellIcon, selectOption } from '@/lib/champion-build';
-import type { BuildElement, BuildMode } from '@/types/championBuild';
-import { SpellTooltipIcon } from '@/components/game-data';
+import type { BuildElement } from '@/types/championBuild';
 import { NoData } from './NoData';
-import { OptionStat } from './OptionStat';
 import { PanelSection } from './PanelSection';
+import { SpellRow } from './SpellRow';
 
 interface SpellPanelProps {
   spells: BuildElement;
-  mode: BuildMode;
 }
 
-export function SpellPanel({ spells, mode }: SpellPanelProps) {
-  const option = selectOption(spells, mode);
+// 試合数の多い上位2件を行で並べる
+export function SpellPanel({ spells }: SpellPanelProps) {
+  const rows = spells.options.slice(0, 2);
   return (
     <PanelSection title="サモナースペル">
-      {option ? (
-        <div className="flex items-center gap-3">
-          <div className="flex gap-1">
-            {option.key.map((id) => {
-              const icon = getSpellIcon(id);
-              return (
-                <SpellTooltipIcon
-                  id={id}
-                  key={id}
-                  src={icon?.src ?? null}
-                  label={icon?.name ?? `スペル${id}`}
-                  size={40}
-                />
-              );
-            })}
-          </div>
-          <OptionStat option={option} />
-        </div>
-      ) : (
+      {rows.length === 0 ? (
         <NoData />
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {rows.map((option, index) => (
+            <SpellRow
+              key={option.key.join('-')}
+              option={option}
+              elementGames={spells.games}
+              isFirst={index === 0}
+            />
+          ))}
+        </ul>
       )}
     </PanelSection>
   );

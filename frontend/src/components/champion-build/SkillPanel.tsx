@@ -1,7 +1,6 @@
 import { SkillIcon, SkillPriorityIcons } from '@/components/game-data';
-import { selectOption } from '@/lib/champion-build';
 import type { SkillInfo } from '@/lib/game-data';
-import type { BuildElement, BuildMode } from '@/types/championBuild';
+import type { BuildElement } from '@/types/championBuild';
 import { NoData } from './NoData';
 import { OptionStat } from './OptionStat';
 import { PanelSection } from './PanelSection';
@@ -12,7 +11,6 @@ interface SkillPanelProps {
   skills: SkillInfo[] | null;
   skillPriority: BuildElement;
   skillOrder: BuildElement;
-  mode: BuildMode;
 }
 
 // スキル画像は読み込み後に出す。読み込み前・失敗時は Q/W/E/R の文字のまま
@@ -20,11 +18,10 @@ export function SkillPanel({
   skills,
   skillPriority,
   skillOrder,
-  mode,
 }: SkillPanelProps) {
   const passive = skills?.find((s) => s.key === 'P');
-  const priority = selectOption(skillPriority, mode);
-  const order = selectOption(skillOrder, mode);
+  const priority = skillPriority.options[0] ?? null;
+  const order = skillOrder.options[0] ?? null;
   return (
     <PanelSection title="スキル">
       {passive && (

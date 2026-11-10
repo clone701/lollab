@@ -24,6 +24,13 @@ const DEFAULT_QUERY: BuildQuery = {
   rank: 'all',
 };
 
+// 取得が終わる（読み込み中の表示が消える）まで待つ
+async function waitForLoaded(): Promise<void> {
+  await waitFor(() =>
+    expect(screen.queryByText('読み込み中...')).not.toBeInTheDocument()
+  );
+}
+
 async function renderContent(
   championId = 'Ahri',
   query: BuildQuery = DEFAULT_QUERY
@@ -31,7 +38,7 @@ async function renderContent(
   const champion = getChampionById(championId);
   if (!champion) throw new Error(`champion not found: ${championId}`);
   render(<ChampionBuildContent champion={champion} query={query} />);
-  await screen.findByText(/集計対象/);
+  await waitForLoaded();
 }
 
 function sectionOf(title: string): HTMLElement {
@@ -42,6 +49,13 @@ function sectionOf(title: string): HTMLElement {
   return section;
 }
 
+function radioOf(group: string, name: string): HTMLElement {
+  return within(screen.getByRole('radiogroup', { name: group })).getByRole(
+    'radio',
+    { name }
+  );
+}
+
 describe('ChampionBuildContent', () => {
   beforeEach(() => {
     mockFetch.mockReset();
@@ -49,23 +63,9 @@ describe('ChampionBuildContent', () => {
     mockFetch.mockResolvedValue(makeBuildResponse());
   });
 
-  describe('最高勝率 / 最多の切り替え', () => {
-    it('初期表示は最高勝率ビルドで、勝率と試合数を併記する', async () => {
+  describe('最多ビルドの表示', () => {
+    it('最多の選択肢を勝率と試合数つきで表示する', async () => {
       await renderContent();
-      const skill = within(sectionOf('スキル'));
-      expect(skill.getByRole('group', { name: 'E > W > Q' })).toBeVisible();
-      // 15 / 20 = 75.0%
-      expect(skill.getByText('勝率 75.0%')).toBeInTheDocument();
-      expect(skill.getByText('20試合')).toBeInTheDocument();
-      expect(
-        within(sectionOf('サモナースペル')).getByText('勝率 70.0%')
-      ).toBeInTheDocument();
-    });
-
-    it('「最多ビルド」に切り替えると options[0] の内容と勝率に変わる', async () => {
-      await renderContent();
-      await userEvent.click(screen.getByRole('button', { name: '最多ビルド' }));
-
       const skill = within(sectionOf('スキル'));
       expect(skill.getByRole('group', { name: 'Q > W > E' })).toBeVisible();
       expect(
@@ -74,29 +74,23 @@ describe('ChampionBuildContent', () => {
       // 40 / 80 = 50.0%
       expect(skill.getAllByText('勝率 50.0%').length).toBeGreaterThan(0);
       expect(skill.getAllByText('80試合').length).toBeGreaterThan(0);
-
-      const spells = within(sectionOf('サモナースペル'));
-      expect(spells.getByAltText('Ignite')).toBeInTheDocument();
-      expect(spells.queryByAltText('Teleport')).not.toBeInTheDocument();
     });
 
-    it('「最高勝率ビルド」に戻すと best_win_rate の内容に戻る', async () => {
+    it('最高勝率ビルド・最多ビルドの切り替えボタンは無い', async () => {
       await renderContent();
-      await userEvent.click(screen.getByRole('button', { name: '最多ビルド' }));
-      await userEvent.click(
-        screen.getByRole('button', { name: '最高勝率ビルド' })
-      );
-      const spells = within(sectionOf('サモナースペル'));
-      expect(spells.getByAltText('Teleport')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: '最高勝率ビルド' })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: '最多ビルド' })
+      ).not.toBeInTheDocument();
     });
   });
 
   describe('データなし', () => {
     it('options が空の要素は「データなし」を表示する', async () => {
       mockFetch.mockResolvedValue(
-        makeBuildResponse({
-          runes: { games: 0, options: [], best_win_rate: null },
-        })
+        makeBuildResponse({ runes: { games: 0, options: [] } })
       );
       await renderContent();
       expect(
@@ -108,7 +102,7 @@ describe('ChampionBuildContent', () => {
     });
 
     it('試合数0の応答では全要素が「データなし」になる', async () => {
-      const empty = { games: 0, options: [], best_win_rate: null };
+      const empty = { games: 0, options: [] };
       mockFetch.mockResolvedValue(
         makeBuildResponse({
           role: null,
@@ -135,11 +129,15 @@ describe('ChampionBuildContent', () => {
       await renderContent();
       // スキル2 + スペル1 + アイテム5 + ルーン1
       expect(screen.getAllByText('データなし')).toHaveLength(9);
-      expect(screen.getByText('集計対象: 0試合')).toBeInTheDocument();
+      expect(screen.getByText('0試合')).toBeInTheDocument();
+      // 試合数0のルーンは切り替えボタンを出さない
+      expect(
+        screen.queryByRole('radiogroup', { name: 'ルーンの候補' })
+      ).toBeNull();
     });
   });
 
-  describe('表示内容', () => {
+  describe('「ビルドの集計」カード', () => {
     it('概要の比率を % で表示する', async () => {
       await renderContent();
       expect(screen.getByText('52.3%')).toBeInTheDocument(); // 523 / 1000
@@ -149,16 +147,40 @@ describe('ChampionBuildContent', () => {
       expect(screen.getByText('1,000')).toBeInTheDocument();
     });
 
-    it('最新パッチ指定のときだけパッチ番号を表示する', async () => {
+    it('見出しの右に集計範囲（パッチと試合数）を出す', async () => {
       await renderContent();
-      expect(screen.getByText('集計対象: 1,000試合')).toBeInTheDocument();
-      expect(screen.getByText('パッチ 16.22')).toBeInTheDocument();
+      expect(screen.getByText('パッチ 16.22 ・ 1,000試合')).toBeInTheDocument();
     });
 
-    it('期間が最新パッチ以外ならパッチ番号を表示しない', async () => {
+    it('期間が最新パッチ以外ならパッチ番号を出さず試合数だけにする', async () => {
       mockFetch.mockResolvedValue(makeBuildResponse({ period: 'all' }));
       await renderContent('Ahri', { period: 'all', queue: 'all', rank: 'all' });
+      expect(screen.getByText('1,000試合')).toBeInTheDocument();
       expect(screen.queryByText(/パッチ 16/)).not.toBeInTheDocument();
+    });
+
+    it('勝率と全体平均との差は 50% 以上・0 以上が勝ち色、未満が負け色', async () => {
+      await renderContent();
+      expect(screen.getByText('52.3%')).toHaveClass('text-win');
+      expect(screen.getByText('+1.2%')).toHaveClass('text-win');
+      expect(screen.getByText('8.3%')).toHaveClass('text-fg');
+    });
+
+    it('勝率 50% 未満・差が負なら負け色', async () => {
+      mockFetch.mockResolvedValue(
+        makeBuildResponse({
+          summary: {
+            games: 1000,
+            wins: 480,
+            win_rate_delta: -0.02,
+            pick_rate: 0.05,
+            ban_rate: 0.01,
+          },
+        })
+      );
+      await renderContent();
+      expect(screen.getByText('48.0%')).toHaveClass('text-loss');
+      expect(screen.getByText('-2.0%')).toHaveClass('text-loss');
     });
 
     it('ロール切り替えは応答の roles のロールだけを試合数付きで出す', async () => {
@@ -175,7 +197,9 @@ describe('ChampionBuildContent', () => {
         '/champion/Ahri?role=BOTTOM'
       );
     });
+  });
 
+  describe('表示内容', () => {
     it('4〜6番目のアイテムは上位3件を OR で並べる', async () => {
       await renderContent();
       const items = within(sectionOf('アイテム'));
@@ -193,9 +217,7 @@ describe('ChampionBuildContent', () => {
     });
 
     it('スキル順は該当レベルのマスだけを塗る', async () => {
-      mockFetch.mockResolvedValue(makeBuildResponse());
       await renderContent();
-      await userEvent.click(screen.getByRole('button', { name: '最多ビルド' }));
       const skill = within(sectionOf('スキル'));
       expect(skill.getByLabelText('レベル1: Q')).toBeInTheDocument();
       expect(skill.getByLabelText('レベル6: R')).toBeInTheDocument();
@@ -234,34 +256,62 @@ describe('ChampionBuildContent', () => {
       );
     });
 
-    it('URL クエリの値をプルダウンの選択状態に反映する', async () => {
+    it('URL クエリの値をボタンの aria-checked とプルダウンの選択状態に反映する', async () => {
       await renderContent('Ahri', {
         role: 'MIDDLE',
         period: 'last_30_days',
         queue: 'flex',
         rank: 'emerald_plus',
       });
-      expect(screen.getByLabelText('期間')).toHaveValue('last_30_days');
-      expect(screen.getByLabelText('キュー')).toHaveValue('flex');
+      expect(radioOf('期間', '直近30日')).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
+      expect(radioOf('期間', '最新パッチ')).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
+      expect(radioOf('キュー', 'フレックス')).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
       expect(screen.getByLabelText('ランク帯')).toHaveValue('emerald_plus');
     });
 
-    it('期間を変えると URL クエリを更新する（ロール・キューは維持）', async () => {
+    it('期間のボタンは3つ、キューのボタンは「すべて」を含む3つ', async () => {
+      await renderContent();
+      const names = (group: string): (string | null)[] =>
+        within(screen.getByRole('radiogroup', { name: group }))
+          .getAllByRole('radio')
+          .map((r) => r.textContent);
+      expect(names('期間')).toEqual(['最新パッチ', '直近30日', '全期間']);
+      expect(names('キュー')).toEqual(['すべて', 'ソロ/デュオ', 'フレックス']);
+      expect(radioOf('期間', '最新パッチ')).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
+      expect(radioOf('キュー', 'すべて')).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
+    });
+
+    it('期間のボタンを押すと router.replace で URL を更新する（ロール・キューは維持）', async () => {
       await renderContent('Ahri', {
         role: 'MIDDLE',
         period: 'latest_patch',
         queue: 'solo',
         rank: 'all',
       });
-      await userEvent.selectOptions(screen.getByLabelText('期間'), 'all');
+      await userEvent.click(radioOf('期間', '全期間'));
       expect(mockReplace).toHaveBeenCalledWith(
         '/champion/Ahri?role=MIDDLE&period=all&queue=solo'
       );
     });
 
-    it('キューを変えると URL クエリを更新する', async () => {
+    it('キューのボタンを押すと URL クエリを更新する', async () => {
       await renderContent();
-      await userEvent.selectOptions(screen.getByLabelText('キュー'), 'flex');
+      await userEvent.click(radioOf('キュー', 'フレックス'));
       expect(mockReplace).toHaveBeenCalledWith('/champion/Ahri?queue=flex');
     });
 
@@ -308,7 +358,7 @@ describe('ChampionBuildContent', () => {
       const { rerender } = render(
         <ChampionBuildContent champion={champion} query={DEFAULT_QUERY} />
       );
-      await screen.findByText(/集計対象/);
+      await waitForLoaded();
       rerender(
         <ChampionBuildContent
           champion={champion}
@@ -321,12 +371,12 @@ describe('ChampionBuildContent', () => {
       });
     });
 
-    it('条件が変わると取得し直し、その間は読み込み中を表示する', async () => {
+    it('条件が変わると取得し直し、その間はカードの下に読み込み中を出してフィルターは残す', async () => {
       const champion = getChampionById('Ahri')!;
       const { rerender } = render(
         <ChampionBuildContent champion={champion} query={DEFAULT_QUERY} />
       );
-      await screen.findByText(/集計対象/);
+      await waitForLoaded();
       mockFetch.mockReturnValue(new Promise(() => {}));
       rerender(
         <ChampionBuildContent
@@ -334,7 +384,12 @@ describe('ChampionBuildContent', () => {
           query={{ ...DEFAULT_QUERY, period: 'all' }}
         />
       );
-      expect(screen.getByText('読み込み中...')).toBeInTheDocument();
+      const loading = screen.getByText('読み込み中...');
+      expect(radioOf('期間', '全期間')).toHaveAttribute('aria-checked', 'true');
+      const card = sectionOf('ビルドの集計');
+      expect(
+        card.compareDocumentPosition(loading) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
       await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
     });
 
@@ -344,12 +399,14 @@ describe('ChampionBuildContent', () => {
     });
   });
 
-  it('API エラーはメッセージを表示する', async () => {
+  it('API エラーはカードの下にメッセージを出し、フィルターは残す', async () => {
     mockFetch.mockRejectedValue(new Error('チャンピオンが見つかりません'));
     const champion = getChampionById('Ahri')!;
     render(<ChampionBuildContent champion={champion} query={DEFAULT_QUERY} />);
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'チャンピオンが見つかりません'
     );
+    expect(radioOf('期間', '最新パッチ')).toBeVisible();
+    expect(screen.getByLabelText('ランク帯')).toBeVisible();
   });
 });

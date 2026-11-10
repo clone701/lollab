@@ -1,6 +1,9 @@
 export * from './constants';
 export { buildChampionBuildHref } from './buildChampionBuildHref';
+export { calcPickShare } from './calcPickShare';
 export { calcWinRate } from './calcWinRate';
+export { rateColorClass } from './rateColorClass';
+export { toRuneChoices } from './toRuneChoices';
 export { filterChampions } from './filterChampions';
 export { formatPercent } from './formatPercent';
 export { formatSignedPercent } from './formatSignedPercent';
@@ -11,8 +14,6 @@ export { itemIconUrls } from './itemIconUrls';
 export { parseBuildQuery } from './parseBuildQuery';
 export { getRuneIcon } from './runeIcons';
 export type { RuneIcon } from './runeIcons';
-export { selectOption } from './selectOption';
-export { selectTopOptions } from './selectTopOptions';
 export { splitRuneKey } from './splitRuneKey';
 export type { RuneKeyParts } from './splitRuneKey';
 export { toRiotChampionName } from './toRiotChampionName';

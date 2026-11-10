@@ -1,23 +1,72 @@
 import {
+  QUEUE_OPTIONS,
+  calcPickShare,
   calcWinRate,
   formatPercent,
   formatSignedPercent,
   formatSkillPriority,
-  selectOption,
-  selectTopOptions,
+  rateColorClass,
   splitRuneKey,
+  toRuneChoices,
   toSkillGrid,
 } from '..';
 import type { BuildElement } from '@/types/championBuild';
 
-const element: BuildElement = {
-  games: 30,
-  options: [
-    { key: [1], games: 20, wins: 8 },
-    { key: [2], games: 10, wins: 9 },
-  ],
-  best_win_rate: { key: [2], games: 10, wins: 9 },
-};
+describe('calcPickShare', () => {
+  it('選択肢の試合数 / 要素の試合数を返す', () => {
+    expect(calcPickShare(443, 878)).toBeCloseTo(0.5046, 4);
+    expect(calcPickShare(30, 30)).toBe(1);
+  });
+
+  it('要素の試合数が 0 以下のときは 0', () => {
+    expect(calcPickShare(0, 0)).toBe(0);
+    expect(calcPickShare(5, 0)).toBe(0);
+  });
+});
+
+describe('rateColorClass', () => {
+  it('基準以上は勝ち色、基準未満は負け色', () => {
+    expect(rateColorClass(0.5, 0.5, true)).toBe('text-win');
+    expect(rateColorClass(0.499, 0.5, true)).toBe('text-loss');
+    expect(rateColorClass(0, 0, true)).toBe('text-win');
+    expect(rateColorClass(-0.001, 0, true)).toBe('text-loss');
+  });
+
+  it('試合数が 0 のときは本文色', () => {
+    expect(rateColorClass(0, 0.5, false)).toBe('text-fg');
+  });
+});
+
+describe('QUEUE_OPTIONS', () => {
+  it('all の表示名は「すべて」で、値は all のまま', () => {
+    expect(QUEUE_OPTIONS[0]).toEqual({ value: 'all', label: 'すべて' });
+  });
+});
+
+describe('toRuneChoices', () => {
+  const runes: BuildElement = {
+    games: 100,
+    options: [
+      { key: [1], games: 54, wins: 30 },
+      { key: [2], games: 18, wins: 9 },
+      { key: [3], games: 10, wins: 5 },
+    ],
+  };
+
+  it('上位2件を「1番目 ・ 採用率54%」の形にする', () => {
+    expect(toRuneChoices(runes)).toEqual([
+      { value: '0', label: '1番目 ・ 採用率54%' },
+      { value: '1', label: '2番目 ・ 採用率18%' },
+    ]);
+  });
+
+  it('選択肢が1件なら1件だけ、0件なら空', () => {
+    expect(
+      toRuneChoices({ ...runes, options: runes.options.slice(0, 1) })
+    ).toHaveLength(1);
+    expect(toRuneChoices({ games: 0, options: [] })).toEqual([]);
+  });
+});
 
 describe('calcWinRate', () => {
   it('勝利数 / 試合数を返す', () => {
@@ -56,49 +105,6 @@ describe('formatSignedPercent', () => {
   it('丸めて 0 になる差は符号なし', () => {
     expect(formatSignedPercent(0)).toBe('0.0%');
     expect(formatSignedPercent(-0.0001)).toBe('0.0%');
-  });
-});
-
-describe('selectOption', () => {
-  it('最多は options[0]、最高勝率は best_win_rate を返す', () => {
-    expect(selectOption(element, 'most_games')).toBe(element.options[0]);
-    expect(selectOption(element, 'best_win_rate')).toBe(element.best_win_rate);
-  });
-
-  it('選択肢がなければ null', () => {
-    const empty: BuildElement = { games: 0, options: [], best_win_rate: null };
-    expect(selectOption(empty, 'most_games')).toBeNull();
-    expect(selectOption(empty, 'best_win_rate')).toBeNull();
-  });
-});
-
-describe('selectTopOptions', () => {
-  const items: BuildElement = {
-    games: 20,
-    options: [
-      { key: [1], games: 10, wins: 4 },
-      { key: [2], games: 6, wins: 4 },
-      { key: [3], games: 3, wins: 2 },
-      { key: [4], games: 1, wins: 0 },
-    ],
-    best_win_rate: { key: [5], games: 1, wins: 1 },
-  };
-  it('最多は試合数の多い順に上位 limit 件', () => {
-    expect(selectTopOptions(items, 'most_games', 2).map((o) => o.key)).toEqual([
-      [1],
-      [2],
-    ]);
-  });
-  it('最高勝率は best_win_rate を含めて勝率順（同率は試合数の多い順）', () => {
-    expect(selectTopOptions(items, 'best_win_rate').map((o) => o.key)).toEqual([
-      [5],
-      [2],
-      [3],
-    ]);
-  });
-  it('best_win_rate が options にある場合は重複させない', () => {
-    const dup = { ...items, best_win_rate: items.options[1] };
-    expect(selectTopOptions(dup, 'best_win_rate', 10)).toHaveLength(4);
   });
 });
 
