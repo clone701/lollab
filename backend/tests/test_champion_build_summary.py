@@ -40,7 +40,6 @@ def test_no_games_without_role_returns_empty_response(store: Store) -> None:
     assert result.summary.win_rate_delta == 0.0
     assert result.runes.games == 0
     assert result.runes.options == []
-    assert result.runes.best_win_rate is None
     store["get_build_rows"].assert_not_awaited()
     store["get_role_win_totals"].assert_not_awaited()
 

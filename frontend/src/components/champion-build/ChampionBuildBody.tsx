@@ -1,11 +1,7 @@
 import { useChampionDetail } from '@/components/game-data';
 import type { Champion } from '@/types/champion';
-import type {
-  BuildMode,
-  BuildQuery,
-  ChampionBuildResponse,
-} from '@/types/championBuild';
-import { BuildScope } from './BuildScope';
+import type { BuildQuery, ChampionBuildResponse } from '@/types/championBuild';
+import { BuildStatsCard } from './BuildStatsCard';
 import { ChampionBuildHeader } from './ChampionBuildHeader';
 import { ItemPanel } from './ItemPanel';
 import { RunePanel } from './RunePanel';
@@ -15,51 +11,45 @@ import { SpellPanel } from './SpellPanel';
 interface ChampionBuildBodyProps {
   champion: Champion;
   query: BuildQuery;
-  data: ChampionBuildResponse;
-  mode: BuildMode;
+  /** 読み込み中・エラーのときは null。カードにはフィルターだけを出し、パネルは出さない */
+  data: ChampionBuildResponse | null;
+  /** カードの下に出す読み込み中・エラーの表示 */
+  children?: React.ReactNode;
 }
 
 export function ChampionBuildBody({
   champion,
   query,
   data,
-  mode,
+  children,
 }: ChampionBuildBodyProps) {
   // スキルと基礎情報で同じデータを使うため、ここで1回だけ取る
   const detail = useChampionDetail(champion.id);
+  // 条件が変わったらルーンの1番目/2番目の選択を初期化する
+  const runeKey = `${champion.id}|${data?.role ?? ''}|${query.period}|${query.queue}|${query.rank}`;
   return (
     <div className="flex flex-col gap-4">
-      <ChampionBuildHeader
-        champion={champion}
-        role={data.role}
-        roles={data.roles}
-        summary={data.summary}
-        query={query}
-        detail={detail}
-      />
-      <BuildScope
-        games={data.summary.games}
-        period={data.period}
-        latestPatch={data.latest_patch}
-      />
-      <div className="grid gap-4 md:grid-cols-2">
-        <SkillPanel
-          skills={detail.skills}
-          skillPriority={data.skill_priority}
-          skillOrder={data.skill_order}
-          mode={mode}
-        />
-        <SpellPanel spells={data.spells} mode={mode} />
-        <ItemPanel
-          startingItems={data.starting_items}
-          coreItems={data.core_items}
-          item4={data.item4}
-          item5={data.item5}
-          item6={data.item6}
-          mode={mode}
-        />
-        <RunePanel runes={data.runes} mode={mode} />
-      </div>
+      <ChampionBuildHeader champion={champion} detail={detail} />
+      <BuildStatsCard championId={champion.id} query={query} data={data} />
+      {children}
+      {data && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <SkillPanel
+            skills={detail.skills}
+            skillPriority={data.skill_priority}
+            skillOrder={data.skill_order}
+          />
+          <SpellPanel spells={data.spells} />
+          <ItemPanel
+            startingItems={data.starting_items}
+            coreItems={data.core_items}
+            item4={data.item4}
+            item5={data.item5}
+            item6={data.item6}
+          />
+          <RunePanel key={runeKey} runes={data.runes} />
+        </div>
+      )}
     </div>
   );
 }

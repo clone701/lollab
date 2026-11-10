@@ -6,13 +6,13 @@ interface BuildScopeProps {
   latestPatch: ChampionBuildResponse['latest_patch'];
 }
 
-// 集計対象の試合数と、最新パッチ指定のときのパッチ番号
+// 集計範囲。最新パッチ指定のときだけパッチ番号を付ける（例: パッチ 16.22 ・ 191試合）
 export function BuildScope({ games, period, latestPatch }: BuildScopeProps) {
+  const count = `${games.toLocaleString('ja-JP')}試合`;
   const showPatch = period === 'latest_patch' && latestPatch !== null;
   return (
-    <p className="text-sm text-fg-muted">
-      集計対象: {games.toLocaleString('ja-JP')}試合
-      {showPatch && <span className="ml-2">パッチ {latestPatch}</span>}
+    <p className="text-xs text-fg-muted">
+      {showPatch ? `パッチ ${latestPatch} ・ ${count}` : count}
     </p>
   );
 }

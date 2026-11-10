@@ -13,7 +13,6 @@ function renderPanel(skills: SkillInfo[] | null): void {
       skills={skills}
       skillPriority={element([option([1, 2, 3], 80, 40)])}
       skillOrder={element([option(SKILL_ORDER, 50, 25)])}
-      mode="most_games"
     />
   );
 }

@@ -54,7 +54,7 @@ def test_defaults_are_passed_to_service() -> None:
     assert body["champion_name"] == "LeeSin"
     assert body["rank"] == "all"
     assert body["role"] is None
-    assert body["runes"] == {"games": 0, "options": [], "best_win_rate": None}
+    assert body["runes"] == {"games": 0, "options": []}
 
 
 def test_query_parameters_are_passed_to_service() -> None:

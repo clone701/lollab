@@ -12,15 +12,12 @@ export function option(
   return { key, games, wins };
 }
 
-export function element(
-  options: BuildOption[],
-  bestWinRate: BuildOption | null = options[0] ?? null
-): BuildElement {
+export function element(options: BuildOption[]): BuildElement {
   const games = options.reduce((sum, o) => sum + o.games, 0);
-  return { games, options, best_win_rate: bestWinRate };
+  return { games, options };
 }
 
-/** 最多と最高勝率が異なるビルド要素を持つ応答。overrides で要素を差し替える */
+/** スペルとルーンが2件ずつある応答。overrides で要素を差し替える */
 export function makeBuildResponse(
   overrides: Partial<ChampionBuildResponse> = {}
 ): ChampionBuildResponse {
@@ -39,17 +36,14 @@ export function makeBuildResponse(
       pick_rate: 0.0834,
       ban_rate: 0.1567,
     },
-    skill_priority: element(
-      [option([1, 2, 3], 80, 40), option([3, 2, 1], 20, 15)],
-      option([3, 2, 1], 20, 15)
-    ),
+    skill_priority: element([
+      option([1, 2, 3], 80, 40),
+      option([3, 2, 1], 20, 15),
+    ]),
     skill_order: element([
       option([1, 2, 3, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3], 50, 25),
     ]),
-    spells: element(
-      [option([4, 14], 70, 35), option([4, 12], 30, 21)],
-      option([4, 12], 30, 21)
-    ),
+    spells: element([option([4, 14], 70, 35), option([4, 12], 30, 21)]),
     starting_items: element([option([1056, 2003, 2003], 60, 30)]),
     core_items: element([option([6655, 3020, 3157], 40, 22)]),
     item4: element([
@@ -65,6 +59,11 @@ export function makeBuildResponse(
         [8100, 8112, 8126, 8138, 8135, 8200, 8226, 8210, 5008, 5008, 5001],
         45,
         27
+      ),
+      option(
+        [8000, 8005, 9111, 9104, 8014, 8200, 8226, 8210, 5005, 5008, 5001],
+        15,
+        9
       ),
     ]),
     ...overrides,

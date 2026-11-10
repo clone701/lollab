@@ -29,8 +29,6 @@ class BuildElement(BaseModel):
     games: int
     # 試合数の多い順、最大10件
     options: list[BuildOption]
-    # 全選択肢のうち勝率が最も高い1件（同率は試合数の多い方）
-    best_win_rate: BuildOption | None = None
 
 
 class ChampionBuildSummary(BaseModel):
