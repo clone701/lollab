@@ -2,7 +2,7 @@
   "version": "16.21.1",
   "passive": "ジャーヴァンⅣの最初の通常攻撃に物理ダメージが追加される。<br>同一の敵に対しては数秒間、効果が発生しない。",
   "spells": [
-    null,
+    "槍を伸ばして<physicalDamage>90/130/170/210/250 (+増加攻撃力の145%)の物理ダメージ</physicalDamage>を与え、3秒間、<scaleArmor>物理防御を10/14/18/22/26%</scaleArmor>低下させる。<br><br>槍が<spellName>「デマーシアの旗印」</spellName>に当たると自身をそこまで引き寄せ、通り道にいた敵を0.75秒間<status>ノックアップ</status>する。",
     null,
     null,
     "敵チャンピオンに向かって雄々しく跳躍し、対象および周囲の敵に<physicalDamage>200/325/450 (+増加攻撃力の180%)の物理ダメージ</physicalDamage>を与え、3.5秒間、周囲を通過不能な障壁で囲い込む。<br><br>障壁は<recast>再発動</recast>すると消滅する。"
