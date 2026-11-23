@@ -7,7 +7,7 @@ supabase==2.34.1
 hypothesis==6.170.15
 # テストの TestClient 用（Starlette は httpx2 があれば使い、なければ httpx で非推奨の警告を出す）。
 # アプリ本体の通信は httpx を使うため、Lambda の ZIP（requirements-lambda.txt）には入れない
-httpx2==2.16.0
+httpx2==2.16.2
 
 # AWS Lambda（boto3 は Lambda のランタイムにも含まれる。ローカル・テスト用に入れる）
 mangum
